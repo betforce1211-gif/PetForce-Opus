@@ -27,6 +27,10 @@ packages/ui/     → Shared Tamagui component library
 packages/core/   → Shared types, Zod schemas, business logic
 packages/db/     → Drizzle schema + PostgreSQL client
 packages/config/ → Shared TypeScript + ESLint configs
+docs/            → User guides, config guides, API docs, runbooks
+tests/           → E2E tests, integration tests, fixtures, helpers
+infra/           → Docker, CI/CD, deployment configs, scripts
+.github/         → GitHub Actions workflows
 ```
 
 ## Core Domain Model
@@ -52,16 +56,19 @@ pnpm dev --filter=api # Start only the API
 
 ## Multi-Agent Team
 
-This project uses 6 specialized Claude Code agents:
+This project uses 9 specialized Claude Code agents, each in its own git worktree:
 
-| Agent | Scope | Owns |
-|-------|-------|------|
-| **Architect** | Root `/` | Architecture, schema design, cross-cutting concerns |
-| **Backend** | `apps/api/` + `packages/db/` | tRPC routers, Drizzle schema, API middleware |
-| **Web Frontend** | `apps/web/` | Next.js pages, layouts, web-specific hooks |
-| **Mobile** | `apps/mobile/` | Expo screens, native navigation, push notifications |
-| **Design System** | `packages/ui/` | Tamagui components, theming, household customization |
-| **Core/Shared** | `packages/core/` | Types, Zod schemas, shared business logic |
+| Agent | Worktree | Branch | Owns |
+|-------|----------|--------|------|
+| **Architect** | `~/PetForce Opus4.6/` | `main` | Architecture, schema design, cross-cutting concerns |
+| **Backend** | `~/petforce-backend/` | `agent/backend` | tRPC routers, Drizzle schema, API middleware |
+| **Web Frontend** | `~/petforce-web/` | `agent/web` | Next.js pages, layouts, web-specific hooks |
+| **Mobile** | `~/petforce-mobile/` | `agent/mobile` | Expo screens, native navigation, push notifications |
+| **Design System** | `~/petforce-design-system/` | `agent/design-system` | Tamagui components, theming, household customization |
+| **Core/Shared** | `~/petforce-core/` | `agent/core` | Types, Zod schemas, shared business logic |
+| **Documentation** | `~/petforce-docs/` | `agent/docs` | User guides, config guides, API docs, runbooks |
+| **QA/Testing** | `~/petforce-tests/` | `agent/tests` | E2E tests, integration tests, coverage, test utilities |
+| **DevOps/Infra** | `~/petforce-infra/` | `agent/infra` | CI/CD, Docker, deployments, monitoring, scripts |
 
 ## Conventions
 
