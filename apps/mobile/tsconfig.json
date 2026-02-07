@@ -1,0 +1,10 @@
+{
+  "extends": "@petforce/config/tsconfig.react-native.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

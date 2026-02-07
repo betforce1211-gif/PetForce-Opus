@@ -1,0 +1,21 @@
+{
+  "name": "petforce",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:generate": "turbo db:generate",
+    "db:push": "turbo db:push",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "turbo": "^2.1.0"
+  },
+  "packageManager": "pnpm@9.7.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "PetForce",
+    "slug": "petforce",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "petforce",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#6366F1"
+    },
+    "ios": {
+      "bundleIdentifier": "com.petforce.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#6366F1"
+      },
+      "package": "com.petforce.app"
+    },
+    "plugins": ["expo-router"]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@petforce/db",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@petforce/core": "workspace:*",
+    "drizzle-orm": "^0.33.0",
+    "postgres": "^3.4.4"
+  },
+  "devDependencies": {
+    "@petforce/config": "workspace:*",
+    "drizzle-kit": "^0.24.0",
+    "typescript": "^5.4.0"
+  }
+}
