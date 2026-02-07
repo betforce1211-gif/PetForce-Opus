@@ -10,26 +10,27 @@
     "clean": "rm -rf .next"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.37.3",
     "@petforce/core": "workspace:*",
     "@petforce/ui": "workspace:*",
+    "@tamagui/next-plugin": "^1.100.0",
+    "@tanstack/react-query": "^4.36.0",
     "@trpc/client": "^10.45.0",
     "@trpc/react-query": "^10.45.0",
     "@trpc/server": "^10.45.0",
-    "@tanstack/react-query": "^4.36.0",
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "superjson": "^2.2.1",
-    "tamagui": "^1.100.0",
-    "@tamagui/next-plugin": "^1.100.0"
+    "tamagui": "^1.100.0"
   },
   "devDependencies": {
     "@petforce/config": "workspace:*",
     "@types/node": "^20.14.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "typescript": "^5.4.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0"
+    "eslint-config-next": "^14.2.0",
+    "typescript": "^5.4.0"
   }
 }
