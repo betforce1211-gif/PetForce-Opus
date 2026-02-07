@@ -1,12 +1,27 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { protectedProcedure, router } from "../trpc";
-import { db, households } from "@petforce/db";
+import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
 
 export const householdRouter = router({
-  list: protectedProcedure.query(async () => {
-    return db.select().from(households);
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const userMemberships = await db
+      .select()
+      .from(members)
+      .where(eq(members.userId, ctx.userId));
+
+    if (userMemberships.length === 0) return [];
+
+    const results = [];
+    for (const membership of userMemberships) {
+      const [household] = await db
+        .select()
+        .from(households)
+        .where(eq(households.id, membership.householdId));
+      if (household) results.push(household);
+    }
+    return results;
   }),
 
   getById: protectedProcedure
@@ -21,7 +36,7 @@ export const householdRouter = router({
 
   create: protectedProcedure
     .input(createHouseholdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const [household] = await db
         .insert(households)
         .values({
@@ -33,6 +48,14 @@ export const householdRouter = router({
           },
         })
         .returning();
+
+      await db.insert(members).values({
+        householdId: household.id,
+        userId: ctx.userId,
+        role: "owner",
+        displayName: "Owner",
+      });
+
       return household;
     }),
 
@@ -41,7 +64,6 @@ export const householdRouter = router({
     .mutation(async ({ input }) => {
       const { id, theme, ...rest } = input;
 
-      // If theme partial fields are provided, merge with existing household theme
       const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
       if (theme) {
         const [existing] = await db

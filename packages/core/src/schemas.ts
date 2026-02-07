@@ -78,3 +78,11 @@ export const createActivitySchema = z.object({
 });
 
 export const updateActivitySchema = createActivitySchema.partial();
+
+// --- Onboarding ---
+
+export const onboardHouseholdSchema = z.object({
+  name: z.string().min(1).max(100),
+  displayName: z.string().min(1).max(50),
+  theme: householdThemeSchema.optional(),
+});

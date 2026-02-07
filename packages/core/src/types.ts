@@ -61,3 +61,20 @@ export interface Activity {
   completedAt: Date | null;
   createdAt: Date;
 }
+
+// --- Dashboard view types ---
+
+export interface HouseholdSummary {
+  id: string;
+  name: string;
+  theme: HouseholdTheme;
+  petCount: number;
+  memberCount: number;
+}
+
+export interface HouseholdDashboard {
+  household: Household;
+  members: Member[];
+  pets: Pet[];
+  recentActivities: Activity[];
+}

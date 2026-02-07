@@ -68,6 +68,18 @@ export default function RootLayout({
                 </Link>
               </SignedOut>
               <SignedIn>
+                <Link
+                  href="/dashboard"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "0.5rem",
+                    color: "#6366F1",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  Dashboard
+                </Link>
                 <UserButton />
               </SignedIn>
             </div>

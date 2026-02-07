@@ -1,5 +1,6 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { AuthTabs } from "./auth-tabs";
+import { DashboardRedirect } from "./dashboard-redirect";
 
 export default function Home() {
   return (
@@ -31,12 +32,7 @@ export default function Home() {
       </SignedOut>
 
       <SignedIn>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-          🐾 Welcome to PetForce
-        </h1>
-        <p style={{ color: "#6B7280", fontSize: "1.1rem" }}>
-          You&apos;re signed in. Your household dashboard is coming soon.
-        </p>
+        <DashboardRedirect />
       </SignedIn>
     </main>
   );

@@ -5,14 +5,17 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e:screenshots": "playwright test --config=playwright.config.ts --reporter=list && echo '\nScreenshots saved to tests/test-results/screenshots/'",
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@clerk/testing": "^1.13.35",
     "@petforce/core": "workspace:*",
-    "vitest": "^2.0.0",
-    "playwright": "^1.45.0",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.14.0",
-    "typescript": "^5.4.0"
+    "playwright": "^1.45.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
   }
 }
