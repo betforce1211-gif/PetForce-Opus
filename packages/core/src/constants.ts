@@ -29,3 +29,18 @@ export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   play: "Play",
   other: "Other",
 };
+
+export const INVITATION_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  accepted: "Accepted",
+  declined: "Declined",
+  expired: "Expired",
+};
+
+export const ACCESS_REQUEST_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  denied: "Denied",
+};
+
+export const INVITE_EXPIRY_DAYS = 7;

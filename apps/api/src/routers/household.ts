@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { protectedProcedure, router } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { protectedProcedure, householdProcedure, router } from "../trpc";
 import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
+import { generateJoinCode } from "../utils/join-code";
 
 export const householdRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -41,6 +43,7 @@ export const householdRouter = router({
         .insert(households)
         .values({
           name: input.name,
+          joinCode: generateJoinCode(),
           theme: input.theme ?? {
             primaryColor: "#6366F1",
             secondaryColor: "#EC4899",
@@ -89,4 +92,21 @@ export const householdRouter = router({
       await db.delete(households).where(eq(households.id, input.id));
       return { success: true };
     }),
+
+  regenerateJoinCode: householdProcedure.mutation(async ({ ctx }) => {
+    if (ctx.membership.role !== "owner") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only owners can regenerate the join code",
+      });
+    }
+
+    const [household] = await db
+      .update(households)
+      .set({ joinCode: generateJoinCode(), updatedAt: new Date() })
+      .where(eq(households.id, ctx.householdId))
+      .returning();
+
+    return household;
+  }),
 });

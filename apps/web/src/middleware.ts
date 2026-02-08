@@ -1,6 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const protectedRoutes = ["/dashboard", "/onboard"];
+const protectedRoutes = ["/dashboard", "/onboard", "/join"];
 
 export default clerkMiddleware(async (auth, request) => {
   const path = request.nextUrl.pathname;

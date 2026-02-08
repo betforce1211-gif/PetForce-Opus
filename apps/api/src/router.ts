@@ -4,6 +4,8 @@ import { petRouter } from "./routers/pet";
 import { activityRouter } from "./routers/activity";
 import { memberRouter } from "./routers/member";
 import { dashboardRouter } from "./routers/dashboard";
+import { invitationRouter } from "./routers/invitation";
+import { accessRequestRouter } from "./routers/access-request";
 
 export const appRouter = router({
   household: householdRouter,
@@ -11,6 +13,8 @@ export const appRouter = router({
   activity: activityRouter,
   member: memberRouter,
   dashboard: dashboardRouter,
+  invitation: invitationRouter,
+  accessRequest: accessRequestRouter,
 });
 
 export type AppRouter = typeof appRouter;

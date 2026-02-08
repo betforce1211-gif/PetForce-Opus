@@ -79,6 +79,23 @@ export const createActivitySchema = z.object({
 
 export const updateActivitySchema = createActivitySchema.partial();
 
+// --- Invitations ---
+
+export const invitableRoles = ["admin", "member", "sitter"] as const;
+
+export const createInvitationSchema = z.object({
+  email: z.string().email().optional(),
+  role: z.enum(invitableRoles),
+});
+
+// --- Access Requests ---
+
+export const createAccessRequestSchema = z.object({
+  joinCode: z.string().min(1),
+  displayName: z.string().min(1).max(50),
+  message: z.string().max(500).optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

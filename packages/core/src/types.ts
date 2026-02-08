@@ -1,4 +1,7 @@
 export type MemberRole = "owner" | "admin" | "member" | "sitter";
+export type InvitableRole = "admin" | "member" | "sitter";
+export type InvitationStatus = "pending" | "accepted" | "declined" | "expired";
+export type AccessRequestStatus = "pending" | "approved" | "denied";
 
 export type PetSpecies = "dog" | "cat" | "bird" | "fish" | "reptile" | "other";
 
@@ -21,6 +24,7 @@ export interface Household {
   id: string;
   name: string;
   theme: HouseholdTheme;
+  joinCode: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +63,33 @@ export interface Activity {
   notes: string | null;
   scheduledAt: Date | null;
   completedAt: Date | null;
+  createdAt: Date;
+}
+
+// --- Invitations ---
+
+export interface Invitation {
+  id: string;
+  householdId: string;
+  invitedBy: string;
+  email: string | null;
+  token: string;
+  role: InvitableRole;
+  status: InvitationStatus;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+// --- Access Requests ---
+
+export interface AccessRequest {
+  id: string;
+  householdId: string;
+  userId: string;
+  displayName: string;
+  message: string | null;
+  status: AccessRequestStatus;
+  reviewedBy: string | null;
   createdAt: Date;
 }
 

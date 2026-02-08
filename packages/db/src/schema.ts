@@ -16,6 +16,7 @@ export const households = pgTable("households", {
     .notNull()
     .$type<{ primaryColor: string; secondaryColor: string; avatar: string | null }>()
     .default({ primaryColor: "#6366F1", secondaryColor: "#EC4899", avatar: null }),
+  joinCode: text("join_code").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -74,5 +75,48 @@ export const activities = pgTable("activities", {
   notes: text("notes"),
   scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Invitations ---
+
+export const invitations = pgTable("invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  invitedBy: uuid("invited_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  email: text("email"),
+  token: text("token").unique().notNull(),
+  role: text("role", { enum: ["admin", "member", "sitter"] }).notNull(),
+  status: text("status", {
+    enum: ["pending", "accepted", "declined", "expired"],
+  })
+    .notNull()
+    .default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+// --- Access Requests ---
+
+export const accessRequests = pgTable("access_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  displayName: text("display_name").notNull(),
+  message: text("message"),
+  status: text("status", {
+    enum: ["pending", "approved", "denied"],
+  })
+    .notNull()
+    .default("pending"),
+  reviewedBy: uuid("reviewed_by").references(() => members.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

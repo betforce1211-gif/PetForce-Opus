@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
@@ -33,8 +33,11 @@ export default function DashboardPage() {
   // --- State 1: Initial query loading ---
   if (householdsQuery.isLoading) {
     return (
-      <main style={containerStyle}>
-        <p style={{ color: "#6B7280" }}>Loading your households...</p>
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={spinner} />
+          <p style={{ color: "#6B7280", margin: 0 }}>Loading your households...</p>
+        </div>
       </main>
     );
   }
@@ -42,21 +45,20 @@ export default function DashboardPage() {
   // --- State 2: Query error ---
   if (householdsQuery.isError) {
     return (
-      <main style={containerStyle}>
-        <div style={errorBoxStyle}>
-          <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.25rem" }}>
-            Could not load your households
-          </h2>
-          <p style={{ color: "#6B7280", margin: "0 0 1rem 0", fontSize: "0.875rem" }}>
-            {householdsQuery.error?.message ?? "An unexpected error occurred."}
-            {" "}Make sure the API server is running on port 3001.
-          </p>
-          <button
-            onClick={() => householdsQuery.refetch()}
-            style={retryButtonStyle}
-          >
-            Retry
-          </button>
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={glassCard}>
+            <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.25rem", color: "#1E1B4B" }}>
+              Could not load your households
+            </h2>
+            <p style={{ color: "#6B7280", margin: "0 0 1rem 0", fontSize: "0.875rem" }}>
+              {householdsQuery.error?.message ?? "An unexpected error occurred."}
+              {" "}Make sure the API server is running on port 3001.
+            </p>
+            <button onClick={() => householdsQuery.refetch()} style={actionButton}>
+              Retry
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -65,8 +67,11 @@ export default function DashboardPage() {
   // --- State 3: No households, redirecting to onboard ---
   if (!householdsQuery.data?.length || !householdId) {
     return (
-      <main style={containerStyle}>
-        <p style={{ color: "#6B7280" }}>Redirecting to setup...</p>
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={spinner} />
+          <p style={{ color: "#6B7280", margin: 0 }}>Redirecting to setup...</p>
+        </div>
       </main>
     );
   }
@@ -74,8 +79,11 @@ export default function DashboardPage() {
   // --- State 4: Dashboard data loading ---
   if (dashboardQuery.isLoading) {
     return (
-      <main style={containerStyle}>
-        <p style={{ color: "#6B7280" }}>Loading dashboard...</p>
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={spinner} />
+          <p style={{ color: "#6B7280", margin: 0 }}>Loading dashboard...</p>
+        </div>
       </main>
     );
   }
@@ -83,20 +91,19 @@ export default function DashboardPage() {
   // --- State 5: Dashboard data error ---
   if (dashboardQuery.isError) {
     return (
-      <main style={containerStyle}>
-        <div style={errorBoxStyle}>
-          <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.25rem" }}>
-            Could not load dashboard
-          </h2>
-          <p style={{ color: "#6B7280", margin: "0 0 1rem 0", fontSize: "0.875rem" }}>
-            {dashboardQuery.error?.message ?? "An unexpected error occurred."}
-          </p>
-          <button
-            onClick={() => dashboardQuery.refetch()}
-            style={retryButtonStyle}
-          >
-            Retry
-          </button>
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={glassCard}>
+            <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.25rem", color: "#1E1B4B" }}>
+              Could not load dashboard
+            </h2>
+            <p style={{ color: "#6B7280", margin: "0 0 1rem 0", fontSize: "0.875rem" }}>
+              {dashboardQuery.error?.message ?? "An unexpected error occurred."}
+            </p>
+            <button onClick={() => dashboardQuery.refetch()} style={actionButton}>
+              Retry
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -106,120 +113,235 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const { household, members, pets, recentActivities } = data;
+  const allHouseholds = householdsQuery.data ?? [];
 
   // --- State 6: Dashboard loaded ---
   return (
-    <main style={containerStyle}>
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <div
-          style={{
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: household.theme.primaryColor,
-            marginBottom: "0.75rem",
-          }}
-        />
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>{household.name}</h1>
-        <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", color: "#6B7280" }}>
-          <span>🐾 {pets.length} {pets.length === 1 ? "pet" : "pets"}</span>
-          <span>👥 {members.length} {members.length === 1 ? "member" : "members"}</span>
-        </div>
-      </div>
+    <main style={pageShell}>
+      <div style={dashboardLayout}>
+        {/* ── Header bar ── */}
+        <header style={headerBar}>
+          <HouseholdSwitcher
+            currentHousehold={household}
+            allHouseholds={allHouseholds}
+            petCount={pets.length}
+            memberCount={members.length}
+            onSwitch={switchHousehold}
+          />
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href="/dashboard/add-pet" style={actionButton}>
+              + Add Pet
+            </Link>
+            <Link href="/dashboard/log-activity" style={actionButtonOutline}>
+              + Log Activity
+            </Link>
+            <Link href="/dashboard/settings" style={actionButtonOutline}>
+              Settings
+            </Link>
+          </div>
+        </header>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "2rem" }}>
-        {/* Main content */}
-        <div>
-          {/* Pets section */}
-          <div style={{ marginBottom: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Pets</h2>
-              <Link href="/dashboard/add-pet" style={linkButtonStyle}>
-                + Add Pet
-              </Link>
+        {/* ── Content area: two columns ── */}
+        <div style={contentArea}>
+          {/* Left column — Pets */}
+          <div style={leftColumn}>
+            <div style={{ ...glassCard, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <h2 style={sectionTitle}>Pets</h2>
+              {pets.length === 0 ? (
+                <div style={emptyState}>
+                  <span style={{ fontSize: "2.5rem" }}>🐾</span>
+                  <p style={{ fontWeight: 600, margin: "0.5rem 0 0.25rem", color: "#1E1B4B" }}>No pets yet</p>
+                  <p style={{ color: "#6B7280", fontSize: "0.85rem", margin: 0 }}>
+                    Add your first pet to get started
+                  </p>
+                </div>
+              ) : (
+                <div style={petGrid}>
+                  {pets.map((pet) => (
+                    <div key={pet.id} style={petCard}>
+                      <span style={{ fontSize: "2rem" }}>{speciesEmoji[pet.species] ?? "🐾"}</span>
+                      <strong style={{ color: "#1E1B4B" }}>{pet.name}</strong>
+                      {pet.breed && (
+                        <span style={{ color: "#6B7280", fontSize: "0.8rem" }}>{pet.breed}</span>
+                      )}
+                      <span style={speciesBadge}>{pet.species}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {pets.length === 0 ? (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: "2.5rem" }}>🐾</span>
-                <p style={{ fontWeight: 600 }}>No pets yet</p>
-                <p style={{ color: "#6B7280", fontSize: "0.875rem" }}>Add your first pet to get started</p>
-              </div>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                {pets.map((pet) => (
-                  <div key={pet.id} style={petCardStyle}>
-                    <span style={{ fontSize: "2rem" }}>{speciesEmoji[pet.species] ?? "🐾"}</span>
-                    <strong>{pet.name}</strong>
-                    {pet.breed && <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>{pet.breed}</span>}
-                    <span style={speciesBadgeStyle}>{pet.species}</span>
+          </div>
+
+          {/* Right column — Activity + Members */}
+          <div style={rightColumn}>
+            {/* Activity card */}
+            <div style={{ ...glassCard, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <h2 style={sectionTitle}>Recent Activity</h2>
+              {recentActivities.length === 0 ? (
+                <div style={emptyState}>
+                  <span style={{ fontSize: "2rem" }}>📝</span>
+                  <p style={{ fontWeight: 600, margin: "0.5rem 0 0.25rem", color: "#1E1B4B" }}>No activities yet</p>
+                  <p style={{ color: "#6B7280", fontSize: "0.85rem", margin: 0 }}>
+                    Log an activity to start tracking
+                  </p>
+                </div>
+              ) : (
+                <div style={{ flex: 1, overflowY: "auto", marginTop: "0.25rem" }}>
+                  {recentActivities.map((activity) => {
+                    const pet = pets.find((p) => p.id === activity.petId);
+                    const member = members.find((m) => m.id === activity.memberId);
+                    return (
+                      <div key={activity.id} style={activityRow}>
+                        <span style={{ fontSize: "1.15rem" }}>
+                          {activityTypeIcons[activity.type] ?? "📝"}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1E1B4B" }}>
+                            {activity.title}
+                          </div>
+                          <div style={{ color: "#9CA3AF", fontSize: "0.75rem" }}>
+                            {pet?.name}{pet && member ? " \u00b7 " : ""}{member?.displayName}
+                          </div>
+                        </div>
+                        <span style={{ color: "#9CA3AF", fontSize: "0.7rem", whiteSpace: "nowrap" }}>
+                          {formatTimeAgo(new Date(activity.createdAt))}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Members card */}
+            <div style={glassCard}>
+              <h2 style={sectionTitle}>Members</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                {members.map((member) => (
+                  <div key={member.id} style={memberRow}>
+                    <div style={initialsCircle}>
+                      {member.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                    <span style={{ flex: 1, fontSize: "0.875rem", color: "#1E1B4B" }}>
+                      {member.displayName}
+                    </span>
+                    <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[member.role] ?? "#6B7280" }}>
+                      {member.role}
+                    </span>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Activity feed */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Recent Activity</h2>
-              <Link href="/dashboard/log-activity" style={linkButtonStyle}>
-                + Log Activity
-              </Link>
             </div>
-            {recentActivities.length === 0 ? (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: "2.5rem" }}>📝</span>
-                <p style={{ fontWeight: 600 }}>No activities yet</p>
-                <p style={{ color: "#6B7280", fontSize: "0.875rem" }}>Log an activity to start tracking</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {recentActivities.map((activity) => {
-                  const pet = pets.find((p) => p.id === activity.petId);
-                  const member = members.find((m) => m.id === activity.memberId);
-                  return (
-                    <div key={activity.id} style={activityRowStyle}>
-                      <span style={{ fontSize: "1.25rem" }}>
-                        {activityTypeIcons[activity.type] ?? "📝"}
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600 }}>{activity.title}</div>
-                        <div style={{ color: "#6B7280", fontSize: "0.75rem" }}>
-                          {pet?.name}{pet && member ? " • " : ""}{member?.displayName}
-                        </div>
-                      </div>
-                      <span style={{ color: "#6B7280", fontSize: "0.75rem" }}>
-                        {formatTimeAgo(new Date(activity.createdAt))}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Members sidebar */}
-        <div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>Members</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {members.map((member) => (
-              <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 0" }}>
-                <div style={initialsCircleStyle}>
-                  {member.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                </div>
-                <span style={{ flex: 1 }}>{member.displayName}</span>
-                <span style={{ ...roleBadgeStyle, backgroundColor: roleBadgeColors[member.role] ?? "#6B7280" }}>
-                  {member.role}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
     </main>
   );
 }
+
+// ── Household Switcher ──
+
+interface HouseholdSwitcherProps {
+  currentHousehold: { id: string; name: string; theme: { primaryColor: string } };
+  allHouseholds: { id: string; name: string; theme: { primaryColor: string }; petCount: number; memberCount: number }[];
+  petCount: number;
+  memberCount: number;
+  onSwitch: (id: string) => void;
+}
+
+function HouseholdSwitcher({ currentHousehold, allHouseholds, petCount, memberCount, onSwitch }: HouseholdSwitcherProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const showDropdown = allHouseholds.length > 1;
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <span style={{ fontSize: "1.5rem" }}>🐾</span>
+      <div>
+        <button
+          onClick={() => showDropdown && setOpen((v) => !v)}
+          style={{
+            ...switcherButton,
+            cursor: showDropdown ? "pointer" : "default",
+          }}
+        >
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, margin: 0, color: "#1E1B4B" }}>
+            {currentHousehold.name}
+          </h1>
+          {showDropdown && (
+            <span style={{ fontSize: "0.75rem", color: "#6B7280", marginLeft: "0.35rem", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }}>
+              ▾
+            </span>
+          )}
+        </button>
+        <p style={{ margin: 0, color: "#6B7280", fontSize: "0.8rem" }}>
+          {petCount} {petCount === 1 ? "pet" : "pets"} &middot;{" "}
+          {memberCount} {memberCount === 1 ? "member" : "members"}
+        </p>
+      </div>
+
+      {open && (
+        <div style={switcherDropdown}>
+          {allHouseholds.map((h) => (
+            <button
+              key={h.id}
+              onClick={() => {
+                onSwitch(h.id);
+                setOpen(false);
+              }}
+              style={{
+                ...switcherItem,
+                backgroundColor: h.id === currentHousehold.id ? "rgba(99, 102, 241, 0.08)" : "transparent",
+              }}
+            >
+              <span style={{ ...switcherDot, backgroundColor: h.theme.primaryColor }} />
+              <span style={{ flex: 1, textAlign: "left", color: "#1E1B4B", fontWeight: h.id === currentHousehold.id ? 600 : 400 }}>
+                {h.name}
+              </span>
+              <span style={{ color: "#9CA3AF", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
+                {h.petCount}🐾 {h.memberCount}👥
+              </span>
+            </button>
+          ))}
+          <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", margin: "0.25rem 0" }} />
+          <button
+            onClick={() => {
+              setOpen(false);
+              router.push("/onboard");
+            }}
+            style={switcherItem}
+          >
+            <span style={{ color: "#6366F1", fontWeight: 600, fontSize: "0.85rem" }}>+ Create New Household</span>
+          </button>
+          <button
+            onClick={() => {
+              setOpen(false);
+              router.push("/join");
+            }}
+            style={switcherItem}
+          >
+            <span style={{ color: "#6366F1", fontWeight: 600, fontSize: "0.85rem" }}>Join a Household</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Utility data ──
 
 const speciesEmoji: Record<string, string> = {
   dog: "🐕", cat: "🐈", bird: "🐦", fish: "🐟", reptile: "🦎", other: "🐾",
@@ -245,96 +367,234 @@ function formatTimeAgo(date: Date): string {
   return date.toLocaleDateString();
 }
 
-const containerStyle: React.CSSProperties = {
-  maxWidth: 1024,
-  margin: "0 auto",
-  padding: "2rem 1.5rem",
+// ── Styles ──
+
+const pageShell: React.CSSProperties = {
+  height: "calc(100vh - 73px)",
+  overflow: "hidden",
+  background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 25%, #FDF2F8 50%, #FFF7ED 75%, #EEF2FF 100%)",
   fontFamily: "system-ui, sans-serif",
 };
 
-const linkButtonStyle: React.CSSProperties = {
-  padding: "0.375rem 0.75rem",
-  borderRadius: "0.375rem",
-  backgroundColor: "#6366F1",
-  color: "white",
-  fontSize: "0.875rem",
-  fontWeight: 600,
-  textDecoration: "none",
+const dashboardLayout: React.CSSProperties = {
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  padding: "1.25rem 1.5rem",
+  gap: "1rem",
 };
 
-const emptyStateStyle: React.CSSProperties = {
+const centeredMessage: React.CSSProperties = {
+  height: "100%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: "0.5rem",
-  padding: "2rem",
-  backgroundColor: "#FAFAFA",
-  borderRadius: "0.5rem",
-  textAlign: "center",
+  justifyContent: "center",
+  gap: "1rem",
 };
 
-const petCardStyle: React.CSSProperties = {
+const headerBar: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  flexShrink: 0,
+};
+
+const contentArea: React.CSSProperties = {
+  flex: 1,
+  display: "flex",
+  gap: "1rem",
+  minHeight: 0,
+};
+
+const leftColumn: React.CSSProperties = {
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+};
+
+const rightColumn: React.CSSProperties = {
+  width: 340,
+  flexShrink: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "1rem",
+  minHeight: 0,
+};
+
+const glassCard: React.CSSProperties = {
+  background: "rgba(255, 255, 255, 0.7)",
+  backdropFilter: "blur(10px)",
+  borderRadius: "0.875rem",
+  padding: "1.25rem",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+  border: "1px solid rgba(255, 255, 255, 0.6)",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: "1rem",
+  fontWeight: 700,
+  margin: "0 0 0.75rem",
+  color: "#1E1B4B",
+};
+
+const petGrid: React.CSSProperties = {
+  flex: 1,
+  overflowY: "auto",
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+  gap: "0.75rem",
+  alignContent: "start",
+};
+
+const petCard: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "0.25rem",
   padding: "1rem",
-  backgroundColor: "#FFFFFF",
-  borderRadius: "0.5rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  background: "rgba(255, 255, 255, 0.85)",
+  borderRadius: "0.75rem",
+  border: "1px solid rgba(255, 255, 255, 0.7)",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
 };
 
-const speciesBadgeStyle: React.CSSProperties = {
+const speciesBadge: React.CSSProperties = {
   alignSelf: "flex-start",
   padding: "0.125rem 0.5rem",
-  borderRadius: "0.25rem",
-  backgroundColor: "#6366F1",
+  borderRadius: "999px",
+  background: "linear-gradient(135deg, #6366F1, #818CF8)",
   color: "white",
-  fontSize: "0.75rem",
+  fontSize: "0.7rem",
+  fontWeight: 600,
   textTransform: "capitalize",
+  marginTop: "0.25rem",
 };
 
-const activityRowStyle: React.CSSProperties = {
+const activityRow: React.CSSProperties = {
   display: "flex",
   alignItems: "flex-start",
-  gap: "0.75rem",
-  padding: "0.625rem 0",
-  borderBottom: "1px solid #E5E7EB",
+  gap: "0.6rem",
+  padding: "0.5rem 0",
+  borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
 };
 
-const initialsCircleStyle: React.CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: "#6366F1",
+const memberRow: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.6rem",
+  padding: "0.35rem 0",
+};
+
+const initialsCircle: React.CSSProperties = {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  background: "linear-gradient(135deg, #6366F1, #818CF8)",
   color: "white",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: 700,
-  fontSize: "0.75rem",
+  fontSize: "0.7rem",
+  flexShrink: 0,
 };
 
-const roleBadgeStyle: React.CSSProperties = {
+const roleBadge: React.CSSProperties = {
   padding: "0.125rem 0.5rem",
-  borderRadius: "0.25rem",
+  borderRadius: "999px",
   color: "white",
-  fontSize: "0.75rem",
+  fontSize: "0.7rem",
+  fontWeight: 600,
   textTransform: "capitalize",
 };
 
-const errorBoxStyle: React.CSSProperties = {
-  padding: "1.5rem",
-  backgroundColor: "#FEF2F2",
-  border: "1px solid #FECACA",
+const actionButton: React.CSSProperties = {
+  padding: "0.4rem 0.85rem",
   borderRadius: "0.5rem",
-};
-
-const retryButtonStyle: React.CSSProperties = {
-  padding: "0.5rem 1rem",
-  borderRadius: "0.375rem",
-  backgroundColor: "#6366F1",
+  background: "linear-gradient(135deg, #6366F1, #818CF8)",
   color: "white",
+  fontSize: "0.8rem",
   fontWeight: 600,
+  textDecoration: "none",
   border: "none",
   cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const actionButtonOutline: React.CSSProperties = {
+  padding: "0.4rem 0.85rem",
+  borderRadius: "0.5rem",
+  background: "rgba(255, 255, 255, 0.7)",
+  color: "#6366F1",
+  fontSize: "0.8rem",
+  fontWeight: 600,
+  textDecoration: "none",
+  border: "1px solid rgba(99, 102, 241, 0.3)",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const emptyState: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  flex: 1,
+  textAlign: "center",
+  padding: "2rem 1rem",
+};
+
+const spinner: React.CSSProperties = {
+  width: 32,
+  height: 32,
+  border: "3px solid rgba(99, 102, 241, 0.2)",
+  borderTopColor: "#6366F1",
+  borderRadius: "50%",
+  animation: "spin 0.8s linear infinite",
+};
+
+const switcherButton: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  background: "none",
+  border: "none",
+  padding: 0,
+  fontFamily: "inherit",
+};
+
+const switcherDropdown: React.CSSProperties = {
+  position: "absolute",
+  top: "calc(100% + 0.5rem)",
+  left: 0,
+  minWidth: 280,
+  background: "rgba(255, 255, 255, 0.85)",
+  backdropFilter: "blur(12px)",
+  borderRadius: "0.875rem",
+  padding: "0.375rem",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+  border: "1px solid rgba(255, 255, 255, 0.6)",
+  zIndex: 50,
+};
+
+const switcherItem: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.6rem",
+  width: "100%",
+  padding: "0.5rem 0.75rem",
+  border: "none",
+  background: "transparent",
+  borderRadius: "0.5rem",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  fontSize: "0.875rem",
+  transition: "background-color 0.15s",
+};
+
+const switcherDot: React.CSSProperties = {
+  width: 10,
+  height: 10,
+  borderRadius: "50%",
+  flexShrink: 0,
 };

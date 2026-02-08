@@ -1,8 +1,9 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { protectedProcedure, householdProcedure, router } from "../trpc";
-import { db, households, members, pets, activities } from "@petforce/db";
+import { db, households, members, pets, activities, invitations, accessRequests } from "@petforce/db";
 import { onboardHouseholdSchema } from "@petforce/core";
 import type { HouseholdSummary } from "@petforce/core";
+import { generateJoinCode } from "../utils/join-code";
 
 export const dashboardRouter = router({
   myHouseholds: protectedProcedure.query(async ({ ctx }) => {
@@ -68,11 +69,42 @@ export const dashboardRouter = router({
       .orderBy(desc(activities.createdAt))
       .limit(20);
 
+    // Pending counts for owners/admins
+    const callerMember = householdMembers.find((m) => m.userId === ctx.userId);
+    let pendingInviteCount = 0;
+    let pendingRequestCount = 0;
+
+    if (callerMember && (callerMember.role === "owner" || callerMember.role === "admin")) {
+      const pendingInvites = await db
+        .select()
+        .from(invitations)
+        .where(
+          and(
+            eq(invitations.householdId, ctx.householdId),
+            eq(invitations.status, "pending")
+          )
+        );
+      pendingInviteCount = pendingInvites.length;
+
+      const pendingRequests = await db
+        .select()
+        .from(accessRequests)
+        .where(
+          and(
+            eq(accessRequests.householdId, ctx.householdId),
+            eq(accessRequests.status, "pending")
+          )
+        );
+      pendingRequestCount = pendingRequests.length;
+    }
+
     return {
       household,
       members: householdMembers,
       pets: householdPets,
       recentActivities,
+      pendingInviteCount,
+      pendingRequestCount,
     };
   }),
 
@@ -83,6 +115,7 @@ export const dashboardRouter = router({
         .insert(households)
         .values({
           name: input.name,
+          joinCode: generateJoinCode(),
           theme: input.theme ?? {
             primaryColor: "#6366F1",
             secondaryColor: "#EC4899",
