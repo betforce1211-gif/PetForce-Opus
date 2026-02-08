@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClerkProvider, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { ClerkProvider, SignedIn, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { Providers } from "./providers";
 
@@ -39,35 +39,8 @@ export default function RootLayout({
             >
               🐾 PetForce
             </Link>
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-              <SignedOut>
-                <Link
-                  href="/sign-in"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    borderRadius: "0.5rem",
-                    color: "#6366F1",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                  }}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    borderRadius: "0.5rem",
-                    backgroundColor: "#6366F1",
-                    color: "white",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                  }}
-                >
-                  Sign Up
-                </Link>
-              </SignedOut>
-              <SignedIn>
+            <SignedIn>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                 <Link
                   href="/dashboard"
                   style={{
@@ -81,8 +54,8 @@ export default function RootLayout({
                   Dashboard
                 </Link>
                 <UserButton />
-              </SignedIn>
-            </div>
+              </div>
+            </SignedIn>
           </header>
           <Providers>{children}</Providers>
         </body>

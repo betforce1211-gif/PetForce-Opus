@@ -7,9 +7,8 @@ test.describe("PetForce Smoke Tests (Unauthenticated)", () => {
     // Header should have PetForce branding
     await expect(page.locator("header")).toContainText("PetForce");
 
-    // Should show Sign In and Sign Up links for unauthenticated users
-    await expect(page.locator('a[href="/sign-in"]')).toBeVisible();
-    await expect(page.locator('a[href="/sign-up"]')).toBeVisible();
+    // Should show auth panel with "Get started" text
+    await expect(page.getByText("Get started")).toBeVisible();
 
     // Screenshot the landing page
     await page.screenshot({
