@@ -24,7 +24,7 @@ export default function SignInPage() {
       >
         Sign in to manage your household
       </p>
-      <SignIn routing="hash" forceRedirectUrl="/" />
+      <SignIn routing="hash" forceRedirectUrl="/dashboard" />
     </main>
   );
 }

@@ -16,11 +16,12 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   projects: [
-    // Auth setup — runs first, saves session state
+    // Auth setup — signs in via Clerk test mode, saves session state
     {
       name: "auth-setup",
       testMatch: /auth\.setup\.ts/,
       use: { browserName: "chromium" },
+      timeout: 60000,
     },
     // Unauthenticated tests — no session needed
     {
@@ -28,11 +29,15 @@ export default defineConfig({
       testMatch: /smoke\.test\.ts/,
       use: { browserName: "chromium" },
     },
-    // Authenticated tests — each test signs in via @clerk/testing helpers
+    // Authenticated tests — reuse session from auth-setup
     {
       name: "authenticated",
       testMatch: /authenticated\.test\.ts/,
-      use: { browserName: "chromium" },
+      dependencies: ["auth-setup"],
+      use: {
+        browserName: "chromium",
+        storageState: authFile,
+      },
       timeout: 60000,
     },
     // Dashboard visual tests — no auth needed (uses mocks)
@@ -40,6 +45,13 @@ export default defineConfig({
       name: "dashboard-mocked",
       testMatch: /dashboard\.test\.ts/,
       use: { browserName: "chromium" },
+    },
+    // Manual sign-in flow test (verifies the sign-in UI works end-to-end)
+    {
+      name: "manual-signin",
+      testMatch: /manual-signin\.test\.ts/,
+      use: { browserName: "chromium" },
+      timeout: 60000,
     },
   ],
   reporter: [

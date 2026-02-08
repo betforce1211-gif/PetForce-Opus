@@ -1,35 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { clerk, setupClerkTestingToken } from "@clerk/testing/playwright";
-import path from "path";
-import fs from "fs";
 
-// Load test env vars
-const envPath = path.resolve(__dirname, "../.env");
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const [key, ...rest] = line.split("=");
-    if (key && rest.length && !key.startsWith("#")) {
-      process.env[key.trim()] = rest.join("=").trim();
-    }
-  }
-}
-
-const email = process.env.TEST_USER_EMAIL!;
+import "./helpers/load-env";
 
 test.describe("Authenticated Dashboard Flow", () => {
-  test.beforeEach(async ({ page }) => {
-    // Set up Clerk testing token + sign in for each test
-    await setupClerkTestingToken({ page });
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    await clerk.signIn({
-      page,
-      emailAddress: email,
-    });
-  });
-
-  test("dashboard loads after sign-in (no infinite loading)", async ({ page }) => {
+  test("dashboard loads after sign-in (no infinite loading)", async ({
+    page,
+  }) => {
     await page.goto("/dashboard");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(3000);
@@ -46,7 +22,7 @@ test.describe("Authenticated Dashboard Flow", () => {
     const isOnOnboard = url.includes("/onboard");
     expect(isOnDashboard || isOnOnboard).toBeTruthy();
 
-    // Should NOT show the "Loading..." text forever or "UNAUTHORIZED" error
+    // Should NOT show "UNAUTHORIZED" error
     const body = await page.textContent("body");
     expect(body).not.toContain("UNAUTHORIZED");
   });
@@ -95,7 +71,7 @@ test.describe("Authenticated Dashboard Flow", () => {
       }
     }
 
-    // If already on dashboard, take a screenshot
+    // If already on dashboard, verify content
     if (page.url().includes("/dashboard")) {
       await page.waitForTimeout(2000);
       await page.screenshot({
@@ -103,7 +79,6 @@ test.describe("Authenticated Dashboard Flow", () => {
         fullPage: true,
       });
 
-      // Verify dashboard content is visible (not loading/error state)
       const body = await page.textContent("body");
       const hasContent =
         body?.includes("Pets") ||

@@ -24,7 +24,7 @@ export default function SignUpPage() {
       >
         Create your account to get started
       </p>
-      <SignUp routing="hash" forceRedirectUrl="/" />
+      <SignUp routing="hash" forceRedirectUrl="/dashboard" />
     </main>
   );
 }
