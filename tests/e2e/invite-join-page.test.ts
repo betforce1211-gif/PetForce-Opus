@@ -162,6 +162,14 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     await safeGoto(page, `/join?token=${invite.token}`);
     await page.waitForTimeout(1000);
 
+    // If session recovery happened, reload to get fresh invite data
+    const expiredCheck = page.getByText(/expired/i);
+    if (await expiredCheck.isVisible().catch(() => false)) {
+      await page.reload();
+      await page.waitForLoadState("domcontentloaded");
+      await page.waitForTimeout(2000);
+    }
+
     // Click Accept & Join
     const acceptBtn = page.locator('button:has-text("Accept & Join")');
     await expect(acceptBtn).toBeVisible({ timeout: 10_000 });
