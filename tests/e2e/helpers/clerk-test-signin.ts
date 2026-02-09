@@ -27,7 +27,7 @@ export async function clerkTestSignIn(
 
   // Navigate to sign-in
   await page.goto("/sign-in");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 
   // Step 1: Enter email
   const emailInput = page.locator('input[name="identifier"]');
@@ -66,5 +66,5 @@ export async function clerkTestSignIn(
 
   // Wait for redirect to dashboard or onboard
   await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 15_000 });
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 }

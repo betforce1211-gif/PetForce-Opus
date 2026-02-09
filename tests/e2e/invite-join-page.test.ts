@@ -4,6 +4,7 @@ import {
   trpcMutation,
   trpcQuery,
   getHouseholdId,
+  safeGoto,
 } from "./helpers/api-client";
 
 import "./helpers/load-env";
@@ -63,9 +64,8 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     createdInvitationIds.push(invite.id);
 
     // Navigate to join page with token
-    await page.goto(`/join?token=${invite.token}`);
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, `/join?token=${invite.token}`);
+    await page.waitForTimeout(1000);
 
     // Should show "You're invited to join" text
     await expect(page.getByText("You're invited to join")).toBeVisible({
@@ -101,9 +101,8 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
   });
 
   test("invalid token shows Invitation Not Found", async ({ page }) => {
-    await page.goto("/join?token=nonexistent-invalid-token-xyz");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, "/join?token=nonexistent-invalid-token-xyz");
+    await page.waitForTimeout(1000);
 
     await expect(
       page.getByRole("heading", { name: "Invitation Not Found" })
@@ -131,9 +130,8 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
       invitationId: invite.id,
     });
 
-    await page.goto(`/join?token=${invite.token}`);
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, `/join?token=${invite.token}`);
+    await page.waitForTimeout(1000);
 
     // Should show that invitation is expired/used
     const expiredText = page
@@ -161,9 +159,8 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     );
     createdInvitationIds.push(invite.id);
 
-    await page.goto(`/join?token=${invite.token}`);
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, `/join?token=${invite.token}`);
+    await page.waitForTimeout(1000);
 
     // Click Accept & Join
     const acceptBtn = page.locator('button:has-text("Accept & Join")');
@@ -196,9 +193,8 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     );
     // Don't add to cleanup — we're declining it
 
-    await page.goto(`/join?token=${invite.token}`);
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, `/join?token=${invite.token}`);
+    await page.waitForTimeout(1000);
 
     // Click Decline
     const declineBtn = page.locator('button:has-text("Decline")');
@@ -223,15 +219,17 @@ test.describe("Join Page — Request Mode (No Token)", () => {
   test.describe.configure({ mode: "serial" });
 
   test.beforeAll(async ({ browser }) => {
+    // If Token Mode already set these, reuse them
+    if (authToken && householdId) return;
+
     const context = await browser.newContext({
       storageState: "e2e/.auth/session.json",
     });
     const page = await context.newPage();
 
     const tokenPromise = extractAuthToken(page);
-    await page.goto("/dashboard");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
+    await safeGoto(page, "/dashboard");
+    await page.waitForTimeout(1000);
 
     authToken = await tokenPromise;
     householdId = await getHouseholdId(page);
@@ -243,9 +241,8 @@ test.describe("Join Page — Request Mode (No Token)", () => {
   test("shows join form with code, name, and message fields", async ({
     page,
   }) => {
-    await page.goto("/join");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
+    await safeGoto(page, "/join");
+    await page.waitForTimeout(1000);
 
     // Should show "Join a Household" heading
     await expect(page.getByText("Join a Household")).toBeVisible({

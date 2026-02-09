@@ -3,6 +3,88 @@ import { Page, APIRequestContext } from "@playwright/test";
 const API_BASE = "http://localhost:3001";
 
 /**
+ * Detects if Clerk redirected to its hosted sign-in page (session expired) and
+ * re-authenticates by breaking the redirect loop and signing in fresh.
+ */
+async function ensureAuthenticated(page: Page): Promise<boolean> {
+  const url = page.url();
+  if (!url.includes("accounts.dev/sign-in") && !url.includes("clerk.accounts.dev")) {
+    return false;
+  }
+
+  console.log("Session expired — re-authenticating via Clerk test mode");
+
+  // Break the Clerk redirect loop by navigating to a clean page first
+  await page.goto("about:blank");
+  await page.waitForTimeout(500);
+
+  // Navigate to /sign-in — Clerk may restore session via handshake (no form needed)
+  // or show the sign-in form if the session is truly gone
+  await page.goto("/sign-in");
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(3000);
+
+  // Check if Clerk already restored the session (redirected to dashboard/onboard)
+  const currentUrl = page.url();
+  if (currentUrl.includes("localhost:3000") && !currentUrl.includes("/sign-in")) {
+    console.log("Session restored via Clerk handshake");
+    return true;
+  }
+
+  // Session is truly expired — fill in the sign-in form
+  const email = process.env.TEST_USER_EMAIL!;
+  const password = process.env.TEST_USER_PASSWORD!;
+  const testCode = process.env.CLERK_TEST_CODE ?? "424242";
+
+  const emailInput = page.locator('input[name="identifier"]');
+  await emailInput.waitFor({ state: "visible", timeout: 15_000 });
+  await emailInput.fill(email);
+  await page.click('button:has-text("Continue")');
+
+  const passwordInput = page.locator('input[type="password"]');
+  await passwordInput.waitFor({ state: "visible", timeout: 10_000 });
+  await passwordInput.fill(password);
+  await page.click('button:has-text("Continue")');
+
+  await page.waitForTimeout(2000);
+  const otpInput = page.locator('input[autocomplete="one-time-code"]');
+  const otpVisible = await otpInput.isVisible().catch(() => false);
+  if (otpVisible || page.url().includes("factor")) {
+    console.log("OTP verification detected — entering test code", testCode);
+    await otpInput.waitFor({ state: "visible", timeout: 5000 });
+    await otpInput.click();
+    await otpInput.pressSequentially(testCode, { delay: 150 });
+    await page.waitForTimeout(1500);
+    if (page.url().includes("factor")) {
+      const continueBtn = page.locator('button:has-text("Continue")');
+      if (await continueBtn.isVisible().catch(() => false)) {
+        await continueBtn.click();
+      }
+    }
+  }
+
+  await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 15_000 });
+  await page.waitForLoadState("domcontentloaded");
+  return true;
+}
+
+/**
+ * Navigates to a URL and re-authenticates if Clerk session has expired.
+ */
+export async function safeGoto(page: Page, url: string): Promise<void> {
+  await page.goto(url);
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(2000);
+  const didReAuth = await ensureAuthenticated(page);
+  if (didReAuth) {
+    // After re-auth, navigate to the original target
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+  }
+}
+
+/**
  * Intercepts outbound tRPC requests from the browser to capture the real
  * Clerk JWT token. Call this BEFORE navigating to a page that makes API calls.
  */
@@ -104,8 +186,8 @@ export async function getHouseholdId(page: Page): Promise<string> {
  * Falls back to loading dashboard first if needed.
  */
 export async function goToSettings(page: Page): Promise<void> {
-  await page.goto("/dashboard/settings");
-  await page.waitForTimeout(3000);
+  await safeGoto(page, "/dashboard/settings");
+  await page.waitForTimeout(1000);
 
   // If "No household selected" is shown, load dashboard to set localStorage
   const noHousehold = page.getByText("No household selected.");
@@ -118,8 +200,7 @@ export async function goToSettings(page: Page): Promise<void> {
       .locator("text=/Pets|No pets yet|Members/")
       .first()
       .waitFor({ state: "visible", timeout: 15_000 });
-    await page.goto("/dashboard/settings");
-    await page.waitForTimeout(2000);
+    await safeGoto(page, "/dashboard/settings");
   }
 
   // Wait for settings content
