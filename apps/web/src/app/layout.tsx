@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider, SignedIn, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { Providers } from "./providers";
+import "./globals.css";
 
 export const dynamic = "force-dynamic";
 
