@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetForce Logo Concepts — Round 2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(145deg, #EEEDFA, #F5F0FA, #FAF0F5);
+    min-height: 100vh;
+    padding: 3rem 2rem;
+  }
+  h1 { text-align: center; font-size: 2rem; color: #1A1637; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
+  .subtitle { text-align: center; color: #8B8FA3; font-size: 0.9rem; margin-bottom: 3rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(20px);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99,102,241,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .card-number {
+    font-size: 0.7rem; font-weight: 700; color: #6366F1;
+    text-transform: uppercase; letter-spacing: 0.1em; align-self: flex-start;
+  }
+  .logo-area { display: flex; align-items: center; justify-content: center; min-height: 90px; }
+  .card-title { font-weight: 700; color: #1A1637; font-size: 0.95rem; }
+  .card-desc { color: #8B8FA3; font-size: 0.8rem; text-align: center; line-height: 1.5; }
+  .preview-bar {
+    width: 100%; background: #1A1637; border-radius: 0.75rem;
+    padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: center; margin-top: 0.25rem;
+  }
+  .preview-bar-light {
+    width: 100%; background: #fff; border-radius: 0.75rem;
+    padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e5e7eb;
+  }
+  .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+  .tag {
+    padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600;
+    background: rgba(99,102,241,0.08); color: #6366F1; letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+
+<h1>PetForce Logo Concepts — Round 2</h1>
+<p class="subtitle">More realistic forms. Houses, lightning, tails, ears, wings, and beyond.</p>
+
+<div class="grid">
+
+  <!-- 1. House with dog/cat silhouette in doorway -->
+  <div class="card">
+    <span class="card-number">Concept 01</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="hg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- House body -->
+        <path d="M30 20 L30 56 L6 56 L6 20 Z" fill="url(#hg1)" opacity="0.15"/>
+        <!-- House roof -->
+        <path d="M18 4 L36 20 L0 20 Z" fill="url(#hg1)"/>
+        <!-- Chimney -->
+        <rect x="28" y="8" width="5" height="12" rx="1" fill="url(#hg1)"/>
+        <!-- Door arch -->
+        <path d="M13 56 L13 38 C13 33 23 33 23 38 L23 56 Z" fill="white"/>
+        <!-- Cat silhouette sitting in door -->
+        <path d="M16 55 L16 46 C16 44 16 43 17 42 L15.5 38 L16.5 38.5 L17 37 L18 39 L18.5 38 L19.5 38 L20 37 L21 39 L21.5 38 L22.5 38.5 L21 42 C22 43 22 44 22 46 L22 55 Z" fill="#1A1637" opacity="0.7"/>
+        <!-- Cat ears (triangles) already in the path above -->
+        <!-- Cat tail -->
+        <path d="M22 50 C25 48 26 44 24 42" stroke="#1A1637" stroke-width="1.5" fill="none" opacity="0.7" stroke-linecap="round"/>
+        <!-- Text -->
+        <text x="44" y="32" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">Pet</text>
+        <text x="84" y="32" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#6366F1" letter-spacing="-0.8">Force</text>
+        <text x="44" y="48" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">HOUSEHOLD PET CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="hg1b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        <path d="M16 16 L16 30 L2 30 L2 16 Z" fill="white" opacity="0.15"/>
+        <path d="M9 4 L20 16 L-2 16 Z" fill="white" opacity="0.9"/>
+        <rect x="16" y="7" width="3" height="9" rx="0.5" fill="white" opacity="0.9"/>
+        <path d="M6.5 30 L6.5 22 C6.5 19.5 11.5 19.5 11.5 22 L11.5 30 Z" fill="white" opacity="0.3"/>
+        <path d="M8 29 L8 24 C8 23 8 22.5 8.5 22 L8 20 L8.5 20.3 L8.7 19.5 L9 20.5 L9.3 20 L9.7 20 L10 19.5 L10.3 20.5 L10.5 20.3 L11 20 L10.5 22 C11 22.5 11 23 11 24 L11 29 Z" fill="white" opacity="0.6"/>
+        <text x="28" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Cat in the Doorway</p>
+    <p class="card-desc">A cozy house with a cat silhouette sitting in the doorway — tail curling out. Home + pet in one glance.</p>
+    <div class="tags"><span class="tag">House</span><span class="tag">Cat</span><span class="tag">Tail</span></div>
+  </div>
+
+  <!-- 2. Lightning bolt with dog ears -->
+  <div class="card">
+    <span class="card-number">Concept 02</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="lg2" x1="0%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Circle background -->
+        <circle cx="30" cy="32" r="28" fill="url(#lg2)"/>
+        <!-- Dog ears (floppy) -->
+        <path d="M10 22 C6 14 4 8 10 6 C14 5 16 10 17 16 Z" fill="#4F46E5"/>
+        <path d="M50 22 C54 14 56 8 50 6 C46 5 44 10 43 16 Z" fill="#4F46E5"/>
+        <!-- Lightning bolt - the "Force" -->
+        <path d="M34 10 L22 32 L28 32 L18 54 L40 28 L33 28 Z" fill="#FBBF24"/>
+        <path d="M34 10 L22 32 L28 32 L18 54 L40 28 L33 28 Z" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
+        <!-- Dog nose at bottom -->
+        <ellipse cx="30" cy="50" rx="4" ry="2.5" fill="#4F46E5"/>
+        <ellipse cx="30" cy="49" rx="2.5" ry="1.5" fill="#1A1637" opacity="0.4"/>
+        <!-- Text -->
+        <text x="66" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#1A1637" letter-spacing="-1">Pet</text>
+        <text x="112" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#6366F1" letter-spacing="-1">Force</text>
+        <text x="66" y="46" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">PET CARE CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="lg2b" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient></defs>
+        <circle cx="17" cy="17" r="15" fill="url(#lg2b)"/>
+        <path d="M7 14 C5 9 4 5 7 4 C9 3.5 10.5 7 11 11 Z" fill="#4F46E5"/>
+        <path d="M27 14 C29 9 30 5 27 4 C25 3.5 23.5 7 23 11 Z" fill="#4F46E5"/>
+        <path d="M20 6 L13 17 L16 17 L10 28 L23 15 L19.5 15 Z" fill="#FBBF24"/>
+        <text x="38" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Lightning Dog</p>
+    <p class="card-desc">Floppy dog ears frame a bold lightning bolt. Playful personality with "Force" energy.</p>
+    <div class="tags"><span class="tag">Lightning</span><span class="tag">Dog Ears</span><span class="tag">Energy</span></div>
+  </div>
+
+  <!-- 3. House roofline with cat ears -->
+  <div class="card">
+    <span class="card-number">Concept 03</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="hg3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- House body -->
+        <rect x="8" y="28" width="40" height="28" rx="3" fill="url(#hg3)"/>
+        <!-- Roof that doubles as cat ears -->
+        <path d="M4 28 L14 8 L22 22 L28 4 L46 28 Z" fill="url(#hg3)"/>
+        <!-- Inner ear color -->
+        <path d="M10 26 L14 12 L18 24 Z" fill="#EC4899" opacity="0.4"/>
+        <path d="M32 26 L28 8 L40 26 Z" fill="#EC4899" opacity="0.4"/>
+        <!-- Window / eyes -->
+        <circle cx="19" cy="38" r="4" fill="white" opacity="0.9"/>
+        <circle cx="37" cy="38" r="4" fill="white" opacity="0.9"/>
+        <circle cx="19" cy="38" r="2" fill="#1A1637"/>
+        <circle cx="37" cy="38" r="2" fill="#1A1637"/>
+        <!-- Door / nose -->
+        <ellipse cx="28" cy="48" rx="4" ry="3" fill="#1A1637" opacity="0.3"/>
+        <!-- Whiskers -->
+        <line x1="4" y1="44" x2="16" y2="42" stroke="white" stroke-width="0.8" opacity="0.5"/>
+        <line x1="4" y1="48" x2="16" y2="47" stroke="white" stroke-width="0.8" opacity="0.5"/>
+        <line x1="40" y1="42" x2="52" y2="44" stroke="white" stroke-width="0.8" opacity="0.5"/>
+        <line x1="40" y1="47" x2="52" y2="48" stroke="white" stroke-width="0.8" opacity="0.5"/>
+        <!-- Text -->
+        <text x="62" y="38" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">PetForce</text>
+        <text x="62" y="52" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="8.5" fill="#8B8FA3" letter-spacing="1.5">Household Pet CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="hg3b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        <rect x="4" y="16" width="24" height="16" rx="2" fill="url(#hg3b)"/>
+        <path d="M2 16 L8 4 L14 13 L16 2 L28 16 Z" fill="url(#hg3b)"/>
+        <path d="M6 15 L8 7 L10.5 14 Z" fill="#EC4899" opacity="0.4"/>
+        <path d="M19 15 L16 5 L24 15 Z" fill="#EC4899" opacity="0.4"/>
+        <circle cx="11" cy="22" r="2.3" fill="white" opacity="0.9"/>
+        <circle cx="21" cy="22" r="2.3" fill="white" opacity="0.9"/>
+        <circle cx="11" cy="22" r="1.1" fill="#1A1637"/>
+        <circle cx="21" cy="22" r="1.1" fill="#1A1637"/>
+        <text x="34" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Cat-Ear House</p>
+    <p class="card-desc">The roofline IS the cat ears. Windows become eyes, door becomes a nose. House and cat merge into one form.</p>
+    <div class="tags"><span class="tag">House</span><span class="tag">Cat Ears</span><span class="tag">Playful</span></div>
+  </div>
+
+  <!-- 4. Dog + tail forming a circle -->
+  <div class="card">
+    <span class="card-number">Concept 04</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="dg4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Dog silhouette facing right, tail curls up and around to form a circle -->
+        <!-- Body arc -->
+        <path d="M28 52 C10 52 4 42 4 32 C4 18 14 10 24 10 L28 10" fill="none" stroke="url(#dg4)" stroke-width="4.5" stroke-linecap="round"/>
+        <!-- Head -->
+        <circle cx="32" cy="12" r="9" fill="url(#dg4)"/>
+        <!-- Ear (floppy) -->
+        <path d="M38 8 C42 4 46 6 44 12 C43 15 40 14 38 12 Z" fill="#4F46E5"/>
+        <!-- Eye -->
+        <circle cx="34" cy="11" r="1.5" fill="white"/>
+        <!-- Nose -->
+        <ellipse cx="39" cy="14" rx="2" ry="1.5" fill="#1A1637" opacity="0.5"/>
+        <!-- Tail curling up from back, forming the top of the circle -->
+        <path d="M28 52 C38 52 48 46 50 36 C52 26 48 16 42 12" fill="none" stroke="url(#dg4)" stroke-width="4" stroke-linecap="round"/>
+        <!-- Legs (simple) -->
+        <line x1="12" y1="48" x2="12" y2="56" stroke="url(#dg4)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="20" y1="50" x2="20" y2="58" stroke="url(#dg4)" stroke-width="3" stroke-linecap="round"/>
+        <!-- Text -->
+        <text x="60" y="34" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">PetForce</text>
+        <text x="60" y="50" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">PET CARE CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar-light">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="dg4b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        <path d="M16 28 C6 28 2 22 2 17 C2 10 8 6 14 6 L16 6" fill="none" stroke="url(#dg4b)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="19" cy="7" r="5.5" fill="url(#dg4b)"/>
+        <path d="M23 5 C25 3 27 4 26 7.5 C25.5 9 24 8.5 23 7.5 Z" fill="#4F46E5"/>
+        <circle cx="20.5" cy="6.5" r="1" fill="white"/>
+        <path d="M16 28 C22 28 27 24 28 19 C29 14 27 9 25 7.5" fill="none" stroke="url(#dg4b)" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="36" y="21" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="#1A1637" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Tail Circle</p>
+    <p class="card-desc">A dog's wagging tail wraps around to form a complete circle. Movement, joy, completeness.</p>
+    <div class="tags"><span class="tag">Dog</span><span class="tag">Tail</span><span class="tag">Circle</span></div>
+  </div>
+
+  <!-- 5. Bird wing + house -->
+  <div class="card">
+    <span class="card-number">Concept 05</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="wg5" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="50%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#EC4899"/>
+          </linearGradient>
+        </defs>
+        <!-- House base -->
+        <rect x="10" y="30" width="36" height="26" rx="3" fill="url(#wg5)"/>
+        <!-- Roof -->
+        <path d="M6 30 L28 12 L50 30 Z" fill="url(#wg5)"/>
+        <!-- Window -->
+        <rect x="14" y="40" width="8" height="8" rx="1.5" fill="white" opacity="0.8"/>
+        <rect x="34" y="40" width="8" height="8" rx="1.5" fill="white" opacity="0.8"/>
+        <!-- Door -->
+        <rect x="24" y="42" width="8" height="14" rx="1.5" fill="white" opacity="0.6"/>
+        <!-- Wing spreading from roof left -->
+        <path d="M6 30 C-4 24 -6 14 2 8 C6 5 12 8 14 14 L10 26 Z" fill="url(#wg5)" opacity="0.7"/>
+        <!-- Wing feathers -->
+        <path d="M2 8 C0 12 2 16 6 18" stroke="white" stroke-width="0.7" fill="none" opacity="0.5"/>
+        <path d="M4 10 C3 14 4 18 8 21" stroke="white" stroke-width="0.7" fill="none" opacity="0.5"/>
+        <!-- Wing spreading from roof right -->
+        <path d="M50 30 C60 24 62 14 54 8 C50 5 44 8 42 14 L46 26 Z" fill="url(#wg5)" opacity="0.7"/>
+        <path d="M54 8 C56 12 54 16 50 18" stroke="white" stroke-width="0.7" fill="none" opacity="0.5"/>
+        <path d="M52 10 C53 14 52 18 48 21" stroke="white" stroke-width="0.7" fill="none" opacity="0.5"/>
+        <!-- Text -->
+        <text x="62" y="36" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">PetForce</text>
+        <text x="62" y="52" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="8.5" fill="#8B8FA3" letter-spacing="1.5">Household Pet CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="wg5b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="50%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#EC4899"/></linearGradient></defs>
+        <rect x="7" y="17" width="20" height="15" rx="2" fill="url(#wg5b)"/>
+        <path d="M5 17 L17 7 L29 17 Z" fill="url(#wg5b)"/>
+        <path d="M5 17 C0 14 -1 8 3 5 C5 3.5 8 5 9 9 L7 15 Z" fill="url(#wg5b)" opacity="0.7"/>
+        <path d="M29 17 C34 14 35 8 31 5 C29 3.5 26 5 25 9 L27 15 Z" fill="url(#wg5b)" opacity="0.7"/>
+        <text x="36" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Winged House</p>
+    <p class="card-desc">A house with wings spreading from the roofline. Covers all pets — birds, dogs, cats. Household that soars.</p>
+    <div class="tags"><span class="tag">House</span><span class="tag">Wings</span><span class="tag">All Pets</span></div>
+  </div>
+
+  <!-- 6. Realistic paw with lightning strike through it -->
+  <div class="card">
+    <span class="card-number">Concept 06</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="pg6" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Realistic paw pad (main) -->
+        <path d="M18 60 C6 54 2 44 8 36 C12 30 20 28 28 30 C36 28 44 30 48 36 C54 44 50 54 38 60 C34 62 22 62 18 60 Z" fill="url(#pg6)"/>
+        <!-- Toe beans (more organic) -->
+        <ellipse cx="12" cy="26" rx="5" ry="7" transform="rotate(-15 12 26)" fill="url(#pg6)"/>
+        <ellipse cx="24" cy="20" rx="5" ry="7.5" transform="rotate(-5 24 20)" fill="url(#pg6)"/>
+        <ellipse cx="36" cy="20" rx="5" ry="7.5" transform="rotate(5 36 20)" fill="url(#pg6)"/>
+        <ellipse cx="46" cy="26" rx="5" ry="7" transform="rotate(15 46 26)" fill="url(#pg6)"/>
+        <!-- Lightning bolt cutting through -->
+        <path d="M32 4 L20 32 L28 30 L16 62 L42 26 L33 28 Z" fill="#FBBF24" opacity="0.9"/>
+        <path d="M32 4 L20 32 L28 30 L16 62 L42 26 L33 28 Z" fill="none" stroke="white" stroke-width="1.2" opacity="0.4"/>
+        <!-- Text -->
+        <text x="60" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#1A1637" letter-spacing="-1">Pet</text>
+        <text x="108" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#6366F1" letter-spacing="-1">Force</text>
+        <line x1="60" y1="36" x2="170" y2="36" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="60" y="50" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2.5">PET CARE CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="pg6b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient></defs>
+        <path d="M11 31 C5 28 3 23 6 19 C8 16 12 15 16 16 C20 15 24 16 26 19 C29 23 27 28 21 31 C19 32 13 32 11 31 Z" fill="url(#pg6b)"/>
+        <ellipse cx="7.5" cy="14" rx="3" ry="4" transform="rotate(-15 7.5 14)" fill="url(#pg6b)"/>
+        <ellipse cx="14" cy="11" rx="3" ry="4.5" transform="rotate(-5 14 11)" fill="url(#pg6b)"/>
+        <ellipse cx="20" cy="11" rx="3" ry="4.5" transform="rotate(5 20 11)" fill="url(#pg6b)"/>
+        <ellipse cx="26" cy="14" rx="3" ry="4" transform="rotate(15 26 14)" fill="url(#pg6b)"/>
+        <path d="M19 2 L13 17 L16.5 16 L10 32 L24 14 L20 15 Z" fill="#FBBF24" opacity="0.9"/>
+        <text x="36" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Charged Paw</p>
+    <p class="card-desc">Realistic paw with organic toe beans, split by a lightning bolt. Raw energy meets natural form.</p>
+    <div class="tags"><span class="tag">Lightning</span><span class="tag">Realistic Paw</span><span class="tag">Bold</span></div>
+  </div>
+
+  <!-- 7. Multi-species silhouettes in shield -->
+  <div class="card">
+    <span class="card-number">Concept 07</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="sg7" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Shield -->
+        <path d="M28 2 L52 10 L52 34 C52 50 28 62 28 62 C28 62 4 50 4 34 L4 10 Z" fill="url(#sg7)"/>
+        <!-- Inner shield highlight -->
+        <path d="M28 6 L48 13 L48 34 C48 47 28 57 28 57 C28 57 8 47 8 34 L8 13 Z" fill="none" stroke="white" stroke-width="0.8" opacity="0.3"/>
+        <!-- Dog face (left) -->
+        <path d="M14 28 C14 24 16 22 19 22 C22 22 24 24 24 28 C24 31 22 33 19 33 C16 33 14 31 14 28 Z" fill="white" opacity="0.9"/>
+        <circle cx="17" cy="27" r="1" fill="#1A1637"/>
+        <circle cx="21" cy="27" r="1" fill="#1A1637"/>
+        <ellipse cx="19" cy="30" rx="1.5" ry="1" fill="#1A1637" opacity="0.4"/>
+        <!-- Dog ear -->
+        <path d="M14 24 C11 20 11 17 14 18 L15 22 Z" fill="white" opacity="0.7"/>
+        <!-- Cat face (right) -->
+        <path d="M32 28 C32 24 34 22 37 22 C40 22 42 24 42 28 C42 31 40 33 37 33 C34 33 32 31 32 28 Z" fill="white" opacity="0.9"/>
+        <circle cx="35" cy="27" r="1" fill="#1A1637"/>
+        <circle cx="39" cy="27" r="1" fill="#1A1637"/>
+        <ellipse cx="37" cy="30" rx="1" ry="0.7" fill="#EC4899" opacity="0.6"/>
+        <!-- Cat ears (pointed) -->
+        <path d="M33 22 L31 14 L35 20 Z" fill="white" opacity="0.9"/>
+        <path d="M41 22 L43 14 L39 20 Z" fill="white" opacity="0.9"/>
+        <!-- Bird (small, top center) -->
+        <path d="M28 14 C26 14 24 16 26 18 C27 19 28 18 28 18 C28 18 29 19 30 18 C32 16 30 14 28 14 Z" fill="white" opacity="0.9"/>
+        <path d="M24 15 L26 16.5" stroke="white" stroke-width="0.8" opacity="0.7"/>
+        <path d="M32 15 L30 16.5" stroke="white" stroke-width="0.8" opacity="0.7"/>
+        <!-- Fish (small, bottom center) -->
+        <path d="M24 44 C26 42 30 42 32 44 C30 46 26 46 24 44 Z" fill="white" opacity="0.7"/>
+        <path d="M23 44 L20 41.5 L20 46.5 Z" fill="white" opacity="0.5"/>
+        <!-- Text -->
+        <text x="62" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#1A1637" letter-spacing="-1">Pet</text>
+        <text x="110" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="26" fill="#6366F1" letter-spacing="-1">Force</text>
+        <text x="62" y="46" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">ALL PETS. ONE HOME.</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="sg7b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        <path d="M16 2 L29 6 L29 19 C29 28 16 33 16 33 C16 33 3 28 3 19 L3 6 Z" fill="url(#sg7b)"/>
+        <circle cx="12" cy="17" r="3" fill="white" opacity="0.8"/>
+        <circle cx="20" cy="17" r="3" fill="white" opacity="0.8"/>
+        <path d="M10 14.5 L8.5 10 L11.5 13 Z" fill="white" opacity="0.6"/>
+        <path d="M22 14.5 L23.5 10 L20.5 13 Z" fill="white" opacity="0.6"/>
+        <path d="M16 9 C15 9 14 10 15 11 C15.5 11.5 16 11 16 11 C16 11 16.5 11.5 17 11 C18 10 17 9 16 9 Z" fill="white" opacity="0.7"/>
+        <text x="36" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Species Shield</p>
+    <p class="card-desc">Dog, cat, bird, and fish all represented in a protective shield. Inclusive of all pet types.</p>
+    <div class="tags"><span class="tag">Shield</span><span class="tag">Multi-Species</span><span class="tag">Ears</span></div>
+  </div>
+
+  <!-- 8. Tail wrapping around house -->
+  <div class="card">
+    <span class="card-number">Concept 08</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="tg8" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- House -->
+        <rect x="12" y="28" width="32" height="28" rx="2" fill="url(#tg8)"/>
+        <path d="M8 28 L28 10 L48 28 Z" fill="url(#tg8)"/>
+        <!-- Window -->
+        <circle cx="22" cy="40" r="3.5" fill="white" opacity="0.8"/>
+        <circle cx="34" cy="40" r="3.5" fill="white" opacity="0.8"/>
+        <!-- Door -->
+        <path d="M24 56 L24 48 C24 46 32 46 32 48 L32 56 Z" fill="white" opacity="0.5"/>
+        <!-- Cat tail wrapping around house -->
+        <path d="M48 52 C56 48 58 38 56 28 C54 18 48 12 42 10"
+              fill="none" stroke="url(#tg8)" stroke-width="4" stroke-linecap="round"/>
+        <!-- Tail tip curl -->
+        <path d="M42 10 C38 8 36 6 38 4"
+              fill="none" stroke="url(#tg8)" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Text -->
+        <text x="68" y="34" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">PetForce</text>
+        <text x="68" y="50" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">PET CARE CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar-light">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="tg8b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        <rect x="6" y="16" width="18" height="16" rx="1.5" fill="url(#tg8b)"/>
+        <path d="M4 16 L15 7 L26 16 Z" fill="url(#tg8b)"/>
+        <circle cx="12" cy="22" r="2" fill="white" opacity="0.8"/>
+        <circle cx="19" cy="22" r="2" fill="white" opacity="0.8"/>
+        <path d="M26 28 C30 26 31 21 30 16 C29 11 26 8 23 7" fill="none" stroke="url(#tg8b)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M23 7 C21 6 20 4.5 21 3.5" fill="none" stroke="url(#tg8b)" stroke-width="2.2" stroke-linecap="round"/>
+        <text x="38" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="#1A1637" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Tail-Wrapped House</p>
+    <p class="card-desc">A cat tail lovingly wraps around the house from back to front. Protection, warmth, ownership.</p>
+    <div class="tags"><span class="tag">House</span><span class="tag">Cat Tail</span><span class="tag">Cozy</span></div>
+  </div>
+
+  <!-- 9. Abstract animal + bolt mark -->
+  <div class="card">
+    <span class="card-number">Concept 09</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="ag9" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="50%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#EC4899"/>
+          </linearGradient>
+        </defs>
+        <!-- Abstract animal head (side profile) - dog/wolf-like -->
+        <path d="M8 50 C4 42 4 30 12 22 C16 18 22 16 26 18 L30 20
+                 C32 14 30 8 34 4 L38 10
+                 C42 8 46 10 48 14
+                 C52 18 54 26 50 34
+                 C48 38 44 40 40 42 L38 44
+                 C36 48 30 52 24 52 L8 50 Z"
+              fill="url(#ag9)"/>
+        <!-- Eye -->
+        <circle cx="38" cy="22" r="3.5" fill="white"/>
+        <circle cx="39" cy="22" r="2" fill="#1A1637"/>
+        <circle cx="39.5" cy="21.5" r="0.6" fill="white"/>
+        <!-- Ear -->
+        <path d="M34 4 C32 2 34 0 36 0 L38 10 Z" fill="url(#ag9)"/>
+        <!-- Nose -->
+        <path d="M50 34 C52 33 53 34 52 36 C51 37 49 37 49 35 Z" fill="#1A1637" opacity="0.6"/>
+        <!-- Mouth line -->
+        <path d="M42 38 C46 36 50 35 52 36" fill="none" stroke="#1A1637" stroke-width="0.8" opacity="0.3"/>
+        <!-- Lightning bolt streak on cheek -->
+        <path d="M32 26 L28 34 L32 33 L27 42" stroke="#FBBF24" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Text -->
+        <text x="62" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="28" fill="#1A1637" letter-spacing="-1.5">Pet</text>
+        <text x="116" y="28" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="28" fill="#6366F1" letter-spacing="-1.5">Force</text>
+        <path d="M62 36 L170 36" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <text x="62" y="50" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="9" fill="#8B8FA3" letter-spacing="2">PET CARE CRM</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="ag9b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="50%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#EC4899"/></linearGradient></defs>
+        <path d="M4 28 C2 24 2 18 6 14 C8 12 12 11 14 12 L16 13 C17 10 16 6 18 4 L20 7 C22 6 24 7 25 9 C27 11 28 15 26 19 C25 21 23 22 21 23 L20 24 C19 26 16 28 13 28 L4 28 Z" fill="url(#ag9b)"/>
+        <circle cx="21" cy="14" r="2" fill="white"/>
+        <circle cx="21.5" cy="14" r="1.1" fill="#1A1637"/>
+        <path d="M17 16 L15 20 L17 19.5 L14.5 24" stroke="#FBBF24" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="36" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Wolf Mark</p>
+    <p class="card-desc">Noble animal profile with a lightning streak across the cheek — like a battle mark. Fierce and memorable.</p>
+    <div class="tags"><span class="tag">Lightning</span><span class="tag">Dog/Wolf</span><span class="tag">Profile</span></div>
+  </div>
+
+  <!-- 10. House with multiple animal features -->
+  <div class="card">
+    <span class="card-number">Concept 10</span>
+    <div class="logo-area">
+      <svg width="220" height="64" viewBox="0 0 220 64">
+        <defs>
+          <linearGradient id="mg10" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+          <linearGradient id="bolt10" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FBBF24"/>
+            <stop offset="100%" stop-color="#F59E0B"/>
+          </linearGradient>
+        </defs>
+        <!-- House with curved roof -->
+        <path d="M6 30 L6 56 L50 56 L50 30 Z" fill="url(#mg10)"/>
+        <path d="M2 32 L28 8 L54 32 Z" fill="url(#mg10)"/>
+        <!-- Cat ear on left roof -->
+        <path d="M2 32 L8 14 L15 28 Z" fill="url(#mg10)"/>
+        <path d="M5 30 L8 18 L12 27 Z" fill="#EC4899" opacity="0.35"/>
+        <!-- Dog ear (floppy) on right roof -->
+        <path d="M46 24 C50 18 54 16 56 20 C57 24 54 28 50 30 Z" fill="url(#mg10)"/>
+        <!-- Bird on chimney -->
+        <rect x="38" y="10" width="6" height="16" rx="1" fill="url(#mg10)"/>
+        <ellipse cx="41" cy="9" rx="4" ry="3.5" fill="url(#mg10)"/>
+        <path d="M38 7 C36 5 34 6 35 8 L38 8 Z" fill="url(#mg10)"/>
+        <circle cx="40" cy="8" r="0.8" fill="white"/>
+        <path d="M44 8 L46 7.5 L44 9 Z" fill="#F59E0B"/>
+        <!-- Fish tail as door knocker -->
+        <path d="M25 48 C27 46 29 46 31 48 C29 50 27 50 25 48 Z" fill="white" opacity="0.6"/>
+        <path d="M24 48 L21 45.5 L21 50.5 Z" fill="white" opacity="0.4"/>
+        <!-- Window with heart -->
+        <circle cx="18" cy="40" r="4" fill="white" opacity="0.8"/>
+        <path d="M16 39 C16 37.5 17.5 37 18 38 C18.5 37 20 37.5 20 39 C20 40.5 18 42 18 42 C18 42 16 40.5 16 39 Z" fill="#EC4899" opacity="0.5"/>
+        <!-- Lightning bolt antenna from chimney -->
+        <path d="M42 4 L39 9 L41.5 8.5 L38 14" stroke="url(#bolt10)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Text -->
+        <text x="64" y="30" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#1A1637" letter-spacing="-0.8">Pet</text>
+        <text x="104" y="30" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="24" fill="#6366F1" letter-spacing="-0.8">Force</text>
+        <text x="64" y="48" font-family="Inter, system-ui, sans-serif" font-weight="600" font-size="8" fill="#8B8FA3" letter-spacing="1.5">Every pet. One household.</text>
+      </svg>
+    </div>
+    <div class="preview-bar">
+      <svg width="180" height="34" viewBox="0 0 180 34">
+        <defs><linearGradient id="mg10b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#7C3AED"/></linearGradient></defs>
+        <path d="M3 18 L3 31 L29 31 L29 18 Z" fill="url(#mg10b)"/>
+        <path d="M1 19 L16 6 L31 19 Z" fill="url(#mg10b)"/>
+        <path d="M1 19 L5 10 L9 17 Z" fill="url(#mg10b)"/>
+        <path d="M4 18 L5 13 L7 16.5 Z" fill="#EC4899" opacity="0.35"/>
+        <path d="M27 15 C29 12 31 11 32 13 C32.5 15 31 17 29 18 Z" fill="url(#mg10b)"/>
+        <rect x="22" y="7" width="3.5" height="9" rx="0.5" fill="url(#mg10b)"/>
+        <ellipse cx="24" cy="6.5" rx="2.5" ry="2" fill="url(#mg10b)"/>
+        <circle cx="23.2" cy="6" r="0.5" fill="white"/>
+        <path d="M25 3 L23.5 6.5 L24.8 6 L22.5 10" stroke="#FBBF24" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <text x="38" y="22" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="16" fill="white" letter-spacing="-0.3">PetForce</text>
+      </svg>
+    </div>
+    <p class="card-title">Menagerie House</p>
+    <p class="card-desc">One house, all the pets: cat ear roof, floppy dog ear, bird on chimney, fish door knocker, lightning bolt. The whole family under one roof.</p>
+    <div class="tags"><span class="tag">House</span><span class="tag">Lightning</span><span class="tag">All Species</span><span class="tag">Ears</span><span class="tag">Wings</span></div>
+  </div>
+
+</div>
+
+</body>
+</html>
