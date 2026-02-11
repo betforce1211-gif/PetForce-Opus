@@ -20,6 +20,12 @@ export const PET_SPECIES_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+export const PET_SEX_LABELS: Record<string, string> = {
+  male: "Male",
+  female: "Female",
+  unknown: "Unknown",
+};
+
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   walk: "Walk",
   feeding: "Feeding",

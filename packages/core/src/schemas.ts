@@ -9,6 +9,7 @@ export const petSpecies = [
   "reptile",
   "other",
 ] as const;
+export const petSex = ["male", "female", "unknown"] as const;
 export const activityTypes = [
   "walk",
   "feeding",
@@ -60,8 +61,13 @@ export const createPetSchema = z.object({
   name: z.string().min(1).max(100),
   species: z.enum(petSpecies),
   breed: z.string().max(100).nullable().optional(),
+  color: z.string().max(50).nullable().optional(),
+  sex: z.enum(petSex).nullable().optional(),
   dateOfBirth: z.coerce.date().nullable().optional(),
   weight: z.number().positive().nullable().optional(),
+  adoptionDate: z.coerce.date().nullable().optional(),
+  microchipNumber: z.string().max(50).nullable().optional(),
+  rabiesTagNumber: z.string().max(50).nullable().optional(),
   medicalNotes: z.string().max(5000).nullable().optional(),
 });
 

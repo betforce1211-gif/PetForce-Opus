@@ -4,6 +4,7 @@ export type InvitationStatus = "pending" | "accepted" | "declined" | "expired";
 export type AccessRequestStatus = "pending" | "approved" | "denied";
 
 export type PetSpecies = "dog" | "cat" | "bird" | "fish" | "reptile" | "other";
+export type PetSex = "male" | "female" | "unknown";
 
 export type ActivityType =
   | "walk"
@@ -45,8 +46,13 @@ export interface Pet {
   name: string;
   species: PetSpecies;
   breed: string | null;
+  color: string | null;
+  sex: PetSex | null;
   dateOfBirth: Date | null;
   weight: number | null;
+  adoptionDate: Date | null;
+  microchipNumber: string | null;
+  rabiesTagNumber: string | null;
   medicalNotes: string | null;
   avatarUrl: string | null;
   createdAt: Date;
