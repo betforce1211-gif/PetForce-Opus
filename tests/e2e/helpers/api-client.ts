@@ -70,11 +70,17 @@ async function ensureAuthenticated(page: Page): Promise<boolean> {
 
 /**
  * Navigates to a URL and re-authenticates if Clerk session has expired.
+ * Handles the case where page.goto itself times out due to a Clerk redirect loop.
  */
 export async function safeGoto(page: Page, url: string): Promise<void> {
-  await page.goto(url);
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(2000);
+  try {
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+  } catch {
+    // page.goto may timeout if Clerk redirect loop prevents the page from settling.
+    // Fall through to ensureAuthenticated which will detect and recover.
+  }
   const didReAuth = await ensureAuthenticated(page);
   if (didReAuth) {
     // After re-auth, navigate to the original target

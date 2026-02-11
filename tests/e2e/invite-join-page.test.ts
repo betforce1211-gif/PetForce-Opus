@@ -25,8 +25,7 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     const page = await context.newPage();
 
     const tokenPromise = extractAuthToken(page);
-    await page.goto("/dashboard");
-    await page.waitForLoadState("domcontentloaded");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     authToken = await tokenPromise;
@@ -72,7 +71,7 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
       timeout: 10_000,
     });
 
-    // Should show the household name
+    // Should show the household name in the invite card (not the nav header)
     const householdDetails = await trpcQuery(
       request,
       authToken,
@@ -80,11 +79,11 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
       { token: invite.token }
     );
     await expect(
-      page.getByText(householdDetails.householdName)
+      page.locator("h3", { hasText: householdDetails.householdName })
     ).toBeVisible();
 
-    // Should show role
-    await expect(page.getByText(/member/i)).toBeVisible();
+    // Should show role badge in the invite card
+    await expect(page.getByText("member", { exact: true })).toBeVisible();
 
     // Should show Accept & Join and Decline buttons
     await expect(

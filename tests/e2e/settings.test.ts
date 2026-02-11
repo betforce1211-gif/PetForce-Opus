@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goToSettings } from "./helpers/api-client";
+import { goToSettings, safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
@@ -7,8 +7,7 @@ test.describe("Settings Page (Real Data)", () => {
   test.describe.configure({ mode: "serial" });
 
   test("navigates to settings from dashboard", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("domcontentloaded");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     // Click Settings button in the dashboard header
