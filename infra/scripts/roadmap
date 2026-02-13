@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LABEL="roadmap"
+LABEL_COLOR="6366F1"
+LABEL_DESC="Future feature / roadmap idea"
+
+# Ensure the roadmap label exists (no-op if already created)
+gh label create "$LABEL" --color "$LABEL_COLOR" --description "$LABEL_DESC" 2>/dev/null || true
+
+usage() {
+  cat <<'USAGE'
+roadmap — Push ideas to GitHub Issues for later
+
+Usage:
+  roadmap "Title of the idea"
+  roadmap "Title" "Longer description of what this feature should do"
+  roadmap --list                  List all roadmap ideas
+  roadmap --list --assignee @me   List your assigned roadmap items
+
+Examples:
+  roadmap "Feeding schedules" "Track feeding times, set reminders, log meals per pet"
+  roadmap "Dark mode support"
+  roadmap --list
+USAGE
+  exit 0
+}
+
+# No args or help flag
+[[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]] && usage
+
+# List mode
+if [[ "$1" == "--list" ]]; then
+  shift
+  gh issue list --label "$LABEL" --state open "$@"
+  exit 0
+fi
+
+TITLE="$1"
+BODY="${2:-}"
+
+if [[ -n "$BODY" ]]; then
+  gh issue create --title "$TITLE" --label "$LABEL" --body "$BODY"
+else
+  gh issue create --title "$TITLE" --label "$LABEL" --body ""
+fi

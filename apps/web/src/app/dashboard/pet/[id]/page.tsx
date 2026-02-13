@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
-import { useHousehold } from "@/lib/household-context";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
 import { PET_AVATAR_MAX_SIZE, PET_AVATAR_ALLOWED_TYPES } from "@petforce/core";
 
 const speciesOptions = ["dog", "cat", "bird", "fish", "reptile", "other"] as const;
 const sexOptions = ["male", "female", "unknown"] as const;
 
-export default function AddPetPage() {
+export default function PetDetailPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { householdId } = useHousehold();
+  const petId = params.id;
+
+  const petQuery = trpc.pet.getById.useQuery({ id: petId }, { enabled: !!petId });
+  const utils = trpc.useContext();
+
+  // Form state
   const [name, setName] = useState("");
   const [species, setSpecies] = useState<string>("dog");
   const [breed, setBreed] = useState("");
@@ -25,22 +30,49 @@ export default function AddPetPage() {
   const [rabiesTagNumber, setRabiesTagNumber] = useState("");
   const [medicalNotes, setMedicalNotes] = useState("");
 
-  // Photo upload state
+  // Photo state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [existingAvatar, setExistingAvatar] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = usePetAvatarUpload();
 
-  const createPet = trpc.pet.create.useMutation({
-    async onSuccess(pet) {
-      // Upload photo after pet creation (need petId)
-      if (photoFile && pet.id) {
+  // Populate form when pet data loads
+  useEffect(() => {
+    const pet = petQuery.data;
+    if (!pet) return;
+    setName(pet.name);
+    setSpecies(pet.species);
+    setBreed(pet.breed ?? "");
+    setColor(pet.color ?? "");
+    setSex(pet.sex ?? "");
+    setDateOfBirth(pet.dateOfBirth ? new Date(pet.dateOfBirth).toISOString().split("T")[0] : "");
+    setWeight(pet.weight != null ? String(pet.weight) : "");
+    setAdoptionDate(pet.adoptionDate ? new Date(pet.adoptionDate).toISOString().split("T")[0] : "");
+    setMicrochipNumber(pet.microchipNumber ?? "");
+    setRabiesTagNumber(pet.rabiesTagNumber ?? "");
+    setMedicalNotes(pet.medicalNotes ?? "");
+    setExistingAvatar(pet.avatarUrl ?? null);
+  }, [petQuery.data]);
+
+  const updatePet = trpc.pet.update.useMutation({
+    async onSuccess() {
+      if (photoFile) {
         try {
-          await upload(pet.id, photoFile);
+          await upload(petId, photoFile);
         } catch {
-          // Photo upload failed but pet was created — continue to dashboard
+          // Photo upload failed but update succeeded
         }
       }
+      utils.pet.getById.invalidate({ id: petId });
+      utils.dashboard.get.invalidate();
+      router.push("/dashboard");
+    },
+  });
+
+  const deletePet = trpc.pet.delete.useMutation({
+    onSuccess() {
+      utils.dashboard.get.invalidate();
       router.push("/dashboard");
     },
   });
@@ -55,16 +87,13 @@ export default function AddPetPage() {
       return;
     }
     setPhotoFile(file);
-    const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!householdId) return;
-
-    createPet.mutate({
-      householdId,
+    updatePet.mutate({
+      id: petId,
       name,
       species: species as (typeof speciesOptions)[number],
       breed: breed || null,
@@ -79,17 +108,54 @@ export default function AddPetPage() {
     });
   };
 
-  if (!householdId) {
-    return <p style={{ padding: "2rem", color: "#6B7280" }}>No household selected.</p>;
+  const handleDelete = () => {
+    if (!confirm(`Delete ${name || "this pet"}? This cannot be undone.`)) return;
+    deletePet.mutate({ id: petId });
+  };
+
+  if (petQuery.isLoading) {
+    return (
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <div style={spinner} />
+          <p style={{ color: "#8B8FA3", margin: 0, fontSize: "0.9rem" }}>Loading pet...</p>
+        </div>
+      </main>
+    );
   }
+
+  if (petQuery.isError) {
+    return (
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <p style={{ color: "#EF4444", fontSize: "0.9rem" }}>Failed to load pet: {petQuery.error.message}</p>
+          <button onClick={() => router.push("/dashboard")} style={cancelButtonStyle}>Back to Dashboard</button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!petQuery.data) {
+    return (
+      <main style={pageShell}>
+        <div style={centeredMessage}>
+          <p style={{ color: "#8B8FA3", fontSize: "0.9rem" }}>Pet not found.</p>
+          <button onClick={() => router.push("/dashboard")} style={cancelButtonStyle}>Back to Dashboard</button>
+        </div>
+      </main>
+    );
+  }
+
+  const displayAvatar = photoPreview ?? existingAvatar;
+  const isSaving = updatePet.isLoading || isUploading;
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Add a pet</h1>
-      <p style={{ color: "#6B7280", marginBottom: "1.5rem" }}>Add a new pet to your household.</p>
+      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Edit Pet</h1>
+      <p style={{ color: "#6B7280", marginBottom: "1.5rem" }}>Update {petQuery.data.name}&apos;s information.</p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        {/* Basic Info — responsive grid: 2 cols on desktop, 1 on mobile */}
+        {/* Basic Info */}
         <fieldset style={fieldsetStyle}>
           <legend style={legendStyle}>Basic Info</legend>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
@@ -104,9 +170,9 @@ export default function AddPetPage() {
               }}
               style={photoPickerStyle}
             >
-              {photoPreview ? (
+              {displayAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoPreview} alt="Pet preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                <img src={displayAvatar} alt="Pet photo" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
               ) : (
                 <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>📷</span>
               )}
@@ -123,7 +189,7 @@ export default function AddPetPage() {
               }}
             />
             <span style={{ fontSize: "0.8rem", color: "#8B8FA3" }}>
-              {photoFile ? photoFile.name : "Click or drag to add a photo"}
+              {photoFile ? photoFile.name : displayAvatar ? "Click to change photo" : "Click or drag to add a photo"}
             </span>
           </div>
           <div style={gridStyle}>
@@ -173,7 +239,7 @@ export default function AddPetPage() {
           </div>
         </fieldset>
 
-        {/* Identification — responsive grid */}
+        {/* Identification */}
         <fieldset style={fieldsetStyle}>
           <legend style={legendStyle}>Identification</legend>
           <div style={gridStyle}>
@@ -194,7 +260,7 @@ export default function AddPetPage() {
           </div>
         </fieldset>
 
-        {/* Notes — full width */}
+        {/* Notes */}
         <fieldset style={fieldsetStyle}>
           <legend style={legendStyle}>Notes</legend>
           <label style={labelStyle}>
@@ -203,22 +269,60 @@ export default function AddPetPage() {
           </label>
         </fieldset>
 
-        {createPet.error && (
-          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{createPet.error.message}</p>
+        {updatePet.error && (
+          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{updatePet.error.message}</p>
+        )}
+        {deletePet.error && (
+          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{deletePet.error.message}</p>
         )}
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          <button type="button" onClick={() => router.back()} style={cancelButtonStyle}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <button type="button" onClick={() => router.push("/dashboard")} style={cancelButtonStyle}>
             Cancel
           </button>
-          <button type="submit" disabled={createPet.isLoading || isUploading} style={submitButtonStyle(createPet.isLoading || isUploading)}>
-            {isUploading ? "Uploading photo..." : createPet.isLoading ? "Adding..." : "Add Pet"}
+          <button type="submit" disabled={isSaving} style={submitButtonStyle(isSaving)}>
+            {isUploading ? "Uploading photo..." : updatePet.isLoading ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deletePet.isLoading}
+            style={deleteButtonStyle}
+          >
+            {deletePet.isLoading ? "Deleting..." : "Delete"}
           </button>
         </div>
       </form>
     </main>
   );
 }
+
+// ── Styles (reused from add-pet) ──
+
+const pageShell: React.CSSProperties = {
+  height: "calc(100vh - 57px)",
+  overflow: "hidden",
+  background: "linear-gradient(145deg, #EEEDFA 0%, #F0EEFB 20%, #F5F0FA 40%, #FAF0F5 60%, #FDF5F0 80%, #EEEDFA 100%)",
+  fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
+};
+
+const centeredMessage: React.CSSProperties = {
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "1.25rem",
+};
+
+const spinner: React.CSSProperties = {
+  width: 36,
+  height: 36,
+  border: "3px solid rgba(99, 102, 241, 0.15)",
+  borderTopColor: "#6366F1",
+  borderRadius: "50%",
+  animation: "spin 0.8s linear infinite",
+};
 
 const fieldsetStyle: React.CSSProperties = {
   border: "1px solid #E5E7EB",
@@ -266,6 +370,15 @@ const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   cursor: loading ? "not-allowed" : "pointer",
   opacity: loading ? 0.7 : 1,
 });
+const deleteButtonStyle: React.CSSProperties = {
+  padding: "0.75rem 1.5rem",
+  borderRadius: "0.5rem",
+  backgroundColor: "#FEE2E2",
+  color: "#DC2626",
+  fontWeight: 600,
+  border: "none",
+  cursor: "pointer",
+};
 const photoPickerStyle: React.CSSProperties = {
   width: 80,
   height: 80,

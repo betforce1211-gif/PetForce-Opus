@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
+import { PetEditModal } from "@/components/pet-edit-modal";
+import { PetAddModal } from "@/components/pet-add-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { householdId, switchHousehold } = useHousehold();
+  const [editingPetId, setEditingPetId] = useState<string | null>(null);
+  const [showAddPet, setShowAddPet] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -163,16 +167,23 @@ export default function DashboardPage() {
               ) : (
                 <div style={petGrid}>
                   {pets.map((pet) => (
-                    <div key={pet.id} style={petCard}>
-                      <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{speciesEmoji[pet.species] ?? "🐾"}</span>
-                      <strong style={petCardName}>{pet.name}</strong>
-                      {pet.breed && <span style={petCardBreed}>{pet.breed}</span>}
-                      <span style={speciesBadge}>{pet.species}</span>
+                    <div key={pet.id} onClick={() => setEditingPetId(pet.id)} style={{ cursor: "pointer" }}>
+                      <div style={petCard}>
+                        {pet.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={pet.avatarUrl} alt={pet.name} style={petAvatarImg} />
+                        ) : (
+                          <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{speciesEmoji[pet.species] ?? "🐾"}</span>
+                        )}
+                        <strong style={petCardName}>{pet.name}</strong>
+                        {pet.breed && <span style={petCardBreed}>{pet.breed}</span>}
+                        <span style={speciesBadge}>{pet.species}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-              <Link href="/dashboard/add-pet" style={tileLink}>+ Add Pet</Link>
+              <button type="button" onClick={() => setShowAddPet(true)} style={{ ...tileLink, background: "none", border: "none", cursor: "pointer" }}>+ Add Pet</button>
             </div>
 
             <div style={tileStyle}>
@@ -254,7 +265,7 @@ export default function DashboardPage() {
               </h2>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.6rem", justifyContent: "center" }}>
                 <Link href="/dashboard/log-activity" style={quickActionBtn}>📋 Log Activity</Link>
-                <Link href="/dashboard/add-pet" style={quickActionBtn}>🐾 Add Pet</Link>
+                <button type="button" onClick={() => setShowAddPet(true)} style={{ ...quickActionBtn, cursor: "pointer", fontFamily: "inherit" }}>🐾 Add Pet</button>
                 <Link href="/dashboard/settings" style={quickActionBtn}>⚙️ Settings</Link>
               </div>
             </div>
@@ -340,6 +351,12 @@ export default function DashboardPage() {
           </aside>
         </div>
       </div>
+      {editingPetId && (
+        <PetEditModal petId={editingPetId} onClose={() => setEditingPetId(null)} />
+      )}
+      {showAddPet && (
+        <PetAddModal onClose={() => setShowAddPet(false)} />
+      )}
     </main>
   );
 }
@@ -682,6 +699,15 @@ const petCard: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(99, 102, 241, 0.05)",
   transition: "all 0.2s ease",
   alignItems: "flex-start",
+  cursor: "pointer",
+};
+
+const petAvatarImg: React.CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: "50%",
+  objectFit: "cover",
+  border: "2px solid rgba(139, 92, 246, 0.15)",
 };
 
 const petCardName: React.CSSProperties = {

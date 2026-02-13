@@ -17,7 +17,17 @@ export function AppHeader() {
         </SignedIn>
       </div>
       <Link href="/" style={brandLink}>
-        🐾 PetForce
+        <svg width="34" height="38" viewBox="0 0 160 180" fill="none" style={{ display: "block", flexShrink: 0 }}>
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <text x="56" y="130" fontFamily="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" fontWeight="900" fontSize="36" fill="white" textAnchor="middle">P</text>
+          <path d="M82 106 L74 120 L82 116 L72 132" fill="none" stroke="#FBBF24" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <text x="104" y="130" fontFamily="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" fontWeight="900" fontSize="36" fill="white" textAnchor="middle">F</text>
+        </svg>
+        <span>PetForce</span>
       </Link>
       <div style={rightSection}>
         <SignedIn>
@@ -152,12 +162,14 @@ const rightSection: React.CSSProperties = {
 };
 
 const brandLink: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.6rem",
   fontWeight: 800,
-  fontSize: "1.3rem",
+  fontSize: "1.65rem",
   color: "#6366F1",
   textDecoration: "none",
-  letterSpacing: "-0.02em",
-  textAlign: "center",
+  letterSpacing: "-0.03em",
 };
 
 const switcherIconWrap: React.CSSProperties = {

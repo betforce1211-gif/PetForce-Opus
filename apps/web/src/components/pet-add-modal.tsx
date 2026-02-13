@@ -1,18 +1,23 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
 import { PET_AVATAR_MAX_SIZE, PET_AVATAR_ALLOWED_TYPES } from "@petforce/core";
+import { Modal } from "./modal";
 
 const speciesOptions = ["dog", "cat", "bird", "fish", "reptile", "other"] as const;
 const sexOptions = ["male", "female", "unknown"] as const;
 
-export default function AddPetPage() {
-  const router = useRouter();
+interface PetAddModalProps {
+  onClose: () => void;
+}
+
+export function PetAddModal({ onClose }: PetAddModalProps) {
   const { householdId } = useHousehold();
+  const utils = trpc.useContext();
+
   const [name, setName] = useState("");
   const [species, setSpecies] = useState<string>("dog");
   const [breed, setBreed] = useState("");
@@ -25,7 +30,6 @@ export default function AddPetPage() {
   const [rabiesTagNumber, setRabiesTagNumber] = useState("");
   const [medicalNotes, setMedicalNotes] = useState("");
 
-  // Photo upload state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,15 +37,15 @@ export default function AddPetPage() {
 
   const createPet = trpc.pet.create.useMutation({
     async onSuccess(pet) {
-      // Upload photo after pet creation (need petId)
       if (photoFile && pet.id) {
         try {
           await upload(pet.id, photoFile);
         } catch {
-          // Photo upload failed but pet was created — continue to dashboard
+          // Photo upload failed but pet was created
         }
       }
-      router.push("/dashboard");
+      utils.dashboard.get.invalidate();
+      onClose();
     },
   });
 
@@ -55,14 +59,12 @@ export default function AddPetPage() {
       return;
     }
     setPhotoFile(file);
-    const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!householdId) return;
-
     createPet.mutate({
       householdId,
       name,
@@ -79,59 +81,60 @@ export default function AddPetPage() {
     });
   };
 
-  if (!householdId) {
-    return <p style={{ padding: "2rem", color: "#6B7280" }}>No household selected.</p>;
-  }
+  const isSaving = createPet.isLoading || isUploading;
 
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Add a pet</h1>
-      <p style={{ color: "#6B7280", marginBottom: "1.5rem" }}>Add a new pet to your household.</p>
-
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        {/* Basic Info — responsive grid: 2 cols on desktop, 1 on mobile */}
-        <fieldset style={fieldsetStyle}>
-          <legend style={legendStyle}>Basic Info</legend>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const file = e.dataTransfer.files[0];
-                if (file) handlePhotoSelect(file);
-              }}
-              style={photoPickerStyle}
-            >
-              {photoPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoPreview} alt="Pet preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-              ) : (
-                <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>📷</span>
-              )}
-              <div style={photoOverlayStyle}>+</div>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              style={{ display: "none" }}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handlePhotoSelect(file);
-              }}
-            />
+    <Modal open onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        {/* Header: photo + title */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem" }}>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = e.dataTransfer.files[0];
+              if (file) handlePhotoSelect(file);
+            }}
+            style={photoPickerStyle}
+          >
+            {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoPreview} alt="Pet preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+            ) : (
+              <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>📷</span>
+            )}
+            <div style={photoOverlayStyle}>+</div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handlePhotoSelect(file);
+            }}
+          />
+          <div>
+            <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#1A1637" }}>
+              Add a Pet
+            </h2>
             <span style={{ fontSize: "0.8rem", color: "#8B8FA3" }}>
-              {photoFile ? photoFile.name : "Click or drag to add a photo"}
+              {photoFile ? photoFile.name : "Click photo to add"}
             </span>
           </div>
+        </div>
+
+        {/* Basic Info */}
+        <fieldset style={fieldsetStyle}>
+          <legend style={legendStyle}>Basic Info</legend>
           <div style={gridStyle}>
             <label style={labelStyle}>
               <span style={labelTextStyle}>Name</span>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Buddy" required style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
               <span style={labelTextStyle}>Species</span>
               <select value={species} onChange={(e) => setSpecies(e.target.value)} style={inputStyle}>
@@ -140,19 +143,16 @@ export default function AddPetPage() {
                 ))}
               </select>
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Breed (optional)</span>
+              <span style={labelTextStyle}>Breed</span>
               <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="Golden Retriever" style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Color (optional)</span>
+              <span style={labelTextStyle}>Color</span>
               <input type="text" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Golden" maxLength={50} style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Sex (optional)</span>
+              <span style={labelTextStyle}>Sex</span>
               <select value={sex} onChange={(e) => setSex(e.target.value)} style={inputStyle}>
                 <option value="">— Select —</option>
                 {sexOptions.map((s) => (
@@ -160,104 +160,108 @@ export default function AddPetPage() {
                 ))}
               </select>
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Date of birth (optional)</span>
+              <span style={labelTextStyle}>Date of birth</span>
               <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Weight in lbs (optional)</span>
+              <span style={labelTextStyle}>Weight (lbs)</span>
               <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="25" min="0" step="0.1" style={inputStyle} />
             </label>
           </div>
         </fieldset>
 
-        {/* Identification — responsive grid */}
-        <fieldset style={fieldsetStyle}>
+        {/* Identification */}
+        <fieldset style={{ ...fieldsetStyle, marginTop: "1rem" }}>
           <legend style={legendStyle}>Identification</legend>
           <div style={gridStyle}>
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Adoption date (optional)</span>
+              <span style={labelTextStyle}>Adoption date</span>
               <input type="date" value={adoptionDate} onChange={(e) => setAdoptionDate(e.target.value)} style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Microchip # (optional)</span>
+              <span style={labelTextStyle}>Microchip #</span>
               <input type="text" value={microchipNumber} onChange={(e) => setMicrochipNumber(e.target.value)} placeholder="900123456789012" maxLength={50} style={inputStyle} />
             </label>
-
             <label style={labelStyle}>
-              <span style={labelTextStyle}>Rabies tag # (optional)</span>
+              <span style={labelTextStyle}>Rabies tag #</span>
               <input type="text" value={rabiesTagNumber} onChange={(e) => setRabiesTagNumber(e.target.value)} placeholder="R-12345" maxLength={50} style={inputStyle} />
             </label>
           </div>
         </fieldset>
 
-        {/* Notes — full width */}
-        <fieldset style={fieldsetStyle}>
+        {/* Notes */}
+        <fieldset style={{ ...fieldsetStyle, marginTop: "1rem" }}>
           <legend style={legendStyle}>Notes</legend>
           <label style={labelStyle}>
-            <span style={labelTextStyle}>Additional notes (optional)</span>
-            <textarea value={medicalNotes} onChange={(e) => setMedicalNotes(e.target.value)} placeholder="Allergies, medications, special needs..." rows={3} maxLength={5000} style={{ ...inputStyle, resize: "vertical" }} />
+            <span style={labelTextStyle}>Additional notes</span>
+            <textarea value={medicalNotes} onChange={(e) => setMedicalNotes(e.target.value)} placeholder="Allergies, medications, special needs..." rows={2} maxLength={5000} style={{ ...inputStyle, resize: "vertical" }} />
           </label>
         </fieldset>
 
         {createPet.error && (
-          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{createPet.error.message}</p>
+          <p style={{ color: "#EF4444", fontSize: "0.875rem", marginTop: "0.75rem" }}>{createPet.error.message}</p>
         )}
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          <button type="button" onClick={() => router.back()} style={cancelButtonStyle}>
-            Cancel
-          </button>
-          <button type="submit" disabled={createPet.isLoading || isUploading} style={submitButtonStyle(createPet.isLoading || isUploading)}>
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "1.25rem" }}>
+          <button type="button" onClick={onClose} style={cancelButtonStyle}>Cancel</button>
+          <button type="submit" disabled={isSaving} style={submitButtonStyle(isSaving)}>
             {isUploading ? "Uploading photo..." : createPet.isLoading ? "Adding..." : "Add Pet"}
           </button>
         </div>
       </form>
-    </main>
+    </Modal>
   );
 }
+
+// ── Styles ──
 
 const fieldsetStyle: React.CSSProperties = {
   border: "1px solid #E5E7EB",
   borderRadius: "0.75rem",
-  padding: "1rem 1.25rem",
+  padding: "0.75rem 1rem",
   margin: 0,
 };
+
 const legendStyle: React.CSSProperties = {
   fontWeight: 700,
-  fontSize: "0.95rem",
+  fontSize: "0.9rem",
   padding: "0 0.5rem",
   color: "#374151",
 };
+
 const gridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
-  gap: "1rem",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "0.75rem",
 };
-const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.25rem" };
-const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.875rem" };
+
+const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
+const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.8rem", color: "#374151" };
+
 const inputStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
+  padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
   border: "1px solid #D1D5DB",
-  fontSize: "0.9375rem",
+  fontSize: "0.875rem",
   outline: "none",
 };
+
 const cancelButtonStyle: React.CSSProperties = {
-  padding: "0.75rem 1.5rem",
+  padding: "0.6rem 1.25rem",
   borderRadius: "0.5rem",
   backgroundColor: "#F3F4F6",
   color: "#374151",
   fontWeight: 600,
   border: "none",
   cursor: "pointer",
+  fontSize: "0.875rem",
 };
+
 const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   flex: 1,
-  padding: "0.75rem 1.5rem",
+  padding: "0.6rem 1.25rem",
   borderRadius: "0.5rem",
   backgroundColor: "#6366F1",
   color: "white",
@@ -265,10 +269,12 @@ const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   border: "none",
   cursor: loading ? "not-allowed" : "pointer",
   opacity: loading ? 0.7 : 1,
+  fontSize: "0.875rem",
 });
+
 const photoPickerStyle: React.CSSProperties = {
-  width: 80,
-  height: 80,
+  width: 64,
+  height: 64,
   borderRadius: "50%",
   border: "2px dashed #D1D5DB",
   display: "flex",
@@ -280,19 +286,20 @@ const photoPickerStyle: React.CSSProperties = {
   flexShrink: 0,
   background: "#F9FAFB",
 };
+
 const photoOverlayStyle: React.CSSProperties = {
   position: "absolute",
   bottom: 0,
   right: 0,
-  width: 24,
-  height: 24,
+  width: 22,
+  height: 22,
   borderRadius: "50%",
   background: "#6366F1",
   color: "white",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "0.875rem",
+  fontSize: "0.8rem",
   fontWeight: 700,
   lineHeight: 1,
 };

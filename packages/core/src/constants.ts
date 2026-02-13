@@ -50,3 +50,10 @@ export const ACCESS_REQUEST_STATUS_LABELS: Record<string, string> = {
 };
 
 export const INVITE_EXPIRY_DAYS = 7;
+
+export const PET_AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+export const PET_AVATAR_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
