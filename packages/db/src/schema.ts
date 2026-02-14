@@ -5,6 +5,7 @@ import {
   jsonb,
   real,
   uuid,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // --- Households ---
@@ -103,6 +104,47 @@ export const invitations = pgTable("invitations", {
     .default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+// --- Feeding Schedules ---
+
+export const feedingSchedules = pgTable("feeding_schedules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  time: text("time").notNull(), // "HH:mm" format
+  foodType: text("food_type"),
+  amount: text("amount"),
+  notes: text("notes"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Feeding Logs ---
+
+export const feedingLogs = pgTable("feeding_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  feedingScheduleId: uuid("feeding_schedule_id")
+    .notNull()
+    .references(() => feedingSchedules.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  completedBy: uuid("completed_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  feedingDate: text("feeding_date").notNull(), // "YYYY-MM-DD" format
+  notes: text("notes"),
 });
 
 // --- Access Requests ---

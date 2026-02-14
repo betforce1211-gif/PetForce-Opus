@@ -102,6 +102,33 @@ export const createAccessRequestSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
+// --- Feeding ---
+
+export const createFeedingScheduleSchema = z.object({
+  petId: z.string().uuid(),
+  label: z.string().min(1).max(50),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:mm format"),
+  foodType: z.string().max(100).nullable().optional(),
+  amount: z.string().max(100).nullable().optional(),
+  notes: z.string().max(500).nullable().optional(),
+});
+
+export const updateFeedingScheduleSchema = z.object({
+  id: z.string().uuid(),
+  label: z.string().min(1).max(50).optional(),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:mm format").optional(),
+  foodType: z.string().max(100).nullable().optional(),
+  amount: z.string().max(100).nullable().optional(),
+  notes: z.string().max(500).nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const logFeedingSchema = z.object({
+  feedingScheduleId: z.string().uuid(),
+  feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format"),
+  notes: z.string().max(500).nullable().optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

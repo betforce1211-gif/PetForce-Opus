@@ -99,6 +99,51 @@ export interface AccessRequest {
   createdAt: Date;
 }
 
+// --- Feeding ---
+
+export interface FeedingSchedule {
+  id: string;
+  householdId: string;
+  petId: string;
+  label: string;
+  time: string; // "HH:mm"
+  foodType: string | null;
+  amount: string | null;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface FeedingLog {
+  id: string;
+  feedingScheduleId: string;
+  householdId: string;
+  petId: string;
+  completedBy: string;
+  completedAt: Date;
+  feedingDate: string; // "YYYY-MM-DD"
+  notes: string | null;
+}
+
+export interface FeedingScheduleStatus {
+  schedule: FeedingSchedule;
+  log: FeedingLog | null;
+}
+
+export interface PetFeedingStatus {
+  petId: string;
+  petName: string;
+  schedules: FeedingScheduleStatus[];
+}
+
+export interface HouseholdFeedingStatus {
+  date: string; // "YYYY-MM-DD"
+  pets: PetFeedingStatus[];
+  totalScheduled: number;
+  totalCompleted: number;
+}
+
 // --- Dashboard view types ---
 
 export interface HouseholdSummary {

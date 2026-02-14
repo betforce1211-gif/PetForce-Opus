@@ -6,6 +6,7 @@ import { memberRouter } from "./routers/member";
 import { dashboardRouter } from "./routers/dashboard";
 import { invitationRouter } from "./routers/invitation";
 import { accessRequestRouter } from "./routers/access-request";
+import { feedingRouter } from "./routers/feeding";
 
 export const appRouter = router({
   household: householdRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   invitation: invitationRouter,
   accessRequest: accessRequestRouter,
+  feeding: feedingRouter,
 });
 
 export type AppRouter = typeof appRouter;

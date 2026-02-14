@@ -7,12 +7,15 @@ import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { PetEditModal } from "@/components/pet-edit-modal";
 import { PetAddModal } from "@/components/pet-add-modal";
+import { FeedingTileContent } from "@/components/feeding-tile";
+import { FeedingManageModal } from "@/components/feeding-manage-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { householdId, switchHousehold } = useHousehold();
   const [editingPetId, setEditingPetId] = useState<string | null>(null);
   const [showAddPet, setShowAddPet] = useState(false);
+  const [showFeedingModal, setShowFeedingModal] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -232,13 +235,10 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>🍽️</span>
                 Feeding
               </h2>
-              <div style={placeholderBody}>
-                <div style={placeholderIconWrap}>
-                  <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>🍽️</span>
-                </div>
-                <p style={placeholderLabel}>Feeding schedules & logs</p>
-                <span style={comingSoonBadge}>Coming Soon</span>
-              </div>
+              <FeedingTileContent
+                householdId={householdId}
+                onManage={() => setShowFeedingModal(true)}
+              />
             </div>
 
             <div style={tileStyle}>
@@ -356,6 +356,12 @@ export default function DashboardPage() {
       )}
       {showAddPet && (
         <PetAddModal onClose={() => setShowAddPet(false)} />
+      )}
+      {showFeedingModal && (
+        <FeedingManageModal
+          householdId={householdId}
+          onClose={() => setShowFeedingModal(false)}
+        />
       )}
     </main>
   );
