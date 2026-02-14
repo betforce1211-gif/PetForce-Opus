@@ -9,6 +9,9 @@ import { PetEditModal } from "@/components/pet-edit-modal";
 import { PetAddModal } from "@/components/pet-add-modal";
 import { FeedingTileContent } from "@/components/feeding-tile";
 import { FeedingManageModal } from "@/components/feeding-manage-modal";
+import { CalendarTileContent } from "@/components/calendar-tile";
+import { CalendarModal } from "@/components/calendar-modal";
+import { CalendarAddEventModal } from "@/components/calendar-add-event-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,6 +19,8 @@ export default function DashboardPage() {
   const [editingPetId, setEditingPetId] = useState<string | null>(null);
   const [showAddPet, setShowAddPet] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -270,19 +275,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div style={tileStyle}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowCalendarModal(true)}>
               <div style={{ ...tileAccentBar, background: tileAccents.calendar }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>📅</span>
                 Calendar
               </h2>
-              <div style={placeholderBody}>
-                <div style={placeholderIconWrap}>
-                  <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>📅</span>
-                </div>
-                <p style={placeholderLabel}>Appointments & events</p>
-                <span style={comingSoonBadge}>Coming Soon</span>
-              </div>
+              <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
             </div>
 
             <div style={tileStyle}>
@@ -361,6 +360,20 @@ export default function DashboardPage() {
         <FeedingManageModal
           householdId={householdId}
           onClose={() => setShowFeedingModal(false)}
+        />
+      )}
+      {showCalendarModal && (
+        <CalendarModal
+          householdId={householdId}
+          onClose={() => setShowCalendarModal(false)}
+        />
+      )}
+      {showAddEventModal && (
+        <CalendarAddEventModal
+          householdId={householdId}
+          defaultDate={new Date().toISOString().split("T")[0]}
+          onClose={() => setShowAddEventModal(false)}
+          onCreated={() => setShowAddEventModal(false)}
         />
       )}
     </main>

@@ -144,6 +144,33 @@ export interface HouseholdFeedingStatus {
   totalCompleted: number;
 }
 
+// --- Calendar ---
+
+export type CalendarEventKind = "activity" | "feeding" | "birthday" | "holiday";
+
+export interface CalendarEvent {
+  id: string;
+  kind: CalendarEventKind;
+  title: string;
+  petId: string;
+  petName: string;
+  memberId: string | null;
+  memberName: string | null;
+  type: ActivityType | "feeding_schedule" | "birthday" | "holiday";
+  scheduledAt: string; // ISO datetime
+  completedAt: string | null;
+}
+
+export interface CalendarMonthData {
+  month: string; // YYYY-MM
+  days: Record<string, CalendarEvent[]>; // keyed by YYYY-MM-DD
+}
+
+export interface UpcomingCalendarEvents {
+  events: CalendarEvent[];
+  totalUpcoming: number;
+}
+
 // --- Dashboard view types ---
 
 export interface HouseholdSummary {

@@ -67,6 +67,93 @@ export const FEEDING_TIME_PRESETS: Record<string, string> = {
   Snack: "15:00",
 };
 
+// --- Calendar ---
+
+export const ACTIVITY_TYPE_ICONS: Record<string, string> = {
+  walk: "🚶",
+  feeding: "🍽️",
+  vet_visit: "🏥",
+  medication: "💊",
+  grooming: "✂️",
+  play: "🎾",
+  other: "📝",
+  feeding_schedule: "🍽️",
+  birthday: "🎂",
+  holiday: "🌟",
+};
+
+/** Static list of national pet holidays/awareness days (month 1-12, day 1-31). */
+export const PET_HOLIDAYS: { month: number; day: number; name: string }[] = [
+  // January
+  { month: 1, day: 2, name: "National Pet Travel Safety Day" },
+  { month: 1, day: 5, name: "National Bird Day" },
+  { month: 1, day: 14, name: "National Dress Up Your Pet Day" },
+  { month: 1, day: 22, name: "Answer Your Cat's Question Day" },
+  { month: 1, day: 24, name: "Change a Pet's Life Day" },
+  // February
+  { month: 2, day: 2, name: "National Hedgehog Day" },
+  { month: 2, day: 3, name: "National Golden Retriever Day" },
+  { month: 2, day: 14, name: "National Pet Theft Awareness Day" },
+  { month: 2, day: 20, name: "Love Your Pet Day" },
+  { month: 2, day: 22, name: "Walking the Dog Day" },
+  { month: 2, day: 23, name: "National Dog Biscuit Day" },
+  // March
+  { month: 3, day: 3, name: "World Wildlife Day" },
+  { month: 3, day: 13, name: "K9 Veterans Day" },
+  { month: 3, day: 23, name: "National Puppy Day" },
+  { month: 3, day: 28, name: "Respect Your Cat Day" },
+  { month: 3, day: 30, name: "Take a Walk in the Park Day" },
+  // April
+  { month: 4, day: 8, name: "National Dog Fighting Awareness Day" },
+  { month: 4, day: 10, name: "National Hug Your Dog Day" },
+  { month: 4, day: 11, name: "National Pet Day" },
+  { month: 4, day: 18, name: "Pet Owners Day" },
+  { month: 4, day: 25, name: "World Veterinary Day" },
+  { month: 4, day: 26, name: "National Pet Parents Day" },
+  { month: 4, day: 30, name: "Adopt a Shelter Pet Day" },
+  // May
+  { month: 5, day: 1, name: "National Purebred Dog Day" },
+  { month: 5, day: 3, name: "National Specially-Abled Pets Day" },
+  { month: 5, day: 20, name: "National Rescue Dog Day" },
+  { month: 5, day: 23, name: "World Turtle Day" },
+  // June
+  { month: 6, day: 4, name: "Hug Your Cat Day" },
+  { month: 6, day: 8, name: "National Best Friends Day" },
+  { month: 6, day: 9, name: "World Pet Memorial Day" },
+  { month: 6, day: 26, name: "Take Your Dog to Work Day" },
+  // July
+  { month: 7, day: 1, name: "National ID Your Pet Day" },
+  { month: 7, day: 10, name: "National Kitten Day" },
+  { month: 7, day: 11, name: "All-American Pet Photo Day" },
+  { month: 7, day: 15, name: "National Pet Fire Safety Day" },
+  { month: 7, day: 31, name: "National Mutt Day" },
+  // August
+  { month: 8, day: 1, name: "DOGust: Shelter Dog Birthday" },
+  { month: 8, day: 8, name: "International Cat Day" },
+  { month: 8, day: 10, name: "Spoil Your Dog Day" },
+  { month: 8, day: 15, name: "Check the Chip Day" },
+  { month: 8, day: 17, name: "National Black Cat Appreciation Day" },
+  { month: 8, day: 26, name: "National Dog Day" },
+  { month: 8, day: 28, name: "Rainbow Bridge Remembrance Day" },
+  // September
+  { month: 9, day: 13, name: "National Pet Memorial Day" },
+  { month: 9, day: 17, name: "National Pet Bird Day" },
+  { month: 9, day: 28, name: "World Rabies Day" },
+  // October
+  { month: 10, day: 1, name: "National Black Dog Day" },
+  { month: 10, day: 4, name: "World Animal Day" },
+  { month: 10, day: 14, name: "Pet Obesity Awareness Day" },
+  { month: 10, day: 29, name: "National Cat Day" },
+  // November
+  { month: 11, day: 1, name: "National Cook for Your Pets Day" },
+  { month: 11, day: 17, name: "Take a Hike Day" },
+  { month: 11, day: 21, name: "National Adoption Day" },
+  // December
+  { month: 12, day: 2, name: "National Mutt Day" },
+  { month: 12, day: 4, name: "Wildlife Conservation Day" },
+  { month: 12, day: 10, name: "International Animal Rights Day" },
+];
+
 export const PET_AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export const PET_AVATAR_ALLOWED_TYPES = [
   "image/jpeg",

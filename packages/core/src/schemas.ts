@@ -129,6 +129,16 @@ export const logFeedingSchema = z.object({
   notes: z.string().max(500).nullable().optional(),
 });
 
+// --- Calendar ---
+
+export const calendarMonthInputSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/, "Must be YYYY-MM format"),
+});
+
+export const calendarUpcomingInputSchema = z.object({
+  limit: z.number().int().min(1).max(20).optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

@@ -55,7 +55,8 @@ export async function uploadPetAvatar(
     data: { publicUrl },
   } = sb.storage.from(BUCKET).getPublicUrl(path);
 
-  return publicUrl;
+  // Append cache-buster so browsers fetch the new image after a replace
+  return `${publicUrl}?t=${Date.now()}`;
 }
 
 export async function deletePetAvatar(path: string): Promise<void> {
