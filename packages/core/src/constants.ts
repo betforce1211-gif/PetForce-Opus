@@ -243,6 +243,28 @@ export const EXPENSE_DESCRIPTION_SUGGESTIONS: Record<string, string[]> = {
   other: [],
 };
 
+// --- Today's Tasks ---
+
+import type { TaskKind } from "./types";
+
+export const TASK_KIND_ICONS: Record<TaskKind, string> = {
+  alert: "\u26A0\uFE0F",
+  feeding: "\uD83C\uDF7D\uFE0F",
+  activity: "\uD83D\uDCCB",
+  health: "\uD83C\uDFE5",
+  medication: "\uD83D\uDC8A",
+  birthday: "\uD83C\uDF82",
+};
+
+export const TASK_KIND_LABELS: Record<TaskKind, string> = {
+  alert: "Alerts",
+  feeding: "Feedings",
+  activity: "Activities",
+  health: "Appointments",
+  medication: "Medications",
+  birthday: "Birthdays",
+};
+
 export const PET_AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export const PET_AVATAR_ALLOWED_TYPES = [
   "image/jpeg",

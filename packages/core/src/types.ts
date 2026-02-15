@@ -274,3 +274,8 @@ export interface HouseholdDashboard {
   pets: Pet[];
   recentActivities: Activity[];
 }
+
+// --- Today's Tasks ---
+
+export type TaskKind = "alert" | "feeding" | "activity" | "health" | "medication" | "birthday";
+export type TaskPriority = "high" | "medium" | "low";

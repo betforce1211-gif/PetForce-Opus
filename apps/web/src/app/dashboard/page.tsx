@@ -16,6 +16,7 @@ import { HealthTileContent } from "@/components/health-tile";
 import { HealthModal } from "@/components/health-modal";
 import { FinanceTileContent } from "@/components/finance-tile";
 import { FinanceModal } from "@/components/finance-modal";
+import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -131,9 +132,6 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const { household, members, pets, recentActivities } = data;
-
-  // Group activities by date for sidebar
-  const activityGroups = groupActivitiesByDate(recentActivities);
 
   // --- State 6: Dashboard loaded ---
   return (
@@ -300,54 +298,13 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── Right: Activity timeline sidebar ── */}
-          <aside style={sidebarStyle}>
-            <div style={sidebarAccentBar} />
-            <h2 style={sidebarTitle}>
-              <span style={titleEmoji}>📋</span>
-              Activity Timeline
-            </h2>
-            {recentActivities.length === 0 ? (
-              <div style={{ ...emptyState, padding: "2rem 0.75rem" }}>
-                <span style={emptyStateIcon}>📝</span>
-                <p style={emptyStateTitle}>No activities yet</p>
-                <p style={emptyStateSubtext}>Log an activity to start tracking</p>
-              </div>
-            ) : (
-              <div style={{ flex: 1, overflowY: "auto" }}>
-                {activityGroups.map((group) => (
-                  <div key={group.label}>
-                    <div style={dateGroupHeader}>{group.label}</div>
-                    {group.activities.map((activity) => {
-                      const pet = pets.find((p) => p.id === activity.petId);
-                      const member = members.find((m) => m.id === activity.memberId);
-                      return (
-                        <div key={activity.id} style={activityRow}>
-                          <div style={activityIconWrap}>
-                            <span style={{ fontSize: "0.9rem", lineHeight: 1 }}>
-                              {activityTypeIcons[activity.type] ?? "📝"}
-                            </span>
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={activityTitle}>
-                              {activity.title}
-                            </div>
-                            <div style={activityMeta}>
-                              {pet?.name}{pet && member ? " \u00b7 " : ""}{member?.displayName}
-                            </div>
-                          </div>
-                          <span style={activityTime}>
-                            {formatTimeShort(new Date(activity.createdAt))}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-            <Link href="/dashboard/log-activity" style={tileLink}>+ Log Activity</Link>
-          </aside>
+          {/* ── Right: Today's Tasks sidebar ── */}
+          <TodayTasksSidebar
+            householdId={householdId}
+            pets={pets}
+            onOpenHealth={() => setShowHealthModal(true)}
+            onOpenFeeding={() => setShowFeedingModal(true)}
+          />
         </div>
       </div>
       {editingPetId && (
@@ -398,64 +355,9 @@ const speciesEmoji: Record<string, string> = {
   dog: "🐕", cat: "🐈", bird: "🐦", fish: "🐟", reptile: "🦎", other: "🐾",
 };
 
-const activityTypeIcons: Record<string, string> = {
-  walk: "🚶", feeding: "🍽️", vet_visit: "🏥", medication: "💊", grooming: "✂️", play: "🎾", other: "📝",
-};
-
 const roleBadgeColors: Record<string, string> = {
   owner: "#5B4FCF", admin: "#3B82F6", member: "#7C7F95", sitter: "#10B981",
 };
-
-function formatTimeAgo(date: Date): string {
-  const diffMs = Date.now() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHrs = Math.floor(diffMin / 60);
-  if (diffHrs < 24) return `${diffHrs}h ago`;
-  const diffDays = Math.floor(diffHrs / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-function formatTimeShort(date: Date): string {
-  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-function formatDateLabel(date: Date): string {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "long" });
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-interface ActivityItem {
-  id: string;
-  type: string;
-  title: string;
-  petId: string | null;
-  memberId: string | null;
-  createdAt: string | Date;
-}
-
-function groupActivitiesByDate(activities: ActivityItem[]): { label: string; activities: ActivityItem[] }[] {
-  const sorted = [...activities].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const groups: { label: string; activities: ActivityItem[] }[] = [];
-  for (const activity of sorted) {
-    const label = formatDateLabel(new Date(activity.createdAt));
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) {
-      last.activities.push(activity);
-    } else {
-      groups.push({ label, activities: [activity] });
-    }
-  }
-  return groups;
-}
 
 // ── Tile accent color mapping (unique gradient per tile) ──
 
@@ -512,29 +414,6 @@ const gridArea: React.CSSProperties = {
   minHeight: 0,
 };
 
-const sidebarStyle: React.CSSProperties = {
-  width: 320,
-  flexShrink: 0,
-  background: "rgba(255, 255, 255, 0.65)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  borderRadius: "1rem",
-  padding: "1.5rem 1.25rem 1.25rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99, 102, 241, 0.06), inset 0 1px 0 rgba(255,255,255,0.7)",
-  border: "1px solid rgba(255, 255, 255, 0.5)",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-};
-
-const sidebarAccentBar: React.CSSProperties = {
-  height: 3,
-  background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%)",
-  margin: "-1.5rem -1.25rem 1.25rem -1.25rem",
-  borderTopLeftRadius: "1rem",
-  borderTopRightRadius: "1rem",
-};
-
 const tileStyle: React.CSSProperties = {
   background: "rgba(255, 255, 255, 0.6)",
   backdropFilter: "blur(20px)",
@@ -561,19 +440,6 @@ const sectionTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   margin: "0 0 0.75rem",
-  color: "#1A1637",
-  textAlign: "center",
-  letterSpacing: "-0.01em",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "0.5rem",
-};
-
-const sidebarTitle: React.CSSProperties = {
-  fontSize: "1rem",
-  fontWeight: 700,
-  margin: "0 0 1rem",
   color: "#1A1637",
   textAlign: "center",
   letterSpacing: "-0.01em",
@@ -687,17 +553,6 @@ const quickActionBtn: React.CSSProperties = {
   letterSpacing: "0.01em",
 };
 
-const dateGroupHeader: React.CSSProperties = {
-  fontSize: "0.675rem",
-  fontWeight: 700,
-  color: "#6366F1",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  padding: "0.75rem 0 0.375rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.08)",
-  marginBottom: "0.375rem",
-};
-
 const glassCard: React.CSSProperties = {
   background: "rgba(255, 255, 255, 0.65)",
   backdropFilter: "blur(20px)",
@@ -767,53 +622,6 @@ const speciesBadge: React.CSSProperties = {
   textTransform: "capitalize",
   marginTop: "0.3rem",
   letterSpacing: "0.02em",
-};
-
-const activityRow: React.CSSProperties = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: "0.75rem",
-  padding: "0.6rem 0.25rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.05)",
-  transition: "background-color 0.15s ease",
-  borderRadius: "0.5rem",
-  margin: "0 -0.25rem",
-};
-
-const activityIconWrap: React.CSSProperties = {
-  width: 32,
-  height: 32,
-  borderRadius: "0.5rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexShrink: 0,
-};
-
-const activityTitle: React.CSSProperties = {
-  fontWeight: 600,
-  fontSize: "0.8rem",
-  color: "#1A1637",
-  letterSpacing: "-0.005em",
-  lineHeight: 1.4,
-};
-
-const activityMeta: React.CSSProperties = {
-  color: "#A5A8BA",
-  fontSize: "0.7rem",
-  fontWeight: 500,
-  marginTop: "0.1rem",
-  letterSpacing: "0.01em",
-};
-
-const activityTime: React.CSSProperties = {
-  color: "#A5A8BA",
-  fontSize: "0.65rem",
-  whiteSpace: "nowrap",
-  fontWeight: 500,
-  letterSpacing: "0.01em",
-  marginTop: "0.1rem",
 };
 
 const memberRow: React.CSSProperties = {
