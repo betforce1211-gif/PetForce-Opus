@@ -69,6 +69,7 @@ export interface Activity {
   notes: string | null;
   scheduledAt: Date | null;
   completedAt: Date | null;
+  completedBy: string | null;
   createdAt: Date;
 }
 
@@ -337,3 +338,42 @@ export interface HouseholdDashboard {
 
 export type TaskKind = "alert" | "feeding" | "activity" | "health" | "medication" | "birthday";
 export type TaskPriority = "high" | "medium" | "low";
+
+// --- Reporting ---
+
+export type ReportTaskType = "feeding" | "medication" | "activity";
+
+export interface TaskCompletionEntry {
+  id: string;
+  taskType: ReportTaskType;
+  taskName: string;
+  petId: string;
+  petName: string;
+  completedById: string;
+  completedByName: string;
+  completedAt: string; // ISO
+  skipped: boolean;
+}
+
+export interface MemberContribution {
+  memberId: string;
+  memberName: string;
+  completed: number;
+  skipped: number;
+  byType: { taskType: ReportTaskType; completed: number; skipped: number }[];
+}
+
+export interface TrendDataPoint {
+  date: string; // YYYY-MM-DD or YYYY-Www
+  completed: number;
+  skipped: number;
+}
+
+export interface ReportingSummary {
+  dateRange: { from: string; to: string };
+  totalCompleted: number;
+  totalSkipped: number;
+  completionRate: number;
+  topContributor: { memberId: string; memberName: string; count: number } | null;
+  contributions: MemberContribution[];
+}

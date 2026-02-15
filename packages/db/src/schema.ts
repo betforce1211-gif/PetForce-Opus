@@ -81,6 +81,9 @@ export const activities = pgTable("activities", {
   notes: text("notes"),
   scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  completedBy: uuid("completed_by").references(() => members.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

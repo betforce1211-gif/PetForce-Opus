@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { protectedProcedure, router } from "../trpc";
-import { db, activities } from "@petforce/db";
+import { db, activities, members } from "@petforce/db";
 import { createActivitySchema, updateActivitySchema } from "@petforce/core";
 
 export const activityRouter = router({
@@ -48,10 +48,34 @@ export const activityRouter = router({
 
   complete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      // Fetch the activity to get its householdId
+      const [existing] = await db
+        .select()
+        .from(activities)
+        .where(eq(activities.id, input.id));
+
+      if (!existing) {
+        throw new Error("Activity not found");
+      }
+
+      // Look up the member record for this user in the activity's household
+      const [membership] = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, existing.householdId),
+            eq(members.userId, ctx.userId)
+          )
+        );
+
       const [activity] = await db
         .update(activities)
-        .set({ completedAt: new Date() })
+        .set({
+          completedAt: new Date(),
+          completedBy: membership?.id ?? null,
+        })
         .where(eq(activities.id, input.id))
         .returning();
       return activity;

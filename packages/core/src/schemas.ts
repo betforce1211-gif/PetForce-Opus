@@ -258,6 +258,29 @@ export const updateNoteSchema = z.object({
   content: z.string().min(1).max(5000).optional(),
 });
 
+// --- Reporting ---
+
+export const reportDateRangeSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const reportingCompletionLogSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  memberId: z.string().uuid().optional(),
+  petId: z.string().uuid().optional(),
+  taskType: z.enum(["feeding", "medication", "activity"]).optional(),
+  limit: z.number().int().min(1).max(200).optional(),
+  offset: z.number().int().min(0).optional(),
+});
+
+export const reportingTrendsSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  granularity: z.enum(["daily", "weekly"]).optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

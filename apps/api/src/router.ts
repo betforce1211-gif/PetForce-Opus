@@ -11,6 +11,7 @@ import { calendarRouter } from "./routers/calendar";
 import { healthRouter } from "./routers/health";
 import { financeRouter } from "./routers/finance";
 import { notesRouter } from "./routers/notes";
+import { reportingRouter } from "./routers/reporting";
 
 export const appRouter = router({
   household: householdRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   health: healthRouter,
   finance: financeRouter,
   notes: notesRouter,
+  reporting: reportingRouter,
 });
 
 export type AppRouter = typeof appRouter;
