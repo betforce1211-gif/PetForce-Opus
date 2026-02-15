@@ -200,6 +200,49 @@ export const COMMON_VACCINES: Record<string, string[]> = {
   ],
 };
 
+// --- Finance / Expenses ---
+
+export const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
+  food: "Food",
+  treats: "Treats",
+  toys: "Toys",
+  grooming: "Grooming",
+  boarding: "Boarding",
+  insurance: "Insurance",
+  supplies: "Supplies",
+  training: "Training",
+  other: "Other",
+};
+
+export const EXPENSE_CATEGORY_ICONS: Record<string, string> = {
+  food: "\uD83C\uDF5A",
+  treats: "\uD83E\uDD6C",
+  toys: "\uD83E\uDDF8",
+  grooming: "\u2702\uFE0F",
+  boarding: "\uD83C\uDFE0",
+  insurance: "\uD83D\uDEE1\uFE0F",
+  supplies: "\uD83D\uDECD\uFE0F",
+  training: "\uD83C\uDF93",
+  other: "\uD83D\uDCB5",
+  // Health record types (for merged finance view)
+  vet_visit: "\uD83C\uDFE5",
+  vaccination: "\uD83D\uDC89",
+  checkup: "\uD83E\uDE7A",
+  procedure: "\uD83D\uDD2C",
+};
+
+export const EXPENSE_DESCRIPTION_SUGGESTIONS: Record<string, string[]> = {
+  food: ["Kibble", "Wet food", "Raw food", "Prescription diet"],
+  treats: ["Training treats", "Dental chews", "Biscuits", "Jerky"],
+  toys: ["Chew toy", "Ball", "Interactive puzzle", "Plush toy"],
+  grooming: ["Bath", "Haircut", "Nail trim", "Teeth cleaning"],
+  boarding: ["Daycare", "Overnight stay", "Pet sitting", "Dog walking"],
+  insurance: ["Monthly premium", "Annual premium", "Deductible"],
+  supplies: ["Collar", "Leash", "Bed", "Crate", "Litter", "Bowls"],
+  training: ["Group class", "Private session", "Online course"],
+  other: [],
+};
+
 export const PET_AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export const PET_AVATAR_ALLOWED_TYPES = [
   "image/jpeg",

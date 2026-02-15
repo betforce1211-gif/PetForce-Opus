@@ -193,6 +193,37 @@ export const medications = pgTable("medications", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// --- Expenses ---
+
+export const expenses = pgTable("expenses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  category: text("category", {
+    enum: [
+      "food",
+      "treats",
+      "toys",
+      "grooming",
+      "boarding",
+      "insurance",
+      "supplies",
+      "training",
+      "other",
+    ],
+  }).notNull(),
+  description: text("description").notNull(),
+  amount: real("amount").notNull(),
+  date: timestamp("date", { withTimezone: true }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // --- Access Requests ---
 
 export const accessRequests = pgTable("access_requests", {

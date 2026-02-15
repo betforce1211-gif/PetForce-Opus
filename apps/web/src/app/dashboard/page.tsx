@@ -14,6 +14,8 @@ import { CalendarModal } from "@/components/calendar-modal";
 import { CalendarAddEventModal } from "@/components/calendar-add-event-modal";
 import { HealthTileContent } from "@/components/health-tile";
 import { HealthModal } from "@/components/health-modal";
+import { FinanceTileContent } from "@/components/finance-tile";
+import { FinanceModal } from "@/components/finance-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function DashboardPage() {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showHealthModal, setShowHealthModal] = useState(false);
+  const [showFinanceModal, setShowFinanceModal] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -246,19 +249,16 @@ export default function DashboardPage() {
               />
             </div>
 
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.reminders }} />
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowFinanceModal(true)}>
+              <div style={{ ...tileAccentBar, background: tileAccents.finance }} />
               <h2 style={sectionTitle}>
-                <span style={titleEmoji}>🔔</span>
-                Reminders
+                <span style={titleEmoji}>{"\uD83D\uDCB0"}</span>
+                Finance
               </h2>
-              <div style={placeholderBody}>
-                <div style={placeholderIconWrap}>
-                  <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>🔔</span>
-                </div>
-                <p style={placeholderLabel}>Upcoming tasks & alerts</p>
-                <span style={comingSoonBadge}>Coming Soon</span>
-              </div>
+              <FinanceTileContent
+                householdId={householdId}
+                onManage={() => setShowFinanceModal(true)}
+              />
             </div>
 
             {/* Row 3 */}
@@ -374,6 +374,12 @@ export default function DashboardPage() {
           onClose={() => setShowHealthModal(false)}
         />
       )}
+      {showFinanceModal && (
+        <FinanceModal
+          householdId={householdId}
+          onClose={() => setShowFinanceModal(false)}
+        />
+      )}
       {showAddEventModal && (
         <CalendarAddEventModal
           householdId={householdId}
@@ -459,7 +465,7 @@ const tileAccents = {
   health:    "linear-gradient(135deg, #EC4899 0%, #F472B6 100%)",
   members:   "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
   feeding:   "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
-  reminders: "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
+  finance:   "linear-gradient(135deg, #10B981 0%, #059669 100%)",
   actions:   "linear-gradient(135deg, #6366F1 0%, #A78BFA 100%)",
   calendar:  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
   notes:     "linear-gradient(135deg, #6366F1 0%, #EC4899 100%)",

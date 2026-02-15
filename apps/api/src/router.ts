@@ -9,6 +9,7 @@ import { accessRequestRouter } from "./routers/access-request";
 import { feedingRouter } from "./routers/feeding";
 import { calendarRouter } from "./routers/calendar";
 import { healthRouter } from "./routers/health";
+import { financeRouter } from "./routers/finance";
 
 export const appRouter = router({
   household: householdRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   feeding: feedingRouter,
   calendar: calendarRouter,
   health: healthRouter,
+  finance: financeRouter,
 });
 
 export type AppRouter = typeof appRouter;

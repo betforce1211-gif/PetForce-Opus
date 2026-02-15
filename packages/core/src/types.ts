@@ -213,6 +213,51 @@ export interface HealthSummary {
   nextAppointment: { petName: string; date: string; reason: string | null } | null;
 }
 
+// --- Finance / Expenses ---
+
+export type ExpenseCategory =
+  | "food"
+  | "treats"
+  | "toys"
+  | "grooming"
+  | "boarding"
+  | "insurance"
+  | "supplies"
+  | "training"
+  | "other";
+
+export interface Expense {
+  id: string;
+  householdId: string;
+  petId: string;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  date: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface FinanceSummaryItem {
+  id: string;
+  description: string;
+  amount: number;
+  date: string; // ISO
+  category: string;
+  petId: string;
+  petName: string;
+  source: "expense" | "health";
+}
+
+export interface FinanceSummary {
+  monthlyTotal: number;
+  previousMonthTotal: number;
+  byCategory: { category: string; total: number }[];
+  byPet: { petId: string; petName: string; total: number }[];
+  recentExpenses: FinanceSummaryItem[];
+}
+
 // --- Dashboard view types ---
 
 export interface HouseholdSummary {

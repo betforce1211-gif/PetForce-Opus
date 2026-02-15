@@ -197,6 +197,45 @@ export const updateMedicationSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+// --- Finance / Expenses ---
+
+export const expenseCategories = [
+  "food",
+  "treats",
+  "toys",
+  "grooming",
+  "boarding",
+  "insurance",
+  "supplies",
+  "training",
+  "other",
+] as const;
+
+export const createExpenseSchema = z.object({
+  petId: z.string().uuid(),
+  category: z.enum(expenseCategories),
+  description: z.string().min(1).max(200),
+  amount: z.number().positive(),
+  date: z.coerce.date(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+
+export const updateExpenseSchema = z.object({
+  id: z.string().uuid(),
+  category: z.enum(expenseCategories).optional(),
+  description: z.string().min(1).max(200).optional(),
+  amount: z.number().positive().optional(),
+  date: z.coerce.date().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+
+export const financeSummaryInputSchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Must be YYYY-MM format")
+    .optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({
