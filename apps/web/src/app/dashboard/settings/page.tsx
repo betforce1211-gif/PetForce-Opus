@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
+import { useTrackEvent } from "@/lib/use-track-event";
 
 type Tab = "members" | "invites" | "settings";
 
@@ -235,6 +236,7 @@ function MembersTab({
 
 function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: boolean }) {
   const utils = trpc.useContext();
+  const trackEvent = useTrackEvent();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "member" | "sitter">("member");
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
@@ -245,6 +247,7 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
   );
   const createInvite = trpc.invitation.create.useMutation({
     onSuccess: () => {
+      trackEvent("member.invited", { role });
       utils.invitation.listByHousehold.invalidate();
       setEmail("");
     },

@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
 import { PET_AVATAR_MAX_SIZE, PET_AVATAR_ALLOWED_TYPES } from "@petforce/core";
+import { useTrackEvent } from "@/lib/use-track-event";
 import { Modal } from "./modal";
 
 const speciesOptions = ["dog", "cat", "bird", "fish", "reptile", "other"] as const;
@@ -16,6 +17,7 @@ interface PetAddModalProps {
 
 export function PetAddModal({ onClose }: PetAddModalProps) {
   const { householdId } = useHousehold();
+  const trackEvent = useTrackEvent();
   const utils = trpc.useContext();
 
   const [name, setName] = useState("");
@@ -37,6 +39,7 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
 
   const createPet = trpc.pet.create.useMutation({
     async onSuccess(pet) {
+      trackEvent("pet.added", { species });
       if (photoFile && pet.id) {
         try {
           await upload(pet.id, photoFile);

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
+import { useTrackEvent } from "@/lib/use-track-event";
 
 export default function OnboardPage() {
   const router = useRouter();
   const { switchHousehold } = useHousehold();
+  const trackEvent = useTrackEvent();
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#6366F1");
@@ -15,6 +17,7 @@ export default function OnboardPage() {
 
   const onboard = trpc.dashboard.onboard.useMutation({
     onSuccess(household) {
+      trackEvent("household.created");
       switchHousehold(household.id);
       router.push("/dashboard");
     },

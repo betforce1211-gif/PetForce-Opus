@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
@@ -16,9 +16,12 @@ import { HealthTileContent } from "@/components/health-tile";
 import { HealthModal } from "@/components/health-modal";
 import { FinanceTileContent } from "@/components/finance-tile";
 import { FinanceModal } from "@/components/finance-modal";
+import { ReportingTileContent } from "@/components/reporting-tile";
+import { ReportingModal } from "@/components/reporting-modal";
 import { NotesTileContent } from "@/components/notes-tile";
 import { NotesModal } from "@/components/notes-modal";
 import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
+import { useTrackEvent } from "@/lib/use-track-event";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,6 +34,9 @@ export default function DashboardPage() {
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showReportingModal, setShowReportingModal] = useState(false);
+  const trackEvent = useTrackEvent();
+  const trackedView = useRef(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -136,6 +142,12 @@ export default function DashboardPage() {
 
   const { household, members, pets, recentActivities } = data;
 
+  // Track dashboard view once per mount
+  if (!trackedView.current) {
+    trackedView.current = true;
+    trackEvent("dashboard.viewed", { petCount: pets.length, memberCount: members.length });
+  }
+
   // --- State 6: Dashboard loaded ---
   return (
     <main style={pageShell}>
@@ -201,7 +213,7 @@ export default function DashboardPage() {
               <button type="button" onClick={() => setShowAddPet(true)} style={{ ...tileLink, background: "none", border: "none", cursor: "pointer" }}>+ Add Pet</button>
             </div>
 
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowHealthModal(true)}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "health" }); setShowHealthModal(true); }}>
               <div style={{ ...tileAccentBar, background: tileAccents.health }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>🏥</span>
@@ -250,7 +262,7 @@ export default function DashboardPage() {
               />
             </div>
 
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowFinanceModal(true)}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "finance" }); setShowFinanceModal(true); }}>
               <div style={{ ...tileAccentBar, background: tileAccents.finance }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>{"\uD83D\uDCB0"}</span>
@@ -263,6 +275,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Row 3 */}
+            {/* Quick Actions — preserved for future custom dashboard
             <div style={tileStyle}>
               <div style={{ ...tileAccentBar, background: tileAccents.actions }} />
               <h2 style={sectionTitle}>
@@ -275,8 +288,20 @@ export default function DashboardPage() {
                 <Link href="/dashboard/settings" style={quickActionBtn}>⚙️ Settings</Link>
               </div>
             </div>
+            */}
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "reporting" }); setShowReportingModal(true); }}>
+              <div style={{ ...tileAccentBar, background: tileAccents.reporting }} />
+              <h2 style={sectionTitle}>
+                <span style={titleEmoji}>{"\uD83D\uDCCA"}</span>
+                Reporting
+              </h2>
+              <ReportingTileContent
+                householdId={householdId}
+                onManage={() => setShowReportingModal(true)}
+              />
+            </div>
 
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowCalendarModal(true)}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "calendar" }); setShowCalendarModal(true); }}>
               <div style={{ ...tileAccentBar, background: tileAccents.calendar }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>📅</span>
@@ -285,7 +310,7 @@ export default function DashboardPage() {
               <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
             </div>
 
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowNotesModal(true)}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "notes" }); setShowNotesModal(true); }}>
               <div style={{ ...tileAccentBar, background: tileAccents.notes }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>📝</span>
@@ -343,6 +368,12 @@ export default function DashboardPage() {
           onClose={() => setShowNotesModal(false)}
         />
       )}
+      {showReportingModal && (
+        <ReportingModal
+          householdId={householdId}
+          onClose={() => setShowReportingModal(false)}
+        />
+      )}
       {showAddEventModal && (
         <CalendarAddEventModal
           householdId={householdId}
@@ -375,6 +406,7 @@ const tileAccents = {
   feeding:   "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
   finance:   "linear-gradient(135deg, #10B981 0%, #059669 100%)",
   actions:   "linear-gradient(135deg, #6366F1 0%, #A78BFA 100%)",
+  reporting: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",
   calendar:  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
   notes:     "linear-gradient(135deg, #6366F1 0%, #EC4899 100%)",
 };

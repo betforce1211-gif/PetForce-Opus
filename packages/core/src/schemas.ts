@@ -281,6 +281,14 @@ export const reportingTrendsSchema = z.object({
   granularity: z.enum(["daily", "weekly"]).optional(),
 });
 
+// --- Analytics ---
+
+export const trackEventSchema = z.object({
+  eventName: z.string().min(1).max(100),
+  householdId: z.string().uuid().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

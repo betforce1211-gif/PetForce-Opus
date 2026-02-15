@@ -316,3 +316,16 @@ export const accessRequests = pgTable("access_requests", {
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// --- Analytics Events ---
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  householdId: uuid("household_id").references(() => households.id, {
+    onDelete: "set null",
+  }),
+  eventName: text("event_name").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

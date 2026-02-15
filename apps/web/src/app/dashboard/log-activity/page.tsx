@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
+import { useTrackEvent } from "@/lib/use-track-event";
 
 const activityTypes = [
   "walk", "feeding", "vet_visit", "medication", "grooming", "play", "other",
@@ -22,6 +23,7 @@ const activityTypeLabels: Record<string, string> = {
 export default function LogActivityPage() {
   const router = useRouter();
   const { householdId } = useHousehold();
+  const trackEvent = useTrackEvent();
   const [petId, setPetId] = useState("");
   const [type, setType] = useState<string>("walk");
   const [title, setTitle] = useState("");
@@ -40,6 +42,7 @@ export default function LogActivityPage() {
 
   const createActivity = trpc.activity.create.useMutation({
     onSuccess() {
+      trackEvent("activity.logged", { activityType: type });
       router.push("/dashboard");
     },
   });

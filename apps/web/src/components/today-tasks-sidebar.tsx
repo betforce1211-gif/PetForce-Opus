@@ -14,6 +14,7 @@ import type {
   HealthSummary,
 } from "@petforce/core";
 import { TASK_KIND_ICONS, TASK_KIND_LABELS } from "@petforce/core";
+import { useTrackEvent } from "@/lib/use-track-event";
 
 // ── Internal task item type ──
 
@@ -175,6 +176,7 @@ function aggregateAndSort(
 
 export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeeding }: Props) {
   const today = new Date().toISOString().split("T")[0];
+  const trackEvent = useTrackEvent();
 
   const utils = trpc.useUtils();
 
@@ -264,6 +266,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
 
   function handleDone(task: TaskItem) {
     if (task.kind === "feeding") {
+      trackEvent("feeding.completed", { skipped: false });
       const scheduleId = task.id.replace("feeding-", "");
       logFeeding.mutate({ householdId, feedingScheduleId: scheduleId, feedingDate: today });
     } else if (task.kind === "activity") {
@@ -321,6 +324,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
 
   function handleSkip(task: TaskItem) {
     if (task.kind === "feeding") {
+      trackEvent("feeding.completed", { skipped: true });
       const scheduleId = task.id.replace("feeding-", "");
       logFeeding.mutate({ householdId, feedingScheduleId: scheduleId, feedingDate: today, skipped: true });
     } else if (task.kind === "activity") {
