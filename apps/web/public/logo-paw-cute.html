@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetForce — Cute Paw Variations (v3)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(145deg, #EEEDFA, #F5F0FA, #FAF0F5);
+    min-height: 100vh;
+    padding: 3rem 2rem;
+  }
+  h1 { text-align: center; font-size: 2rem; color: #1A1637; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
+  .subtitle { text-align: center; color: #8B8FA3; font-size: 0.9rem; margin-bottom: 3rem; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(20px);
+    border-radius: 1.25rem;
+    padding: 2rem 2rem 1.75rem;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99,102,241,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .card-number {
+    font-size: 0.65rem; font-weight: 700; color: #6366F1;
+    text-transform: uppercase; letter-spacing: 0.12em; align-self: flex-start;
+  }
+  .logo-area { display: flex; align-items: center; justify-content: center; min-height: 180px; }
+  .card-title { font-weight: 700; color: #1A1637; font-size: 0.95rem; }
+  .card-desc { color: #8B8FA3; font-size: 0.78rem; text-align: center; line-height: 1.6; }
+  .previews { display: flex; gap: 0.75rem; width: 100%; margin-top: 0.25rem; }
+  .preview-dark {
+    flex: 1; background: #1A1637; border-radius: 0.625rem;
+    padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center;
+  }
+  .preview-light {
+    flex: 1; background: #fff; border-radius: 0.625rem;
+    padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cute Paw — Matching Your Reference</h1>
+<p class="subtitle">Filled toe beans, thick chunky outlines, organic shapes, heart in the pad — matching the soft bubbly energy of the image you shared. 10 variations with PF / bolt / house ideas.</p>
+
+<div class="grid">
+
+  <!--
+    BASE PAW SHAPE (reused across all concepts):
+    - 4 filled toe beans (rounded, organic, slightly different sizes)
+    - 1 large main pad (organic bean shape, not a perfect ellipse)
+    - All with thick stroke outlines + filled interiors
+    - The reference had: filled dark beans, thick outline, heart in pad
+  -->
+
+  <!-- 01 — Heart in Pad (closest to reference) -->
+  <div class="card">
+    <span class="card-number">01 — Heart in Pad (Reference Match)</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <!-- Toe beans: filled with thick outline -->
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1" stroke="#6366F1" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1" stroke="#6366F1" stroke-width="6"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1" stroke="#6366F1" stroke-width="6"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1" stroke="#6366F1" stroke-width="6"/>
+        <!-- Main pad: organic bean shape -->
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1" stroke="#6366F1" stroke-width="6" stroke-linejoin="round"/>
+        <!-- Heart cutout in pad — white/background colored -->
+        <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white" stroke="white" stroke-width="3" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#1A1637"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Heart in Pad</p>
+    <p class="card-desc">Closest to your reference. Filled chunky beans, organic pad, white heart cutout. Clean and cute.</p>
+  </div>
+
+  <!-- 02 — Heart in Pad + PF Below -->
+  <div class="card">
+    <span class="card-number">02 — Heart Paw + PF Wordmark</span>
+    <div class="logo-area">
+      <svg width="160" height="210" viewBox="0 0 160 210">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+        <!-- PF wordmark below -->
+        <text x="80" y="198" font-family="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" font-weight="900" font-size="32" fill="#6366F1" text-anchor="middle" letter-spacing="3">PF</text>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="56" viewBox="0 0 160 210">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#1A1637"/>
+          <text x="80" y="198" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="32" fill="white" text-anchor="middle" letter-spacing="3">PF</text>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="56" viewBox="0 0 160 210">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+          <text x="80" y="198" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="32" fill="#6366F1" text-anchor="middle" letter-spacing="3">PF</text>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Heart Paw + PF</p>
+    <p class="card-desc">Same cute paw from #01 with bold "PF" wordmark underneath. Great for a lockup.</p>
+  </div>
+
+  <!-- 03 — Bolt in Pad (replaces heart) -->
+  <div class="card">
+    <span class="card-number">03 — Bolt in Pad</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- Lightning bolt cutout in pad instead of heart -->
+        <path d="M90 100 L72 124 L84 120 L66 148" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M90 100 L72 124 L84 120 L66 148" fill="none" stroke="#1A1637" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M90 100 L72 124 L84 120 L66 148" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Bolt in Pad</p>
+    <p class="card-desc">Chunky lightning bolt cutout replaces the heart. Same filled paw energy. The "Force" in PetForce.</p>
+  </div>
+
+  <!-- 04 — Heart + Bolt Toe -->
+  <div class="card">
+    <span class="card-number">04 — Heart Pad + Bolt Toe</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <!-- 3 normal toes -->
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <!-- 4th toe is a gold bolt shape -->
+        <path d="M140 24 L122 50 L134 44 L118 68" fill="none" stroke="#FBBF24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Main pad -->
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- Heart cutout -->
+        <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <path d="M140 24 L122 50 L134 44 L118 68" fill="none" stroke="#FBBF24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#1A1637"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <path d="M140 24 L122 50 L134 44 L118 68" fill="none" stroke="#FBBF24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Heart Pad + Bolt Toe</p>
+    <p class="card-desc">Three filled beans + one gold lightning bolt toe. Heart stays in the pad. Keeps the cute paw, sneaks in the Force.</p>
+  </div>
+
+  <!-- 05 — House Roof Peak on Pad -->
+  <div class="card">
+    <span class="card-number">05 — House Paw</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <!-- Main pad with roof peak at top -->
+        <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="#6366F1"/>
+        <!-- Heart cutout -->
+        <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="white"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="white"/>
+          <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="#1A1637"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="#6366F1"/>
+          <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">House Paw</p>
+    <p class="card-desc">The main pad has a subtle roof peak at the top — paw meets home. Heart cutout inside. Still reads as a paw.</p>
+  </div>
+
+  <!-- 06 — PF Inside Pad (no heart) -->
+  <div class="card">
+    <span class="card-number">06 — PF Inside Pad</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- Bold PF text cutout -->
+        <text x="80" y="132" font-family="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" font-weight="900" font-size="44" fill="white" text-anchor="middle" letter-spacing="-1">PF</text>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <text x="80" y="132" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="44" fill="#1A1637" text-anchor="middle" letter-spacing="-1">PF</text>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <text x="80" y="132" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="44" fill="white" text-anchor="middle" letter-spacing="-1">PF</text>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">PF Inside Pad</p>
+    <p class="card-desc">Bold "PF" letters cut out of the main pad. Simple, direct branding. Paw is unmistakable.</p>
+  </div>
+
+  <!-- 07 — Heart + Bolt Through -->
+  <div class="card">
+    <span class="card-number">07 — Heart + Bolt Through</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- Heart cutout -->
+        <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+        <!-- Gold bolt through the heart -->
+        <path d="M90 100 L76 120 L86 116 L70 140" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#1A1637"/>
+          <path d="M90 100 L76 120 L86 116 L70 140" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="white"/>
+          <path d="M90 100 L76 120 L86 116 L70 140" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Heart + Bolt Through</p>
+    <p class="card-desc">The reference heart stays — with a gold lightning bolt charging through it. Love + Force. Two-tone pop on the pad.</p>
+  </div>
+
+  <!-- 08 — Two-Tone: Indigo + Gold -->
+  <div class="card">
+    <span class="card-number">08 — Two-Tone Paw</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <!-- Two gold toes, two indigo toes -->
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#FBBF24"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#FBBF24"/>
+        <!-- Gold pad -->
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- Heart cutout -->
+        <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#FBBF24"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#FBBF24"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#FBBF24"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#FBBF24"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#FBBF24"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#FBBF24"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <path d="M80 148 C56 130 48 118 60 108 C67 103 74 107 80 114 C86 107 93 103 100 108 C112 118 104 130 80 148 Z" fill="#FBBF24"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Two-Tone Paw</p>
+    <p class="card-desc">Alternating indigo and gold beans. Gold heart in the indigo pad. Playful, energetic, still cute.</p>
+  </div>
+
+  <!-- 09 — House Shape Pad + Bolt Chimney -->
+  <div class="card">
+    <span class="card-number">09 — House Pad + Bolt Chimney</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <!-- Main pad with roof peak -->
+        <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="#6366F1"/>
+        <!-- Heart cutout -->
+        <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="white"/>
+        <!-- Bolt chimney coming off the roof -->
+        <path d="M100 62 L92 76 L100 72 L90 86" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="white"/>
+          <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="#1A1637"/>
+          <path d="M100 62 L92 76 L100 72 L90 86" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 96 C24 78 40 68 58 70 L80 56 L104 70 C120 72 140 82 136 100 C132 124 118 150 100 160 C86 168 72 168 58 160 C42 150 24 120 28 96 Z" fill="#6366F1"/>
+          <path d="M80 150 C56 132 48 120 60 110 C67 105 74 109 80 116 C86 109 93 105 100 110 C112 120 104 132 80 150 Z" fill="white"/>
+          <path d="M100 62 L92 76 L100 72 L90 86" fill="none" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">House Pad + Bolt Chimney</p>
+    <p class="card-desc">All three: house-shaped pad, heart inside, and a gold bolt "chimney" spark. Home + love + energy.</p>
+  </div>
+
+  <!-- 10 — P-Bolt-F Stacked -->
+  <div class="card">
+    <span class="card-number">10 — P⚡F in Pad</span>
+    <div class="logo-area">
+      <svg width="160" height="180" viewBox="0 0 160 180">
+        <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+        <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+        <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+        <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+        <!-- P on left -->
+        <text x="56" y="130" font-family="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" font-weight="900" font-size="36" fill="white" text-anchor="middle">P</text>
+        <!-- Tiny bolt in middle -->
+        <path d="M82 106 L74 120 L82 116 L72 132" fill="none" stroke="#FBBF24" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- F on right -->
+        <text x="104" y="130" font-family="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" font-weight="900" font-size="36" fill="white" text-anchor="middle">F</text>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="white"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="white"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="white"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="white"/>
+          <text x="56" y="130" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="36" fill="#1A1637" text-anchor="middle">P</text>
+          <path d="M82 106 L74 120 L82 116 L72 132" fill="none" stroke="#FBBF24" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="104" y="130" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="36" fill="#1A1637" text-anchor="middle">F</text>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="44" height="48" viewBox="0 0 160 180">
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <text x="56" y="130" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="36" fill="white" text-anchor="middle">P</text>
+          <path d="M82 106 L74 120 L82 116 L72 132" fill="none" stroke="#FBBF24" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="104" y="130" font-family="'Trebuchet MS', system-ui" font-weight="900" font-size="36" fill="white" text-anchor="middle">F</text>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">P⚡F in Pad</p>
+    <p class="card-desc">P and F with a gold bolt between them, all inside the chunky pad. Spells out PetForce with energy.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

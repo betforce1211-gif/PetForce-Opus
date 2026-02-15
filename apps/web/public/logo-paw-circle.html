@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetForce Logo — Paw Circle Variations</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(145deg, #EEEDFA, #F5F0FA, #FAF0F5);
+    min-height: 100vh;
+    padding: 3rem 2rem;
+  }
+  h1 { text-align: center; font-size: 2rem; color: #1A1637; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
+  .subtitle { text-align: center; color: #8B8FA3; font-size: 0.9rem; margin-bottom: 3rem; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(20px);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem 2rem;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99,102,241,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .card-number {
+    font-size: 0.65rem; font-weight: 700; color: #6366F1;
+    text-transform: uppercase; letter-spacing: 0.12em; align-self: flex-start;
+  }
+  .logo-area { display: flex; align-items: center; justify-content: center; min-height: 120px; }
+  .card-title { font-weight: 700; color: #1A1637; font-size: 0.95rem; }
+  .card-desc { color: #8B8FA3; font-size: 0.78rem; text-align: center; line-height: 1.6; }
+  .previews { display: flex; gap: 0.75rem; width: 100%; margin-top: 0.25rem; }
+  .preview-dark {
+    flex: 1; background: #1A1637; border-radius: 0.625rem;
+    padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center;
+  }
+  .preview-light {
+    flex: 1; background: #fff; border-radius: 0.625rem;
+    padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+
+<h1>Paw Circle — 10 Variations</h1>
+<p class="subtitle">Starting from the PF Monogram concept. The circle becomes a cute paw. Each explores a different paw style.</p>
+
+<div class="grid">
+
+  <!-- 1. Classic round paw — symmetrical, clean -->
+  <div class="card">
+    <span class="card-number">01 — Classic</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad — the big circle -->
+        <ellipse cx="60" cy="72" rx="32" ry="28" fill="url(#p1)"/>
+        <!-- Four toe beans — round, symmetrical -->
+        <circle cx="30" cy="42" r="14" fill="url(#p1)"/>
+        <circle cx="90" cy="42" r="14" fill="url(#p1)"/>
+        <circle cx="48" cy="28" r="14" fill="url(#p1)"/>
+        <circle cx="72" cy="28" r="14" fill="url(#p1)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="72" rx="32" ry="28" fill="#6366F1"/>
+          <circle cx="30" cy="42" r="14" fill="#6366F1"/>
+          <circle cx="90" cy="42" r="14" fill="#6366F1"/>
+          <circle cx="48" cy="28" r="14" fill="#6366F1"/>
+          <circle cx="72" cy="28" r="14" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="72" rx="32" ry="28" fill="#6366F1"/>
+          <circle cx="30" cy="42" r="14" fill="#6366F1"/>
+          <circle cx="90" cy="42" r="14" fill="#6366F1"/>
+          <circle cx="48" cy="28" r="14" fill="#6366F1"/>
+          <circle cx="72" cy="28" r="14" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Classic Round</p>
+    <p class="card-desc">Perfectly symmetrical circles. Clean, recognizable, reads as "paw" instantly at any size.</p>
+  </div>
+
+  <!-- 2. Soft / chubby beans -->
+  <div class="card">
+    <span class="card-number">02 — Chubby</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad — wider, squishier -->
+        <ellipse cx="60" cy="74" rx="36" ry="26" fill="url(#p2)"/>
+        <!-- Chubby toe beans — larger, overlapping slightly -->
+        <ellipse cx="28" cy="44" rx="16" ry="14" transform="rotate(-10 28 44)" fill="url(#p2)"/>
+        <ellipse cx="92" cy="44" rx="16" ry="14" transform="rotate(10 92 44)" fill="url(#p2)"/>
+        <ellipse cx="48" cy="28" rx="15" ry="16" transform="rotate(-5 48 28)" fill="url(#p2)"/>
+        <ellipse cx="72" cy="28" rx="15" ry="16" transform="rotate(5 72 28)" fill="url(#p2)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="74" rx="36" ry="26" fill="#6366F1"/>
+          <ellipse cx="28" cy="44" rx="16" ry="14" transform="rotate(-10 28 44)" fill="#6366F1"/>
+          <ellipse cx="92" cy="44" rx="16" ry="14" transform="rotate(10 92 44)" fill="#6366F1"/>
+          <ellipse cx="48" cy="28" rx="15" ry="16" transform="rotate(-5 48 28)" fill="#6366F1"/>
+          <ellipse cx="72" cy="28" rx="15" ry="16" transform="rotate(5 72 28)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="74" rx="36" ry="26" fill="#6366F1"/>
+          <ellipse cx="28" cy="44" rx="16" ry="14" transform="rotate(-10 28 44)" fill="#6366F1"/>
+          <ellipse cx="92" cy="44" rx="16" ry="14" transform="rotate(10 92 44)" fill="#6366F1"/>
+          <ellipse cx="48" cy="28" rx="15" ry="16" transform="rotate(-5 48 28)" fill="#6366F1"/>
+          <ellipse cx="72" cy="28" rx="15" ry="16" transform="rotate(5 72 28)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Chubby Beans</p>
+    <p class="card-desc">Wider pad, fatter toe beans, slightly rotated outward. Soft, cute, squishy feel.</p>
+  </div>
+
+  <!-- 3. Elongated / realistic cat paw -->
+  <div class="card">
+    <span class="card-number">03 — Cat Paw</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad — heart-shaped / triangular -->
+        <path d="M30 88 C20 78 18 64 30 56 C38 50 50 48 60 50 C70 48 82 50 90 56 C102 64 100 78 90 88 C82 96 38 96 30 88 Z" fill="url(#p3)"/>
+        <!-- Elongated toes — more oval, cat-like -->
+        <ellipse cx="28" cy="40" rx="10" ry="16" transform="rotate(-20 28 40)" fill="url(#p3)"/>
+        <ellipse cx="92" cy="40" rx="10" ry="16" transform="rotate(20 92 40)" fill="url(#p3)"/>
+        <ellipse cx="48" cy="26" rx="10" ry="17" transform="rotate(-8 48 26)" fill="url(#p3)"/>
+        <ellipse cx="72" cy="26" rx="10" ry="17" transform="rotate(8 72 26)" fill="url(#p3)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <path d="M30 88 C20 78 18 64 30 56 C38 50 50 48 60 50 C70 48 82 50 90 56 C102 64 100 78 90 88 C82 96 38 96 30 88 Z" fill="#6366F1"/>
+          <ellipse cx="28" cy="40" rx="10" ry="16" transform="rotate(-20 28 40)" fill="#6366F1"/>
+          <ellipse cx="92" cy="40" rx="10" ry="16" transform="rotate(20 92 40)" fill="#6366F1"/>
+          <ellipse cx="48" cy="26" rx="10" ry="17" transform="rotate(-8 48 26)" fill="#6366F1"/>
+          <ellipse cx="72" cy="26" rx="10" ry="17" transform="rotate(8 72 26)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <path d="M30 88 C20 78 18 64 30 56 C38 50 50 48 60 50 C70 48 82 50 90 56 C102 64 100 78 90 88 C82 96 38 96 30 88 Z" fill="#6366F1"/>
+          <ellipse cx="28" cy="40" rx="10" ry="16" transform="rotate(-20 28 40)" fill="#6366F1"/>
+          <ellipse cx="92" cy="40" rx="10" ry="16" transform="rotate(20 92 40)" fill="#6366F1"/>
+          <ellipse cx="48" cy="26" rx="10" ry="17" transform="rotate(-8 48 26)" fill="#6366F1"/>
+          <ellipse cx="72" cy="26" rx="10" ry="17" transform="rotate(8 72 26)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Cat Paw</p>
+    <p class="card-desc">Elongated oval toes angled outward, heart-shaped main pad. More anatomically cat-like.</p>
+  </div>
+
+  <!-- 4. Dog paw — wider spread, rounder -->
+  <div class="card">
+    <span class="card-number">04 — Dog Paw</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad — larger, rounder -->
+        <ellipse cx="60" cy="74" rx="34" ry="30" fill="url(#p4)"/>
+        <!-- Dog toes — wider spread, chunkier -->
+        <ellipse cx="22" cy="40" rx="14" ry="12" transform="rotate(-25 22 40)" fill="url(#p4)"/>
+        <ellipse cx="98" cy="40" rx="14" ry="12" transform="rotate(25 98 40)" fill="url(#p4)"/>
+        <ellipse cx="44" cy="24" rx="13" ry="14" transform="rotate(-10 44 24)" fill="url(#p4)"/>
+        <ellipse cx="76" cy="24" rx="13" ry="14" transform="rotate(10 76 24)" fill="url(#p4)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="74" rx="34" ry="30" fill="#6366F1"/>
+          <ellipse cx="22" cy="40" rx="14" ry="12" transform="rotate(-25 22 40)" fill="#6366F1"/>
+          <ellipse cx="98" cy="40" rx="14" ry="12" transform="rotate(25 98 40)" fill="#6366F1"/>
+          <ellipse cx="44" cy="24" rx="13" ry="14" transform="rotate(-10 44 24)" fill="#6366F1"/>
+          <ellipse cx="76" cy="24" rx="13" ry="14" transform="rotate(10 76 24)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="74" rx="34" ry="30" fill="#6366F1"/>
+          <ellipse cx="22" cy="40" rx="14" ry="12" transform="rotate(-25 22 40)" fill="#6366F1"/>
+          <ellipse cx="98" cy="40" rx="14" ry="12" transform="rotate(25 98 40)" fill="#6366F1"/>
+          <ellipse cx="44" cy="24" rx="13" ry="14" transform="rotate(-10 44 24)" fill="#6366F1"/>
+          <ellipse cx="76" cy="24" rx="13" ry="14" transform="rotate(10 76 24)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Dog Paw</p>
+    <p class="card-desc">Wider spread toes, chunkier pads, bigger footprint. Sturdy, friendly, dog energy.</p>
+  </div>
+
+  <!-- 5. Tilted / playful -->
+  <div class="card">
+    <span class="card-number">05 — Tilted</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p5" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-15 60 60)">
+          <ellipse cx="60" cy="72" rx="30" ry="26" fill="url(#p5)"/>
+          <circle cx="32" cy="42" r="13" fill="url(#p5)"/>
+          <circle cx="88" cy="42" r="13" fill="url(#p5)"/>
+          <ellipse cx="48" cy="28" rx="12" ry="14" fill="url(#p5)"/>
+          <ellipse cx="72" cy="28" rx="12" ry="14" fill="url(#p5)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <g transform="rotate(-15 60 60)">
+            <ellipse cx="60" cy="72" rx="30" ry="26" fill="#6366F1"/>
+            <circle cx="32" cy="42" r="13" fill="#6366F1"/>
+            <circle cx="88" cy="42" r="13" fill="#6366F1"/>
+            <ellipse cx="48" cy="28" rx="12" ry="14" fill="#6366F1"/>
+            <ellipse cx="72" cy="28" rx="12" ry="14" fill="#6366F1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <g transform="rotate(-15 60 60)">
+            <ellipse cx="60" cy="72" rx="30" ry="26" fill="#6366F1"/>
+            <circle cx="32" cy="42" r="13" fill="#6366F1"/>
+            <circle cx="88" cy="42" r="13" fill="#6366F1"/>
+            <ellipse cx="48" cy="28" rx="12" ry="14" fill="#6366F1"/>
+            <ellipse cx="72" cy="28" rx="12" ry="14" fill="#6366F1"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Tilted Playful</p>
+    <p class="card-desc">Same clean paw, rotated 15 degrees. Adds movement and personality. Feels like a stamp.</p>
+  </div>
+
+  <!-- 6. Three toes (simplified) -->
+  <div class="card">
+    <span class="card-number">06 — Three Toes</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p6" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad -->
+        <ellipse cx="60" cy="72" rx="32" ry="28" fill="url(#p6)"/>
+        <!-- Three toes only — more iconic/simplified -->
+        <ellipse cx="30" cy="36" rx="13" ry="16" transform="rotate(-15 30 36)" fill="url(#p6)"/>
+        <ellipse cx="60" cy="24" rx="13" ry="18" fill="url(#p6)"/>
+        <ellipse cx="90" cy="36" rx="13" ry="16" transform="rotate(15 90 36)" fill="url(#p6)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="72" rx="32" ry="28" fill="#6366F1"/>
+          <ellipse cx="30" cy="36" rx="13" ry="16" transform="rotate(-15 30 36)" fill="#6366F1"/>
+          <ellipse cx="60" cy="24" rx="13" ry="18" fill="#6366F1"/>
+          <ellipse cx="90" cy="36" rx="13" ry="16" transform="rotate(15 90 36)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="72" rx="32" ry="28" fill="#6366F1"/>
+          <ellipse cx="30" cy="36" rx="13" ry="16" transform="rotate(-15 30 36)" fill="#6366F1"/>
+          <ellipse cx="60" cy="24" rx="13" ry="18" fill="#6366F1"/>
+          <ellipse cx="90" cy="36" rx="13" ry="16" transform="rotate(15 90 36)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Three Toes</p>
+    <p class="card-desc">Simplified to three toes instead of four. More abstract, more logo-friendly. Reads clearly at tiny sizes.</p>
+  </div>
+
+  <!-- 7. Heart-shaped pad -->
+  <div class="card">
+    <span class="card-number">07 — Heart Pad</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p7" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Heart-shaped main pad -->
+        <path d="M60 96 C20 72 14 58 30 50 C40 45 52 50 60 60 C68 50 80 45 90 50 C106 58 100 72 60 96 Z" fill="url(#p7)"/>
+        <!-- Four toes -->
+        <circle cx="30" cy="38" r="12" fill="url(#p7)"/>
+        <circle cx="90" cy="38" r="12" fill="url(#p7)"/>
+        <ellipse cx="48" cy="24" rx="12" ry="14" transform="rotate(-5 48 24)" fill="url(#p7)"/>
+        <ellipse cx="72" cy="24" rx="12" ry="14" transform="rotate(5 72 24)" fill="url(#p7)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <path d="M60 96 C20 72 14 58 30 50 C40 45 52 50 60 60 C68 50 80 45 90 50 C106 58 100 72 60 96 Z" fill="#6366F1"/>
+          <circle cx="30" cy="38" r="12" fill="#6366F1"/>
+          <circle cx="90" cy="38" r="12" fill="#6366F1"/>
+          <ellipse cx="48" cy="24" rx="12" ry="14" transform="rotate(-5 48 24)" fill="#6366F1"/>
+          <ellipse cx="72" cy="24" rx="12" ry="14" transform="rotate(5 72 24)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <path d="M60 96 C20 72 14 58 30 50 C40 45 52 50 60 60 C68 50 80 45 90 50 C106 58 100 72 60 96 Z" fill="#6366F1"/>
+          <circle cx="30" cy="38" r="12" fill="#6366F1"/>
+          <circle cx="90" cy="38" r="12" fill="#6366F1"/>
+          <ellipse cx="48" cy="24" rx="12" ry="14" transform="rotate(-5 48 24)" fill="#6366F1"/>
+          <ellipse cx="72" cy="24" rx="12" ry="14" transform="rotate(5 72 24)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Heart Pad</p>
+    <p class="card-desc">The main pad is a heart shape. Love + pets. Cute without being childish.</p>
+  </div>
+
+  <!-- 8. Compact / tightly packed -->
+  <div class="card">
+    <span class="card-number">08 — Compact</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p8" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad -->
+        <ellipse cx="60" cy="70" rx="30" ry="28" fill="url(#p8)"/>
+        <!-- Toes packed tightly, almost touching pad -->
+        <ellipse cx="32" cy="40" rx="12" ry="13" transform="rotate(-12 32 40)" fill="url(#p8)"/>
+        <ellipse cx="88" cy="40" rx="12" ry="13" transform="rotate(12 88 40)" fill="url(#p8)"/>
+        <ellipse cx="48" cy="30" rx="11" ry="14" transform="rotate(-4 48 30)" fill="url(#p8)"/>
+        <ellipse cx="72" cy="30" rx="11" ry="14" transform="rotate(4 72 30)" fill="url(#p8)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="70" rx="30" ry="28" fill="#6366F1"/>
+          <ellipse cx="32" cy="40" rx="12" ry="13" transform="rotate(-12 32 40)" fill="#6366F1"/>
+          <ellipse cx="88" cy="40" rx="12" ry="13" transform="rotate(12 88 40)" fill="#6366F1"/>
+          <ellipse cx="48" cy="30" rx="11" ry="14" transform="rotate(-4 48 30)" fill="#6366F1"/>
+          <ellipse cx="72" cy="30" rx="11" ry="14" transform="rotate(4 72 30)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="70" rx="30" ry="28" fill="#6366F1"/>
+          <ellipse cx="32" cy="40" rx="12" ry="13" transform="rotate(-12 32 40)" fill="#6366F1"/>
+          <ellipse cx="88" cy="40" rx="12" ry="13" transform="rotate(12 88 40)" fill="#6366F1"/>
+          <ellipse cx="48" cy="30" rx="11" ry="14" transform="rotate(-4 48 30)" fill="#6366F1"/>
+          <ellipse cx="72" cy="30" rx="11" ry="14" transform="rotate(4 72 30)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Compact</p>
+    <p class="card-desc">Toes packed close to the pad. Forms a tighter, more circular overall silhouette. Great for small spaces.</p>
+  </div>
+
+  <!-- 9. Splayed / energetic -->
+  <div class="card">
+    <span class="card-number">09 — Splayed</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p9" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad -->
+        <ellipse cx="60" cy="76" rx="28" ry="24" fill="url(#p9)"/>
+        <!-- Toes splayed wide — energetic, like landing from a jump -->
+        <ellipse cx="16" cy="46" rx="12" ry="15" transform="rotate(-30 16 46)" fill="url(#p9)"/>
+        <ellipse cx="104" cy="46" rx="12" ry="15" transform="rotate(30 104 46)" fill="url(#p9)"/>
+        <ellipse cx="40" cy="20" rx="11" ry="16" transform="rotate(-15 40 20)" fill="url(#p9)"/>
+        <ellipse cx="80" cy="20" rx="11" ry="16" transform="rotate(15 80 20)" fill="url(#p9)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="76" rx="28" ry="24" fill="#6366F1"/>
+          <ellipse cx="16" cy="46" rx="12" ry="15" transform="rotate(-30 16 46)" fill="#6366F1"/>
+          <ellipse cx="104" cy="46" rx="12" ry="15" transform="rotate(30 104 46)" fill="#6366F1"/>
+          <ellipse cx="40" cy="20" rx="11" ry="16" transform="rotate(-15 40 20)" fill="#6366F1"/>
+          <ellipse cx="80" cy="20" rx="11" ry="16" transform="rotate(15 80 20)" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <ellipse cx="60" cy="76" rx="28" ry="24" fill="#6366F1"/>
+          <ellipse cx="16" cy="46" rx="12" ry="15" transform="rotate(-30 16 46)" fill="#6366F1"/>
+          <ellipse cx="104" cy="46" rx="12" ry="15" transform="rotate(30 104 46)" fill="#6366F1"/>
+          <ellipse cx="40" cy="20" rx="11" ry="16" transform="rotate(-15 40 20)" fill="#6366F1"/>
+          <ellipse cx="80" cy="20" rx="11" ry="16" transform="rotate(15 80 20)" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Splayed</p>
+    <p class="card-desc">Toes spread wide like an excited pounce. Dynamic, energetic — fits the "Force" theme.</p>
+  </div>
+
+  <!-- 10. Rounded blob / kawaii style -->
+  <div class="card">
+    <span class="card-number">10 — Kawaii Blob</span>
+    <div class="logo-area">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="p10" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#8B5CF6"/>
+          </linearGradient>
+        </defs>
+        <!-- Main pad — very round, almost circular -->
+        <circle cx="60" cy="70" r="32" fill="url(#p10)"/>
+        <!-- Blob toes — super round, varied sizes, slight asymmetry -->
+        <circle cx="28" cy="38" r="14" fill="url(#p10)"/>
+        <circle cx="92" cy="40" r="12" fill="url(#p10)"/>
+        <circle cx="48" cy="22" r="15" fill="url(#p10)"/>
+        <circle cx="74" cy="24" r="13" fill="url(#p10)"/>
+      </svg>
+    </div>
+    <div class="previews">
+      <div class="preview-dark">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <circle cx="60" cy="70" r="32" fill="#6366F1"/>
+          <circle cx="28" cy="38" r="14" fill="#6366F1"/>
+          <circle cx="92" cy="40" r="12" fill="#6366F1"/>
+          <circle cx="48" cy="22" r="15" fill="#6366F1"/>
+          <circle cx="74" cy="24" r="13" fill="#6366F1"/>
+        </svg>
+      </div>
+      <div class="preview-light">
+        <svg width="32" height="32" viewBox="0 0 120 120">
+          <circle cx="60" cy="70" r="32" fill="#6366F1"/>
+          <circle cx="28" cy="38" r="14" fill="#6366F1"/>
+          <circle cx="92" cy="40" r="12" fill="#6366F1"/>
+          <circle cx="48" cy="22" r="15" fill="#6366F1"/>
+          <circle cx="74" cy="24" r="13" fill="#6366F1"/>
+        </svg>
+      </div>
+    </div>
+    <p class="card-title">Kawaii Blob</p>
+    <p class="card-desc">All circles, slightly asymmetric sizes. Cute, approachable, bubbly personality. Think app icon energy.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
