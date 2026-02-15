@@ -8,6 +8,7 @@ import { invitationRouter } from "./routers/invitation";
 import { accessRequestRouter } from "./routers/access-request";
 import { feedingRouter } from "./routers/feeding";
 import { calendarRouter } from "./routers/calendar";
+import { healthRouter } from "./routers/health";
 
 export const appRouter = router({
   household: householdRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
   accessRequest: accessRequestRouter,
   feeding: feedingRouter,
   calendar: calendarRouter,
+  health: healthRouter,
 });
 
 export type AppRouter = typeof appRouter;

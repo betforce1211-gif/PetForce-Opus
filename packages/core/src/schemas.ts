@@ -139,6 +139,64 @@ export const calendarUpcomingInputSchema = z.object({
   limit: z.number().int().min(1).max(20).optional(),
 });
 
+// --- Health Records ---
+
+export const healthRecordTypes = [
+  "vet_visit",
+  "vaccination",
+  "checkup",
+  "procedure",
+] as const;
+
+export const createHealthRecordSchema = z.object({
+  petId: z.string().uuid(),
+  type: z.enum(healthRecordTypes),
+  date: z.coerce.date(),
+  vetOrClinic: z.string().max(200).nullable().optional(),
+  reason: z.string().max(500).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  cost: z.number().nonnegative().nullable().optional(),
+  vaccineName: z.string().max(200).nullable().optional(),
+  nextDueDate: z.coerce.date().nullable().optional(),
+});
+
+export const updateHealthRecordSchema = z.object({
+  id: z.string().uuid(),
+  type: z.enum(healthRecordTypes).optional(),
+  date: z.coerce.date().optional(),
+  vetOrClinic: z.string().max(200).nullable().optional(),
+  reason: z.string().max(500).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  cost: z.number().nonnegative().nullable().optional(),
+  vaccineName: z.string().max(200).nullable().optional(),
+  nextDueDate: z.coerce.date().nullable().optional(),
+});
+
+// --- Medications ---
+
+export const createMedicationSchema = z.object({
+  petId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  dosage: z.string().max(100).nullable().optional(),
+  frequency: z.string().max(100).nullable().optional(),
+  startDate: z.coerce.date().nullable().optional(),
+  endDate: z.coerce.date().nullable().optional(),
+  prescribedBy: z.string().max(200).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+
+export const updateMedicationSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(200).optional(),
+  dosage: z.string().max(100).nullable().optional(),
+  frequency: z.string().max(100).nullable().optional(),
+  startDate: z.coerce.date().nullable().optional(),
+  endDate: z.coerce.date().nullable().optional(),
+  prescribedBy: z.string().max(200).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

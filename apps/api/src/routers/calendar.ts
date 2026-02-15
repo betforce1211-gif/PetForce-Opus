@@ -5,6 +5,7 @@ import {
   activities,
   feedingSchedules,
   feedingLogs,
+  healthRecords,
   pets,
   members,
 } from "@petforce/db";
@@ -129,6 +130,38 @@ export const calendarRouter = router({
             completedAt: log?.completedAt?.toISOString() ?? null,
           });
         }
+      }
+
+      // Add health records (vet visits, vaccinations, checkups, procedures)
+      const monthHealthRecords = await db
+        .select()
+        .from(healthRecords)
+        .where(
+          and(
+            eq(healthRecords.householdId, householdId),
+            gte(healthRecords.date, monthStart),
+            lte(healthRecords.date, monthEnd)
+          )
+        );
+
+      for (const rec of monthHealthRecords) {
+        const dateKey = rec.date.toISOString().split("T")[0];
+        const label =
+          rec.type === "vaccination"
+            ? rec.vaccineName ?? "Vaccination"
+            : rec.reason ?? rec.type.replace("_", " ");
+        addEvent(dateKey, {
+          id: `health-${rec.id}`,
+          kind: "health",
+          title: `${label} - ${petMap.get(rec.petId) ?? "Unknown"}`,
+          petId: rec.petId,
+          petName: petMap.get(rec.petId) ?? "Unknown",
+          memberId: null,
+          memberName: null,
+          type: rec.type as CalendarEvent["type"],
+          scheduledAt: rec.date.toISOString(),
+          completedAt: null,
+        });
       }
 
       // Add pet birthdays (use UTC to avoid timezone shift on midnight-UTC dates)
@@ -260,6 +293,38 @@ export const calendarRouter = router({
           memberName: memberMap.get(act.memberId) ?? null,
           type: act.type as CalendarEvent["type"],
           scheduledAt: act.scheduledAt.toISOString(),
+          completedAt: null,
+        });
+      }
+
+      // Add upcoming health records (future vet visits, vaccinations, etc.)
+      const upcomingHealth = await db
+        .select()
+        .from(healthRecords)
+        .where(
+          and(
+            eq(healthRecords.householdId, householdId),
+            gte(healthRecords.date, now)
+          )
+        )
+        .orderBy(asc(healthRecords.date))
+        .limit(limit);
+
+      for (const rec of upcomingHealth) {
+        const label =
+          rec.type === "vaccination"
+            ? rec.vaccineName ?? "Vaccination"
+            : rec.reason ?? rec.type.replace("_", " ");
+        events.push({
+          id: `health-${rec.id}`,
+          kind: "health",
+          title: `${label} - ${petMap.get(rec.petId) ?? "Unknown"}`,
+          petId: rec.petId,
+          petName: petMap.get(rec.petId) ?? "Unknown",
+          memberId: null,
+          memberName: null,
+          type: rec.type as CalendarEvent["type"],
+          scheduledAt: rec.date.toISOString(),
           completedAt: null,
         });
       }

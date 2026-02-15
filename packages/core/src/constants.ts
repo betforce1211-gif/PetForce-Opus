@@ -80,6 +80,9 @@ export const ACTIVITY_TYPE_ICONS: Record<string, string> = {
   feeding_schedule: "🍽️",
   birthday: "🎂",
   holiday: "🌟",
+  vaccination: "💉",
+  checkup: "🩺",
+  procedure: "🔬",
 };
 
 /** Static list of national pet holidays/awareness days (month 1-12, day 1-31). */
@@ -153,6 +156,49 @@ export const PET_HOLIDAYS: { month: number; day: number; name: string }[] = [
   { month: 12, day: 4, name: "Wildlife Conservation Day" },
   { month: 12, day: 10, name: "International Animal Rights Day" },
 ];
+
+// --- Health ---
+
+export const HEALTH_RECORD_TYPE_LABELS: Record<string, string> = {
+  vet_visit: "Vet Visit",
+  vaccination: "Vaccination",
+  checkup: "Checkup",
+  procedure: "Procedure",
+};
+
+export const HEALTH_RECORD_TYPE_ICONS: Record<string, string> = {
+  vet_visit: "\uD83C\uDFE5",
+  vaccination: "\uD83D\uDC89",
+  checkup: "\uD83E\uDE7A",
+  procedure: "\uD83D\uDD2C",
+};
+
+export const MEDICATION_FREQUENCY_SUGGESTIONS = [
+  "Once daily",
+  "Twice daily",
+  "Three times daily",
+  "Every other day",
+  "Weekly",
+  "As needed",
+] as const;
+
+export const COMMON_VACCINES: Record<string, string[]> = {
+  dog: [
+    "Rabies",
+    "DHPP (Distemper)",
+    "Bordetella",
+    "Canine Influenza",
+    "Leptospirosis",
+    "Lyme Disease",
+  ],
+  cat: [
+    "Rabies",
+    "FVRCP (Distemper)",
+    "FeLV (Feline Leukemia)",
+    "FIV",
+    "Bordetella",
+  ],
+};
 
 export const PET_AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export const PET_AVATAR_ALLOWED_TYPES = [

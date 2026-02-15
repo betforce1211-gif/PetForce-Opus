@@ -146,7 +146,7 @@ export interface HouseholdFeedingStatus {
 
 // --- Calendar ---
 
-export type CalendarEventKind = "activity" | "feeding" | "birthday" | "holiday";
+export type CalendarEventKind = "activity" | "feeding" | "birthday" | "holiday" | "health";
 
 export interface CalendarEvent {
   id: string;
@@ -156,7 +156,7 @@ export interface CalendarEvent {
   petName: string;
   memberId: string | null;
   memberName: string | null;
-  type: ActivityType | "feeding_schedule" | "birthday" | "holiday";
+  type: ActivityType | "feeding_schedule" | "birthday" | "holiday" | HealthRecordType;
   scheduledAt: string; // ISO datetime
   completedAt: string | null;
 }
@@ -169,6 +169,48 @@ export interface CalendarMonthData {
 export interface UpcomingCalendarEvents {
   events: CalendarEvent[];
   totalUpcoming: number;
+}
+
+// --- Health ---
+
+export type HealthRecordType = "vet_visit" | "vaccination" | "checkup" | "procedure";
+
+export interface HealthRecord {
+  id: string;
+  householdId: string;
+  petId: string;
+  type: HealthRecordType;
+  date: Date;
+  vetOrClinic: string | null;
+  reason: string | null;
+  notes: string | null;
+  cost: number | null;
+  vaccineName: string | null;
+  nextDueDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Medication {
+  id: string;
+  householdId: string;
+  petId: string;
+  name: string;
+  dosage: string | null;
+  frequency: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  prescribedBy: string | null;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface HealthSummary {
+  activeMedicationCount: number;
+  overdueVaccinationCount: number;
+  nextAppointment: { petName: string; date: string; reason: string | null } | null;
 }
 
 // --- Dashboard view types ---

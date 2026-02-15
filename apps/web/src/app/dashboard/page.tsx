@@ -12,6 +12,8 @@ import { FeedingManageModal } from "@/components/feeding-manage-modal";
 import { CalendarTileContent } from "@/components/calendar-tile";
 import { CalendarModal } from "@/components/calendar-modal";
 import { CalendarAddEventModal } from "@/components/calendar-add-event-modal";
+import { HealthTileContent } from "@/components/health-tile";
+import { HealthModal } from "@/components/health-modal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -21,6 +23,7 @@ export default function DashboardPage() {
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [showHealthModal, setShowHealthModal] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -194,19 +197,16 @@ export default function DashboardPage() {
               <button type="button" onClick={() => setShowAddPet(true)} style={{ ...tileLink, background: "none", border: "none", cursor: "pointer" }}>+ Add Pet</button>
             </div>
 
-            <div style={tileStyle}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowHealthModal(true)}>
               <div style={{ ...tileAccentBar, background: tileAccents.health }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>🏥</span>
                 Health
               </h2>
-              <div style={placeholderBody}>
-                <div style={placeholderIconWrap}>
-                  <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>🏥</span>
-                </div>
-                <p style={placeholderLabel}>Vet visits & medical records</p>
-                <span style={comingSoonBadge}>Coming Soon</span>
-              </div>
+              <HealthTileContent
+                householdId={householdId}
+                onManage={() => setShowHealthModal(true)}
+              />
             </div>
 
             {/* Row 2 */}
@@ -366,6 +366,12 @@ export default function DashboardPage() {
         <CalendarModal
           householdId={householdId}
           onClose={() => setShowCalendarModal(false)}
+        />
+      )}
+      {showHealthModal && (
+        <HealthModal
+          householdId={householdId}
+          onClose={() => setShowHealthModal(false)}
         />
       )}
       {showAddEventModal && (
