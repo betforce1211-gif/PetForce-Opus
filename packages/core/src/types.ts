@@ -124,11 +124,23 @@ export interface FeedingLog {
   completedAt: Date;
   feedingDate: string; // "YYYY-MM-DD"
   notes: string | null;
+  skipped: boolean;
+}
+
+export interface FeedingSnooze {
+  id: string;
+  feedingScheduleId: string;
+  householdId: string;
+  snoozeDate: string;
+  snoozedUntil: Date;
+  snoozedBy: string;
+  createdAt: Date;
 }
 
 export interface FeedingScheduleStatus {
   schedule: FeedingSchedule;
   log: FeedingLog | null;
+  snooze: FeedingSnooze | null;
 }
 
 export interface PetFeedingStatus {
@@ -213,6 +225,40 @@ export interface HealthSummary {
   nextAppointment: { petName: string; date: string; reason: string | null } | null;
 }
 
+export interface MedicationLog {
+  id: string;
+  medicationId: string;
+  householdId: string;
+  loggedDate: string; // "YYYY-MM-DD"
+  loggedBy: string;
+  skipped: boolean;
+  createdAt: Date;
+}
+
+export interface MedicationSnooze {
+  id: string;
+  medicationId: string;
+  householdId: string;
+  snoozeDate: string;
+  snoozedUntil: Date;
+  snoozedBy: string;
+  createdAt: Date;
+}
+
+export interface MedicationStatus {
+  medication: Medication;
+  petName: string;
+  log: MedicationLog | null; // null = not yet logged today
+  snooze: MedicationSnooze | null;
+}
+
+export interface HouseholdMedicationStatus {
+  date: string;
+  medications: MedicationStatus[];
+  totalActive: number;
+  totalLogged: number;
+}
+
 // --- Finance / Expenses ---
 
 export type ExpenseCategory =
@@ -256,6 +302,18 @@ export interface FinanceSummary {
   byCategory: { category: string; total: number }[];
   byPet: { petId: string; petName: string; total: number }[];
   recentExpenses: FinanceSummaryItem[];
+}
+
+// --- Pet Notes ---
+
+export interface PetNote {
+  id: string;
+  householdId: string;
+  petId: string | null;
+  title: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // --- Dashboard view types ---

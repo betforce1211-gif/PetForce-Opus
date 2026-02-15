@@ -145,6 +145,25 @@ export const feedingLogs = pgTable("feeding_logs", {
   completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
   feedingDate: text("feeding_date").notNull(), // "YYYY-MM-DD" format
   notes: text("notes"),
+  skipped: boolean("skipped").notNull().default(false),
+});
+
+// --- Feeding Snoozes ---
+
+export const feedingSnoozes = pgTable("feeding_snoozes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  feedingScheduleId: uuid("feeding_schedule_id")
+    .notNull()
+    .references(() => feedingSchedules.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
+  snoozedBy: uuid("snoozed_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // --- Health Records ---
@@ -193,6 +212,42 @@ export const medications = pgTable("medications", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// --- Medication Logs ---
+
+export const medicationLogs = pgTable("medication_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  medicationId: uuid("medication_id")
+    .notNull()
+    .references(() => medications.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  loggedDate: text("logged_date").notNull(), // "YYYY-MM-DD"
+  loggedBy: uuid("logged_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  skipped: boolean("skipped").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Medication Snoozes ---
+
+export const medicationSnoozes = pgTable("medication_snoozes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  medicationId: uuid("medication_id")
+    .notNull()
+    .references(() => medications.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
+  snoozedBy: uuid("snoozed_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // --- Expenses ---
 
 export const expenses = pgTable("expenses", {
@@ -220,6 +275,20 @@ export const expenses = pgTable("expenses", {
   amount: real("amount").notNull(),
   date: timestamp("date", { withTimezone: true }).notNull(),
   notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Pet Notes ---
+
+export const petNotes = pgTable("pet_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id").references(() => pets.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -5,6 +5,8 @@ import {
   db,
   healthRecords,
   medications,
+  medicationLogs,
+  medicationSnoozes,
   pets,
 } from "@petforce/db";
 import {
@@ -13,7 +15,7 @@ import {
   createMedicationSchema,
   updateMedicationSchema,
 } from "@petforce/core";
-import type { HealthSummary } from "@petforce/core";
+import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
 
 export const healthRouter = router({
   // ── Health Records ──
@@ -152,6 +154,159 @@ export const healthRouter = router({
           and(
             eq(medications.id, input.id),
             eq(medications.householdId, ctx.householdId)
+          )
+        );
+      return { success: true };
+    }),
+
+  // ── Medication daily status ──
+
+  todayMedicationStatus: householdProcedure
+    .input(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }))
+    .query(async ({ ctx, input }) => {
+      const today = input.date ?? new Date().toISOString().split("T")[0];
+
+      const activeMeds = await db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.householdId, ctx.householdId),
+            eq(medications.isActive, true)
+          )
+        );
+
+      const logs = await db
+        .select()
+        .from(medicationLogs)
+        .where(
+          and(
+            eq(medicationLogs.householdId, ctx.householdId),
+            eq(medicationLogs.loggedDate, today)
+          )
+        );
+
+      const householdPets = await db
+        .select()
+        .from(pets)
+        .where(eq(pets.householdId, ctx.householdId));
+
+      const snoozes = await db
+        .select()
+        .from(medicationSnoozes)
+        .where(
+          and(
+            eq(medicationSnoozes.householdId, ctx.householdId),
+            eq(medicationSnoozes.snoozeDate, today),
+            eq(medicationSnoozes.snoozedBy, ctx.membership.id)
+          )
+        );
+
+      const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
+      const logByMed = new Map(logs.map((l) => [l.medicationId, l]));
+      const snoozeByMed = new Map(snoozes.map((s) => [s.medicationId, s]));
+
+      const statuses: MedicationStatus[] = activeMeds.map((med) => ({
+        medication: med,
+        petName: petMap.get(med.petId) ?? "Unknown",
+        log: logByMed.get(med.id) ?? null,
+        snooze: snoozeByMed.get(med.id) ?? null,
+      }));
+
+      statuses.sort((a, b) => a.medication.name.localeCompare(b.medication.name));
+
+      const result: HouseholdMedicationStatus = {
+        date: today,
+        medications: statuses,
+        totalActive: activeMeds.length,
+        totalLogged: logs.length,
+      };
+
+      return result;
+    }),
+
+  logMedicationCompletion: householdProcedure
+    .input(z.object({
+      medicationId: z.string().uuid(),
+      loggedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      skipped: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const [log] = await db
+        .insert(medicationLogs)
+        .values({
+          medicationId: input.medicationId,
+          householdId: ctx.householdId,
+          loggedDate: input.loggedDate,
+          loggedBy: ctx.membership.id,
+          skipped: input.skipped ?? false,
+        })
+        .returning();
+      return log;
+    }),
+
+  undoMedicationLog: householdProcedure
+    .input(z.object({ medicationLogId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .delete(medicationLogs)
+        .where(
+          and(
+            eq(medicationLogs.id, input.medicationLogId),
+            eq(medicationLogs.householdId, ctx.householdId)
+          )
+        );
+      return { success: true };
+    }),
+
+  snoozeMedication: householdProcedure
+    .input(z.object({
+      medicationId: z.string().uuid(),
+      snoozeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      snoozeDurationMinutes: z.number().min(1).max(1440),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const snoozedUntil = new Date(Date.now() + input.snoozeDurationMinutes * 60 * 1000);
+
+      await db
+        .delete(medicationSnoozes)
+        .where(
+          and(
+            eq(medicationSnoozes.medicationId, input.medicationId),
+            eq(medicationSnoozes.householdId, ctx.householdId),
+            eq(medicationSnoozes.snoozeDate, input.snoozeDate),
+            eq(medicationSnoozes.snoozedBy, ctx.membership.id)
+          )
+        );
+
+      const [snooze] = await db
+        .insert(medicationSnoozes)
+        .values({
+          medicationId: input.medicationId,
+          householdId: ctx.householdId,
+          snoozeDate: input.snoozeDate,
+          snoozedUntil,
+          snoozedBy: ctx.membership.id,
+        })
+        .returning();
+
+      return snooze;
+    }),
+
+  undoMedicationSnooze: householdProcedure
+    .input(z.object({
+      medicationId: z.string().uuid(),
+      snoozeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .delete(medicationSnoozes)
+        .where(
+          and(
+            eq(medicationSnoozes.medicationId, input.medicationId),
+            eq(medicationSnoozes.householdId, ctx.householdId),
+            eq(medicationSnoozes.snoozeDate, input.snoozeDate),
+            eq(medicationSnoozes.snoozedBy, ctx.membership.id)
           )
         );
       return { success: true };

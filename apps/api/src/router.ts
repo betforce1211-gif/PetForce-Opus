@@ -10,6 +10,7 @@ import { feedingRouter } from "./routers/feeding";
 import { calendarRouter } from "./routers/calendar";
 import { healthRouter } from "./routers/health";
 import { financeRouter } from "./routers/finance";
+import { notesRouter } from "./routers/notes";
 
 export const appRouter = router({
   household: householdRouter,
@@ -23,6 +24,7 @@ export const appRouter = router({
   calendar: calendarRouter,
   health: healthRouter,
   finance: financeRouter,
+  notes: notesRouter,
 });
 
 export type AppRouter = typeof appRouter;

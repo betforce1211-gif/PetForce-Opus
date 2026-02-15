@@ -17,7 +17,7 @@ export function AppHeader() {
         </SignedIn>
       </div>
       <Link href="/" style={brandLink}>
-        <svg width="34" height="38" viewBox="0 0 160 180" fill="none" style={{ display: "block", flexShrink: 0 }}>
+        <svg width="26" height="30" viewBox="0 0 160 180" fill="none" style={{ display: "block", flexShrink: 0 }}>
           <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
           <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
           <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
@@ -141,12 +141,12 @@ const headerStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "1fr auto 1fr",
   alignItems: "center",
-  padding: "0.75rem 1.75rem",
+  padding: "0.4rem 1.25rem",
   borderBottom: "1px solid rgba(99, 102, 241, 0.08)",
   background: "rgba(255, 255, 255, 0.8)",
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
-  minHeight: 56,
+  minHeight: 44,
 };
 
 const leftSection: React.CSSProperties = {
@@ -164,9 +164,9 @@ const rightSection: React.CSSProperties = {
 const brandLink: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "0.6rem",
+  gap: "0.45rem",
   fontWeight: 800,
-  fontSize: "1.65rem",
+  fontSize: "1.35rem",
   color: "#6366F1",
   textDecoration: "none",
   letterSpacing: "-0.03em",

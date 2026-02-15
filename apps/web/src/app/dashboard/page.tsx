@@ -16,6 +16,8 @@ import { HealthTileContent } from "@/components/health-tile";
 import { HealthModal } from "@/components/health-modal";
 import { FinanceTileContent } from "@/components/finance-tile";
 import { FinanceModal } from "@/components/finance-modal";
+import { NotesTileContent } from "@/components/notes-tile";
+import { NotesModal } from "@/components/notes-modal";
 import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
 
 export default function DashboardPage() {
@@ -28,6 +30,7 @@ export default function DashboardPage() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [showFinanceModal, setShowFinanceModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -282,19 +285,16 @@ export default function DashboardPage() {
               <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
             </div>
 
-            <div style={tileStyle}>
+            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => setShowNotesModal(true)}>
               <div style={{ ...tileAccentBar, background: tileAccents.notes }} />
               <h2 style={sectionTitle}>
                 <span style={titleEmoji}>📝</span>
                 Notes
               </h2>
-              <div style={placeholderBody}>
-                <div style={placeholderIconWrap}>
-                  <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>📝</span>
-                </div>
-                <p style={placeholderLabel}>Pet journal & notes</p>
-                <span style={comingSoonBadge}>Coming Soon</span>
-              </div>
+              <NotesTileContent
+                householdId={householdId}
+                onManage={() => setShowNotesModal(true)}
+              />
             </div>
           </div>
 
@@ -337,6 +337,12 @@ export default function DashboardPage() {
           onClose={() => setShowFinanceModal(false)}
         />
       )}
+      {showNotesModal && (
+        <NotesModal
+          householdId={householdId}
+          onClose={() => setShowNotesModal(false)}
+        />
+      )}
       {showAddEventModal && (
         <CalendarAddEventModal
           householdId={householdId}
@@ -376,7 +382,7 @@ const tileAccents = {
 // ── Styles ──
 
 const pageShell: React.CSSProperties = {
-  height: "calc(100vh - 57px)",
+  height: "calc(100vh - 45px)",
   overflow: "hidden",
   background: "linear-gradient(145deg, #EEEDFA 0%, #F0EEFB 20%, #F5F0FA 40%, #FAF0F5 60%, #FDF5F0 80%, #EEEDFA 100%)",
   fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
@@ -386,7 +392,7 @@ const dashboardLayout: React.CSSProperties = {
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  padding: "1rem 1.75rem",
+  padding: "0.5rem 1rem",
 };
 
 const centeredMessage: React.CSSProperties = {
@@ -401,7 +407,7 @@ const centeredMessage: React.CSSProperties = {
 const contentArea: React.CSSProperties = {
   flex: 1,
   display: "flex",
-  gap: "1.25rem",
+  gap: "0.75rem",
   minHeight: 0,
 };
 
@@ -410,7 +416,7 @@ const gridArea: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
   gridTemplateRows: "repeat(3, 1fr)",
-  gap: "0.875rem",
+  gap: "0.625rem",
   minHeight: 0,
 };
 
@@ -418,8 +424,8 @@ const tileStyle: React.CSSProperties = {
   background: "rgba(255, 255, 255, 0.6)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
-  borderRadius: "1rem",
-  padding: "1.25rem",
+  borderRadius: "0.75rem",
+  padding: "0.875rem",
   boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99, 102, 241, 0.05), inset 0 1px 0 rgba(255,255,255,0.7)",
   border: "1px solid rgba(255, 255, 255, 0.5)",
   display: "flex",
@@ -431,22 +437,22 @@ const tileStyle: React.CSSProperties = {
 const tileAccentBar: React.CSSProperties = {
   height: 3,
   background: "linear-gradient(135deg, #6366F1, #EC4899)",
-  margin: "-1.25rem -1.25rem 1rem -1.25rem",
-  borderTopLeftRadius: "1rem",
-  borderTopRightRadius: "1rem",
+  margin: "-0.875rem -0.875rem 0.625rem -0.875rem",
+  borderTopLeftRadius: "0.75rem",
+  borderTopRightRadius: "0.75rem",
 };
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: "1rem",
+  fontSize: "0.9rem",
   fontWeight: 700,
-  margin: "0 0 0.75rem",
+  margin: "0 0 0.5rem",
   color: "#1A1637",
   textAlign: "center",
   letterSpacing: "-0.01em",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "0.5rem",
+  gap: "0.4rem",
 };
 
 const titleEmoji: React.CSSProperties = {
@@ -494,48 +500,6 @@ const tileLink: React.CSSProperties = {
   textAlign: "center",
   letterSpacing: "0.01em",
   transition: "color 0.2s ease",
-};
-
-const placeholderBody: React.CSSProperties = {
-  flex: 1,
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "0.5rem",
-  textAlign: "center",
-};
-
-const placeholderIconWrap: React.CSSProperties = {
-  width: 52,
-  height: 52,
-  borderRadius: "50%",
-  background: "rgba(99, 102, 241, 0.06)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  marginBottom: "0.25rem",
-};
-
-const placeholderLabel: React.CSSProperties = {
-  color: "#A5A8BA",
-  fontSize: "0.8rem",
-  margin: 0,
-  fontWeight: 500,
-  letterSpacing: "0.01em",
-};
-
-const comingSoonBadge: React.CSSProperties = {
-  display: "inline-block",
-  padding: "0.2rem 0.65rem",
-  borderRadius: "999px",
-  background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08))",
-  color: "#6366F1",
-  fontSize: "0.65rem",
-  fontWeight: 600,
-  marginTop: "0.25rem",
-  letterSpacing: "0.03em",
-  textTransform: "uppercase",
 };
 
 const quickActionBtn: React.CSSProperties = {

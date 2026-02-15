@@ -127,6 +127,13 @@ export const logFeedingSchema = z.object({
   feedingScheduleId: z.string().uuid(),
   feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format"),
   notes: z.string().max(500).nullable().optional(),
+  skipped: z.boolean().optional(),
+});
+
+export const snoozeFeedingSchema = z.object({
+  feedingScheduleId: z.string().uuid(),
+  feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format"),
+  snoozeDurationMinutes: z.number().int().min(15).max(480).default(120),
 });
 
 // --- Calendar ---
@@ -234,6 +241,21 @@ export const financeSummaryInputSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}$/, "Must be YYYY-MM format")
     .optional(),
+});
+
+// --- Pet Notes ---
+
+export const createNoteSchema = z.object({
+  petId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(100),
+  content: z.string().min(1).max(5000),
+});
+
+export const updateNoteSchema = z.object({
+  id: z.string().uuid(),
+  petId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).max(100).optional(),
+  content: z.string().min(1).max(5000).optional(),
 });
 
 // --- Onboarding ---

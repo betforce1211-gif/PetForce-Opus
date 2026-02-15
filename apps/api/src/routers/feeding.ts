@@ -5,12 +5,14 @@ import {
   db,
   feedingSchedules,
   feedingLogs,
+  feedingSnoozes,
   pets,
 } from "@petforce/db";
 import {
   createFeedingScheduleSchema,
   updateFeedingScheduleSchema,
   logFeedingSchema,
+  snoozeFeedingSchema,
 } from "@petforce/core";
 import type {
   HouseholdFeedingStatus,
@@ -108,6 +110,18 @@ export const feedingRouter = router({
           )
         );
 
+      // Fetch today's snoozes for the current member only
+      const snoozes = await db
+        .select()
+        .from(feedingSnoozes)
+        .where(
+          and(
+            eq(feedingSnoozes.householdId, ctx.householdId),
+            eq(feedingSnoozes.snoozeDate, today),
+            eq(feedingSnoozes.snoozedBy, ctx.membership.id)
+          )
+        );
+
       // Fetch pets for name lookup
       const householdPets = await db
         .select()
@@ -116,6 +130,7 @@ export const feedingRouter = router({
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       const logBySchedule = new Map(logs.map((l) => [l.feedingScheduleId, l]));
+      const snoozeBySchedule = new Map(snoozes.map((s) => [s.feedingScheduleId, s]));
 
       // Group by pet
       const petSchedules = new Map<string, FeedingScheduleStatus[]>();
@@ -124,6 +139,7 @@ export const feedingRouter = router({
         statuses.push({
           schedule,
           log: logBySchedule.get(schedule.id) ?? null,
+          snooze: snoozeBySchedule.get(schedule.id) ?? null,
         });
         petSchedules.set(schedule.petId, statuses);
       }
@@ -155,6 +171,58 @@ export const feedingRouter = router({
       return result;
     }),
 
+  snooze: householdProcedure
+    .input(snoozeFeedingSchema)
+    .mutation(async ({ ctx, input }) => {
+      const snoozedUntil = new Date(
+        Date.now() + input.snoozeDurationMinutes * 60 * 1000
+      );
+
+      // Delete existing snooze for same member+schedule+date, then insert new one
+      await db
+        .delete(feedingSnoozes)
+        .where(
+          and(
+            eq(feedingSnoozes.feedingScheduleId, input.feedingScheduleId),
+            eq(feedingSnoozes.householdId, ctx.householdId),
+            eq(feedingSnoozes.snoozeDate, input.feedingDate),
+            eq(feedingSnoozes.snoozedBy, ctx.membership.id)
+          )
+        );
+
+      const [snooze] = await db
+        .insert(feedingSnoozes)
+        .values({
+          feedingScheduleId: input.feedingScheduleId,
+          householdId: ctx.householdId,
+          snoozeDate: input.feedingDate,
+          snoozedUntil,
+          snoozedBy: ctx.membership.id,
+        })
+        .returning();
+
+      return snooze;
+    }),
+
+  undoSnooze: householdProcedure
+    .input(z.object({
+      feedingScheduleId: z.string().uuid(),
+      feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .delete(feedingSnoozes)
+        .where(
+          and(
+            eq(feedingSnoozes.feedingScheduleId, input.feedingScheduleId),
+            eq(feedingSnoozes.householdId, ctx.householdId),
+            eq(feedingSnoozes.snoozeDate, input.feedingDate),
+            eq(feedingSnoozes.snoozedBy, ctx.membership.id)
+          )
+        );
+      return { success: true };
+    }),
+
   logCompletion: householdProcedure
     .input(logFeedingSchema)
     .mutation(async ({ ctx, input }) => {
@@ -182,6 +250,7 @@ export const feedingRouter = router({
           completedBy: ctx.membership.id,
           feedingDate: input.feedingDate,
           notes: input.notes ?? null,
+          skipped: input.skipped ?? false,
         })
         .returning();
 
