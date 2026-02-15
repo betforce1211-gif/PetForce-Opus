@@ -38,7 +38,7 @@ export function ReportingTileContent({ householdId, onManage }: ReportingTileCon
   }
 
   const data = summaryQuery.data;
-  if (!data || (data.totalCompleted === 0 && data.totalSkipped === 0)) {
+  if (!data || (data.totalExpected === 0)) {
     return (
       <>
         <div style={centered}>
@@ -56,6 +56,7 @@ export function ReportingTileContent({ householdId, onManage }: ReportingTileCon
 
   return (
     <>
+      <p style={monthLabel}>This Month</p>
       <div style={summaryList}>
         {/* On Time (completed, non-skipped) */}
         <div style={summaryRow}>
@@ -68,7 +69,7 @@ export function ReportingTileContent({ householdId, onManage }: ReportingTileCon
         <div style={summaryRow}>
           <span style={summaryIcon}>{"\uD83D\uDCCB"}</span>
           <span style={summaryLabel}>Total Tasks</span>
-          <span style={summaryValue}>{data.totalCompleted + data.totalSkipped}</span>
+          <span style={summaryValue}>{data.totalExpected}</span>
         </div>
 
         {/* Skipped */}
@@ -87,6 +88,16 @@ export function ReportingTileContent({ householdId, onManage }: ReportingTileCon
 }
 
 // ── Styles ──
+
+const monthLabel: React.CSSProperties = {
+  textAlign: "center",
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  color: "#A5A8BA",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  margin: 0,
+};
 
 const centered: React.CSSProperties = {
   flex: 1,

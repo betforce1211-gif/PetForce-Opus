@@ -339,8 +339,54 @@ export const reportingRouter = router({
 
       const totalCompleted = raw.filter((r) => !r.skipped).length;
       const totalSkipped = raw.filter((r) => r.skipped).length;
-      const total = totalCompleted + totalSkipped;
-      const completionRate = total > 0 ? totalCompleted / total : 0;
+
+      // Count today's pending tasks (no log yet)
+      const today = new Date().toISOString().split("T")[0];
+
+      const activeSchedules = await db
+        .select()
+        .from(feedingSchedules)
+        .where(
+          and(
+            eq(feedingSchedules.householdId, ctx.householdId),
+            eq(feedingSchedules.isActive, true)
+          )
+        );
+      const todayFeedingLogRows = await db
+        .select()
+        .from(feedingLogs)
+        .where(
+          and(
+            eq(feedingLogs.householdId, ctx.householdId),
+            eq(feedingLogs.feedingDate, today)
+          )
+        );
+      const loggedFeedingIds = new Set(todayFeedingLogRows.map((l) => l.feedingScheduleId));
+      const pendingFeedings = activeSchedules.filter((s) => !loggedFeedingIds.has(s.id)).length;
+
+      const activeMeds = await db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.householdId, ctx.householdId),
+            eq(medications.isActive, true)
+          )
+        );
+      const todayMedLogRows = await db
+        .select()
+        .from(medicationLogs)
+        .where(
+          and(
+            eq(medicationLogs.householdId, ctx.householdId),
+            eq(medicationLogs.loggedDate, today)
+          )
+        );
+      const loggedMedIds = new Set(todayMedLogRows.map((l) => l.medicationId));
+      const pendingMeds = activeMeds.filter((m) => !loggedMedIds.has(m.id)).length;
+
+      const totalExpected = totalCompleted + totalSkipped + pendingFeedings + pendingMeds;
+      const completionRate = totalExpected > 0 ? totalCompleted / totalExpected : 0;
 
       // Find top contributor
       const memberCounts = new Map<string, number>();
@@ -420,6 +466,7 @@ export const reportingRouter = router({
         dateRange: { from: input.from, to: input.to },
         totalCompleted,
         totalSkipped,
+        totalExpected,
         completionRate,
         topContributor,
         contributions,
