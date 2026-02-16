@@ -378,3 +378,104 @@ export interface ReportingSummary {
   topContributor: { memberId: string; memberName: string; count: number } | null;
   contributions: MemberContribution[];
 }
+
+// --- Gamification ---
+
+export type GamificationEntityGroup = "member" | "household" | "pet";
+
+export interface MemberGameStats {
+  id: string;
+  memberId: string;
+  householdId: string;
+  totalXp: number;
+  level: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  unlockedBadgeIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface HouseholdGameStatsRow {
+  id: string;
+  householdId: string;
+  totalXp: number;
+  level: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  unlockedBadgeIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PetGameStatsRow {
+  id: string;
+  petId: string;
+  householdId: string;
+  totalXp: number;
+  level: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  unlockedBadgeIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GamificationMemberView {
+  memberId: string;
+  memberName: string;
+  avatarUrl: string | null;
+  totalXp: number;
+  level: number;
+  levelName: string;
+  xpToNextLevel: number;
+  nextLevelXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  unlockedBadgeIds: string[];
+  feedingCount: number;
+  medicationCount: number;
+  activityCount: number;
+}
+
+export interface GamificationHouseholdView {
+  householdName: string;
+  totalXp: number;
+  level: number;
+  levelName: string;
+  xpToNextLevel: number;
+  nextLevelXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  unlockedBadgeIds: string[];
+  activeMemberCount: number;
+  totalTasks: number;
+}
+
+export interface GamificationPetView {
+  petId: string;
+  petName: string;
+  species: string;
+  avatarUrl: string | null;
+  totalXp: number;
+  level: number;
+  levelName: string;
+  xpToNextLevel: number;
+  nextLevelXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  unlockedBadgeIds: string[];
+  feedingCount: number;
+  medicationCount: number;
+  activityCount: number;
+}
+
+export interface GamificationFullStats {
+  members: GamificationMemberView[];
+  household: GamificationHouseholdView;
+  pets: GamificationPetView[];
+  currentUserId: string;
+}

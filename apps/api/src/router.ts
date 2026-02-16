@@ -13,6 +13,7 @@ import { financeRouter } from "./routers/finance";
 import { notesRouter } from "./routers/notes";
 import { reportingRouter } from "./routers/reporting";
 import { analyticsRouter } from "./routers/analytics";
+import { gamificationRouter } from "./routers/gamification";
 
 export const appRouter = router({
   household: householdRouter,
@@ -29,6 +30,7 @@ export const appRouter = router({
   notes: notesRouter,
   reporting: reportingRouter,
   analytics: analyticsRouter,
+  gamification: gamificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

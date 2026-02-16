@@ -6,6 +6,7 @@ import {
   real,
   uuid,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 
 // --- Households ---
@@ -315,6 +316,72 @@ export const accessRequests = pgTable("access_requests", {
     onDelete: "set null",
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Member Game Stats (Gamification) ---
+
+export const memberGameStats = pgTable("member_game_stats", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActiveDate: text("last_active_date"),
+  unlockedBadgeIds: jsonb("unlocked_badge_ids")
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Household Game Stats (Gamification) ---
+
+export const householdGameStats = pgTable("household_game_stats", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActiveDate: text("last_active_date"),
+  unlockedBadgeIds: jsonb("unlocked_badge_ids")
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --- Pet Game Stats (Gamification) ---
+
+export const petGameStats = pgTable("pet_game_stats", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActiveDate: text("last_active_date"),
+  unlockedBadgeIds: jsonb("unlocked_badge_ids")
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // --- Analytics Events ---

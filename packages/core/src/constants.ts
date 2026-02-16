@@ -271,3 +271,63 @@ export const PET_AVATAR_ALLOWED_TYPES = [
   "image/png",
   "image/webp",
 ] as const;
+
+// --- Gamification ---
+
+export const GAMIFICATION_XP_VALUES: Record<string, number> = {
+  feeding: 10,
+  medication: 15,
+  activity: 20,
+};
+
+export const GAMIFICATION_LEVELS = [
+  { level: 1, name: "Puppy Pal", xpThreshold: 0 },
+  { level: 2, name: "Treat Tosser", xpThreshold: 50 },
+  { level: 3, name: "Belly Rubber", xpThreshold: 150 },
+  { level: 4, name: "Fetch Champion", xpThreshold: 350 },
+  { level: 5, name: "Pack Leader", xpThreshold: 600 },
+  { level: 6, name: "Kibble King", xpThreshold: 1000 },
+  { level: 7, name: "Whisker Whisperer", xpThreshold: 1600 },
+  { level: 8, name: "Paw Protector", xpThreshold: 2500 },
+  { level: 9, name: "Fur Guardian", xpThreshold: 4000 },
+  { level: 10, name: "Pet Legend", xpThreshold: 6000 },
+] as const;
+
+export type GamificationGroup = "member" | "household" | "pet";
+
+export interface BadgeDefinition {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  condition: string;
+  group: GamificationGroup;
+}
+
+export const GAMIFICATION_BADGES: BadgeDefinition[] = [
+  // --- Member badges ---
+  { id: "first_steps", name: "First Steps", icon: "\uD83D\uDC3E", description: "Complete your first task", condition: "totalTasks >= 1", group: "member" },
+  { id: "feeding_frenzy", name: "Feeding Frenzy", icon: "\uD83C\uDF7D\uFE0F", description: "Complete 10 feedings", condition: "feedingCount >= 10", group: "member" },
+  { id: "med_master", name: "Med Master", icon: "\uD83D\uDC8A", description: "Complete 10 medications", condition: "medicationCount >= 10", group: "member" },
+  { id: "walk_star", name: "Walk Star", icon: "\u2B50", description: "Complete 10 activities", condition: "activityCount >= 10", group: "member" },
+  { id: "week_warrior", name: "Week Warrior", icon: "\uD83D\uDD25", description: "7-day activity streak", condition: "longestStreak >= 7", group: "member" },
+  { id: "fortnight_hero", name: "Fortnight Hero", icon: "\uD83D\uDCAA", description: "14-day activity streak", condition: "longestStreak >= 14", group: "member" },
+  { id: "month_master", name: "Month Master", icon: "\uD83C\uDFC6", description: "30-day activity streak", condition: "longestStreak >= 30", group: "member" },
+  { id: "pet_parent_pro", name: "Pet Parent Pro", icon: "\uD83C\uDF1F", description: "Reach level 5", condition: "level >= 5", group: "member" },
+  { id: "century_club", name: "Century Club", icon: "\uD83D\uDCAF", description: "Complete 100 tasks", condition: "totalTasks >= 100", group: "member" },
+  { id: "feeding_fiend", name: "Feeding Fiend", icon: "\uD83C\uDF56", description: "Complete 50 feedings", condition: "feedingCount >= 50", group: "member" },
+  // --- Household badges ---
+  { id: "house_warming", name: "House Warming", icon: "\uD83C\uDFE0", description: "Household's first task", condition: "totalTasks >= 1", group: "household" },
+  { id: "full_house", name: "Full House", icon: "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66", description: "3+ active members", condition: "activeMemberCount >= 3", group: "household" },
+  { id: "team_effort", name: "Team Effort", icon: "\uD83E\uDD1D", description: "7-day household streak", condition: "longestStreak >= 7", group: "household" },
+  { id: "family_commitment", name: "Family Commitment", icon: "\uD83D\uDC96", description: "30-day household streak", condition: "longestStreak >= 30", group: "household" },
+  { id: "century_home", name: "Century Home", icon: "\uD83C\uDFDB\uFE0F", description: "100 household tasks", condition: "totalTasks >= 100", group: "household" },
+  { id: "dream_team", name: "Dream Team", icon: "\uD83C\uDF1F", description: "Household reaches level 5", condition: "level >= 5", group: "household" },
+  // --- Pet badges ---
+  { id: "first_care", name: "First Care", icon: "\uD83D\uDC3E", description: "First task for this pet", condition: "totalTasks >= 1", group: "pet" },
+  { id: "well_fed", name: "Well Fed", icon: "\uD83C\uDF7D\uFE0F", description: "10 feedings logged", condition: "feedingCount >= 10", group: "pet" },
+  { id: "med_champion", name: "Med Champion", icon: "\uD83D\uDC8A", description: "10 medications given", condition: "medicationCount >= 10", group: "pet" },
+  { id: "active_pal", name: "Active Pal", icon: "\uD83C\uDFC3", description: "10 activities completed", condition: "activityCount >= 10", group: "pet" },
+  { id: "pampered_pet", name: "Pampered Pet", icon: "\uD83D\uDC51", description: "7-day care streak", condition: "longestStreak >= 7", group: "pet" },
+  { id: "vip_pet", name: "VIP Pet", icon: "\uD83C\uDFC6", description: "100 tasks completed", condition: "totalTasks >= 100", group: "pet" },
+];

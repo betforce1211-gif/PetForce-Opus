@@ -20,6 +20,8 @@ import { ReportingTileContent } from "@/components/reporting-tile";
 import { ReportingModal } from "@/components/reporting-modal";
 import { NotesTileContent } from "@/components/notes-tile";
 import { NotesModal } from "@/components/notes-modal";
+import { GamificationTileContent } from "@/components/gamification-tile";
+import { GamificationModal } from "@/components/gamification-modal";
 import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
 import { useTrackEvent } from "@/lib/use-track-event";
 
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showReportingModal, setShowReportingModal] = useState(false);
+  const [showGamificationModal, setShowGamificationModal] = useState(false);
   const trackEvent = useTrackEvent();
   const trackedView = useRef(false);
 
@@ -227,27 +230,15 @@ export default function DashboardPage() {
 
             {/* Row 2 */}
             <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.members }} />
+              <div style={{ ...tileAccentBar, background: tileAccents.gamification }} />
               <h2 style={sectionTitle}>
-                <span style={titleEmoji}>👥</span>
-                Members
+                <span style={titleEmoji}>{"\uD83C\uDFC6"}</span>
+                Gamification
               </h2>
-              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                {members.map((member) => (
-                  <div key={member.id} style={memberRow}>
-                    <div style={initialsCircle}>
-                      {member.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                    </div>
-                    <span style={memberName}>
-                      {member.displayName}
-                    </span>
-                    <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[member.role] ?? "#6B7280" }}>
-                      {member.role}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <Link href="/dashboard/settings" style={tileLink}>Invite Member</Link>
+              <GamificationTileContent
+                householdId={householdId}
+                onManage={() => { trackEvent("tile.opened", { tile: "gamification" }); setShowGamificationModal(true); }}
+              />
             </div>
 
             <div style={tileStyle}>
@@ -374,6 +365,12 @@ export default function DashboardPage() {
           onClose={() => setShowReportingModal(false)}
         />
       )}
+      {showGamificationModal && (
+        <GamificationModal
+          householdId={householdId}
+          onClose={() => setShowGamificationModal(false)}
+        />
+      )}
       {showAddEventModal && (
         <CalendarAddEventModal
           householdId={householdId}
@@ -392,10 +389,6 @@ const speciesEmoji: Record<string, string> = {
   dog: "🐕", cat: "🐈", bird: "🐦", fish: "🐟", reptile: "🦎", other: "🐾",
 };
 
-const roleBadgeColors: Record<string, string> = {
-  owner: "#5B4FCF", admin: "#3B82F6", member: "#7C7F95", sitter: "#10B981",
-};
-
 // ── Tile accent color mapping (unique gradient per tile) ──
 
 const tileAccents = {
@@ -407,8 +400,9 @@ const tileAccents = {
   finance:   "linear-gradient(135deg, #10B981 0%, #059669 100%)",
   actions:   "linear-gradient(135deg, #6366F1 0%, #A78BFA 100%)",
   reporting: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",
-  calendar:  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  notes:     "linear-gradient(135deg, #6366F1 0%, #EC4899 100%)",
+  calendar:     "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+  notes:        "linear-gradient(135deg, #6366F1 0%, #EC4899 100%)",
+  gamification: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
 };
 
 // ── Styles ──
@@ -617,49 +611,6 @@ const speciesBadge: React.CSSProperties = {
   fontWeight: 600,
   textTransform: "capitalize",
   marginTop: "0.3rem",
-  letterSpacing: "0.02em",
-};
-
-const memberRow: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.625rem",
-  padding: "0.4rem 0.25rem",
-  borderRadius: "0.5rem",
-  transition: "background-color 0.15s ease",
-};
-
-const memberName: React.CSSProperties = {
-  flex: 1,
-  fontSize: "0.85rem",
-  color: "#1A1637",
-  fontWeight: 500,
-  letterSpacing: "-0.005em",
-};
-
-const initialsCircle: React.CSSProperties = {
-  width: 34,
-  height: 34,
-  borderRadius: 17,
-  background: "linear-gradient(135deg, #6366F1, #8B5CF6)",
-  color: "white",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: 700,
-  fontSize: "0.7rem",
-  flexShrink: 0,
-  letterSpacing: "0.02em",
-  boxShadow: "0 2px 8px rgba(99, 102, 241, 0.2)",
-};
-
-const roleBadge: React.CSSProperties = {
-  padding: "0.15rem 0.55rem",
-  borderRadius: "999px",
-  color: "white",
-  fontSize: "0.65rem",
-  fontWeight: 600,
-  textTransform: "capitalize",
   letterSpacing: "0.02em",
 };
 
