@@ -293,6 +293,49 @@ export const GAMIFICATION_LEVELS = [
   { level: 10, name: "Pet Legend", xpThreshold: 6000 },
 ] as const;
 
+export const GAMIFICATION_LEVEL_NAMES: Record<string, readonly string[]> = {
+  member: [
+    "Helping Hand", "Caring Rookie", "Devoted Carer", "Nurture Pro",
+    "Guardian Angel", "Care Captain", "Welfare Wizard", "Compassion Champion",
+    "Master Caretaker", "Legendary Guardian",
+  ],
+  household: [
+    "Starter Home", "Cozy Cottage", "Family Nest", "Townhouse",
+    "Garden Villa", "Country Manor", "Estate House", "Grand Manor",
+    "Luxury Estate", "Dream Palace",
+  ],
+  dog: [
+    "Puppy Pal", "Treat Tosser", "Belly Rubber", "Fetch Champion",
+    "Pack Leader", "Kibble King", "Good Boy Guru", "Paw Protector",
+    "Bark Boss", "Top Dog",
+  ],
+  cat: [
+    "Kitten Keeper", "Yarn Wrangler", "Purr Whisperer", "Nap Master",
+    "Whisker Wizard", "Catnip Commander", "Feline Sage", "Shadow Stalker",
+    "Cat Emperor", "Meow Legend",
+  ],
+  bird: [
+    "Fledgling Friend", "Seed Scatterer", "Perch Pal", "Tweet Tender",
+    "Feather Keeper", "Aviary Ace", "Wing Commander", "Sky Shepherd",
+    "Flight Master", "Legendary Avian",
+  ],
+  fish: [
+    "Guppy Guide", "Bubble Buddy", "Tank Tender", "Reef Ranger",
+    "Current Keeper", "Aqua Ace", "Tide Master", "Coral Commander",
+    "Deep Sea Guardian", "Ocean Legend",
+  ],
+  reptile: [
+    "Scale Starter", "Basking Buddy", "Terrarium Tender", "Shell Shield",
+    "Reptile Ranger", "Lizard Lord", "Dragon Keeper", "Scale Sage",
+    "Ancient Guardian", "Reptile Legend",
+  ],
+  other: [
+    "Pet Pal", "Care Starter", "Gentle Keeper", "Nurture Guide",
+    "Animal Ally", "Critter Captain", "Creature Sage", "Wild Whisperer",
+    "Nature Guardian", "Pet Legend",
+  ],
+};
+
 export type GamificationGroup = "member" | "household" | "pet";
 
 export interface BadgeDefinition {

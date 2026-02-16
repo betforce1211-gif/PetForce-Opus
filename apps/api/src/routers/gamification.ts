@@ -11,6 +11,7 @@ import {
 } from "@petforce/db";
 import {
   GAMIFICATION_LEVELS,
+  GAMIFICATION_LEVEL_NAMES,
   GAMIFICATION_XP_VALUES,
   GAMIFICATION_BADGES,
 } from "@petforce/core";
@@ -30,7 +31,11 @@ function levelFromXp(xp: number): number {
   return 1;
 }
 
-function levelName(level: number): string {
+function levelName(level: number, track?: string): string {
+  if (track) {
+    const names = GAMIFICATION_LEVEL_NAMES[track];
+    if (names && names[level - 1]) return names[level - 1];
+  }
   return GAMIFICATION_LEVELS.find((l) => l.level === level)?.name ?? "Puppy Pal";
 }
 
@@ -139,13 +144,13 @@ function evaluateBadges(
   return earned;
 }
 
-function buildLevelView(xp: number) {
+function buildLevelView(xp: number, track?: string) {
   const lvl = levelFromXp(xp);
   const nxtXp = nextLevelXp(lvl);
   const curXp = currentLevelXp(lvl);
   return {
     level: lvl,
-    levelName: levelName(lvl),
+    levelName: levelName(lvl, track),
     xpToNextLevel: nxtXp - xp,
     nextLevelXp: nxtXp - curXp,
   };
@@ -181,7 +186,7 @@ export const gamificationRouter = router({
     const memberViews: GamificationMemberView[] = householdMembers.map((m) => {
       const gs = statsMap.get(m.id);
       const xp = gs?.totalXp ?? 0;
-      const lv = buildLevelView(xp);
+      const lv = buildLevelView(xp, "member");
       return {
         memberId: m.id,
         memberName: m.displayName,
@@ -205,7 +210,7 @@ export const gamificationRouter = router({
       .where(eq(householdGameStats.householdId, ctx.householdId));
     const hs = hStats[0];
     const hXp = hs?.totalXp ?? 0;
-    const hLv = buildLevelView(hXp);
+    const hLv = buildLevelView(hXp, "household");
     const householdView: GamificationHouseholdView = {
       householdName: householdRow?.name ?? "Household",
       totalXp: hXp,
@@ -222,7 +227,7 @@ export const gamificationRouter = router({
     const petViews: GamificationPetView[] = petRows.map((p) => {
       const ps = petStatsMap.get(p.id);
       const pXp = ps?.totalXp ?? 0;
-      const pLv = buildLevelView(pXp);
+      const pLv = buildLevelView(pXp, p.species);
       return {
         petId: p.id,
         petName: p.name,
