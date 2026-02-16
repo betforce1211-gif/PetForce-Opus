@@ -2,9 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc";
 import {
   db,
-  feedingLogs,
   feedingSchedules,
-  medicationLogs,
   medications,
   pets,
   members,
@@ -225,10 +223,24 @@ export const reportingRouter = router({
 
       const totalCompleted = raw.filter((r) => !r.skipped).length;
       const totalSkipped = raw.filter((r) => r.skipped).length;
+      const completedActivities = raw.filter((r) => r.taskType === "activity").length;
 
-      // Count today's pending tasks (no log yet)
-      const today = new Date().toISOString().split("T")[0];
+      // Count expected tasks by computing active days per schedule/medication
+      const rangeStart = new Date(input.from + "T00:00:00Z");
+      const today = new Date(new Date().toISOString().split("T")[0] + "T00:00:00Z");
+      const rangeEnd = new Date(input.to + "T00:00:00Z");
+      const effectiveRangeEnd = rangeEnd < today ? rangeEnd : today;
 
+      const msPerDay = 86_400_000;
+
+      function countActiveDays(start: Date, end: Date): number {
+        const effStart = start > rangeStart ? start : rangeStart;
+        const effEnd = end < effectiveRangeEnd ? end : effectiveRangeEnd;
+        if (effStart > effEnd) return 0;
+        return Math.floor((effEnd.getTime() - effStart.getTime()) / msPerDay) + 1;
+      }
+
+      // Feeding schedules: each active schedule = 1 expected task per active day
       const activeSchedules = await db
         .select()
         .from(feedingSchedules)
@@ -238,18 +250,14 @@ export const reportingRouter = router({
             eq(feedingSchedules.isActive, true)
           )
         );
-      const todayFeedingLogRows = await db
-        .select()
-        .from(feedingLogs)
-        .where(
-          and(
-            eq(feedingLogs.householdId, ctx.householdId),
-            eq(feedingLogs.feedingDate, today)
-          )
-        );
-      const loggedFeedingIds = new Set(todayFeedingLogRows.map((l) => l.feedingScheduleId));
-      const pendingFeedings = activeSchedules.filter((s) => !loggedFeedingIds.has(s.id)).length;
 
+      let totalExpectedFeedings = 0;
+      for (const s of activeSchedules) {
+        const schedStart = new Date(new Date(s.createdAt).toISOString().split("T")[0] + "T00:00:00Z");
+        totalExpectedFeedings += countActiveDays(schedStart, effectiveRangeEnd);
+      }
+
+      // Medications: each active medication = 1 expected task per active day
       const activeMeds = await db
         .select()
         .from(medications)
@@ -259,19 +267,21 @@ export const reportingRouter = router({
             eq(medications.isActive, true)
           )
         );
-      const todayMedLogRows = await db
-        .select()
-        .from(medicationLogs)
-        .where(
-          and(
-            eq(medicationLogs.householdId, ctx.householdId),
-            eq(medicationLogs.loggedDate, today)
-          )
-        );
-      const loggedMedIds = new Set(todayMedLogRows.map((l) => l.medicationId));
-      const pendingMeds = activeMeds.filter((m) => !loggedMedIds.has(m.id)).length;
 
-      const totalExpected = totalCompleted + totalSkipped + pendingFeedings + pendingMeds;
+      let totalExpectedMeds = 0;
+      for (const m of activeMeds) {
+        const medStart = m.startDate
+          ? new Date(new Date(m.startDate).toISOString().split("T")[0] + "T00:00:00Z")
+          : new Date(new Date(m.createdAt).toISOString().split("T")[0] + "T00:00:00Z");
+        const medEnd = m.endDate
+          ? new Date(new Date(m.endDate).toISOString().split("T")[0] + "T00:00:00Z")
+          : effectiveRangeEnd;
+        totalExpectedMeds += countActiveDays(medStart, medEnd);
+      }
+
+      // Activities are ad-hoc: completed activities already count as both expected and completed
+      const totalExpected = totalExpectedFeedings + totalExpectedMeds + completedActivities;
+      const totalMissed = Math.max(0, totalExpected - totalCompleted - totalSkipped);
       const completionRate = totalExpected > 0 ? totalCompleted / totalExpected : 0;
 
       // Find top contributor
@@ -352,6 +362,7 @@ export const reportingRouter = router({
         dateRange: { from: input.from, to: input.to },
         totalCompleted,
         totalSkipped,
+        totalMissed,
         totalExpected,
         completionRate,
         topContributor,

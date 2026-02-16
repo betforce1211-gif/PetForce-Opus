@@ -373,6 +373,7 @@ export interface ReportingSummary {
   dateRange: { from: string; to: string };
   totalCompleted: number;
   totalSkipped: number;
+  totalMissed: number;
   totalExpected: number;
   completionRate: number;
   topContributor: { memberId: string; memberName: string; count: number } | null;

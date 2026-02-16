@@ -111,6 +111,10 @@ function SummaryTab({ householdId }: { householdId: string }) {
               <span style={{ ...statCardValue, color: data.totalSkipped > 0 ? "#DC2626" : "#1A1637" }}>{data.totalSkipped}</span>
               <span style={statCardLabel}>Skipped</span>
             </div>
+            <div style={statCard}>
+              <span style={{ ...statCardValue, color: data.totalMissed > 0 ? "#D97706" : "#1A1637" }}>{data.totalMissed}</span>
+              <span style={statCardLabel}>Missed</span>
+            </div>
           </div>
 
           {/* Member contribution bars */}

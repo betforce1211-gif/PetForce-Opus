@@ -73,10 +73,17 @@ export function ReportingTileContent({ householdId, onManage }: ReportingTileCon
         </div>
 
         {/* Skipped */}
-        <div style={{ ...summaryRow, borderBottom: "none" }}>
+        <div style={summaryRow}>
           <span style={summaryIcon}>{"\u23ED\uFE0F"}</span>
           <span style={summaryLabel}>Skipped</span>
           <span style={{ ...summaryValue, color: data.totalSkipped > 0 ? "#DC2626" : "#1A1637" }}>{data.totalSkipped}</span>
+        </div>
+
+        {/* Missed */}
+        <div style={{ ...summaryRow, borderBottom: "none" }}>
+          <span style={summaryIcon}>{"\u274C"}</span>
+          <span style={summaryLabel}>Missed</span>
+          <span style={{ ...summaryValue, color: data.totalMissed > 0 ? "#D97706" : "#1A1637" }}>{data.totalMissed}</span>
         </div>
       </div>
 
