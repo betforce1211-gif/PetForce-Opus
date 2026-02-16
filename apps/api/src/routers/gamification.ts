@@ -13,14 +13,13 @@ import {
   GAMIFICATION_LEVELS,
   GAMIFICATION_LEVEL_NAMES,
   GAMIFICATION_XP_VALUES,
-  GAMIFICATION_BADGES,
+  evaluateBadges,
 } from "@petforce/core";
 import type {
   GamificationMemberView,
   GamificationHouseholdView,
   GamificationPetView,
   GamificationFullStats,
-  GamificationEntityGroup,
 } from "@petforce/core";
 import { fetchUnifiedCompletions } from "../lib/unified-completions";
 
@@ -36,7 +35,8 @@ function levelName(level: number, track?: string): string {
     const names = GAMIFICATION_LEVEL_NAMES[track];
     if (names && names[level - 1]) return names[level - 1];
   }
-  return GAMIFICATION_LEVELS.find((l) => l.level === level)?.name ?? "Puppy Pal";
+  const otherNames = GAMIFICATION_LEVEL_NAMES["other"];
+  return (otherNames && otherNames[level - 1]) ?? `Level ${level}`;
 }
 
 function nextLevelXp(level: number): number {
@@ -93,55 +93,6 @@ function computeStreaks(
   }
 
   return { currentStreak, longestStreak, lastDay };
-}
-
-function evaluateBadges(
-  group: GamificationEntityGroup,
-  stats: {
-    totalTasks: number;
-    feedingCount: number;
-    medicationCount: number;
-    activityCount: number;
-    longestStreak: number;
-    level: number;
-    activeMemberCount?: number;
-  }
-): string[] {
-  const earned: string[] = [];
-  const groupBadges = GAMIFICATION_BADGES.filter((b) => b.group === group);
-
-  for (const badge of groupBadges) {
-    let unlocked = false;
-    switch (badge.id) {
-      // Member badges
-      case "first_steps": unlocked = stats.totalTasks >= 1; break;
-      case "feeding_frenzy": unlocked = stats.feedingCount >= 10; break;
-      case "med_master": unlocked = stats.medicationCount >= 10; break;
-      case "walk_star": unlocked = stats.activityCount >= 10; break;
-      case "week_warrior": unlocked = stats.longestStreak >= 7; break;
-      case "fortnight_hero": unlocked = stats.longestStreak >= 14; break;
-      case "month_master": unlocked = stats.longestStreak >= 30; break;
-      case "pet_parent_pro": unlocked = stats.level >= 5; break;
-      case "century_club": unlocked = stats.totalTasks >= 100; break;
-      case "feeding_fiend": unlocked = stats.feedingCount >= 50; break;
-      // Household badges
-      case "house_warming": unlocked = stats.totalTasks >= 1; break;
-      case "full_house": unlocked = (stats.activeMemberCount ?? 0) >= 3; break;
-      case "team_effort": unlocked = stats.longestStreak >= 7; break;
-      case "family_commitment": unlocked = stats.longestStreak >= 30; break;
-      case "century_home": unlocked = stats.totalTasks >= 100; break;
-      case "dream_team": unlocked = stats.level >= 5; break;
-      // Pet badges
-      case "first_care": unlocked = stats.totalTasks >= 1; break;
-      case "well_fed": unlocked = stats.feedingCount >= 10; break;
-      case "med_champion": unlocked = stats.medicationCount >= 10; break;
-      case "active_pal": unlocked = stats.activityCount >= 10; break;
-      case "pampered_pet": unlocked = stats.longestStreak >= 7; break;
-      case "vip_pet": unlocked = stats.totalTasks >= 100; break;
-    }
-    if (unlocked) earned.push(badge.id);
-  }
-  return earned;
 }
 
 function buildLevelView(xp: number, track?: string) {

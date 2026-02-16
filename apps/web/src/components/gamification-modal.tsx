@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Modal } from "./modal";
-import { GAMIFICATION_BADGES, GAMIFICATION_LEVELS } from "@petforce/core";
-import type { GamificationMemberView, GamificationHouseholdView, GamificationPetView } from "@petforce/core";
+import { GAMIFICATION_BADGES, GAMIFICATION_LEVELS, BADGE_CATEGORIES } from "@petforce/core";
+import type { GamificationMemberView, GamificationHouseholdView, GamificationPetView, BadgeDefinition } from "@petforce/core";
 
 interface GamificationModalProps {
   householdId: string;
@@ -120,23 +120,7 @@ function MembersTab({ data }: { data: { members: GamificationMemberView[]; curre
       </div>
 
       {/* Member Badges */}
-      <div>
-        <p style={sectionTitle}>Member Badges</p>
-        <div style={badgeGrid}>
-          {memberBadges.map((badge) => {
-            const earned = allEarned.has(badge.id);
-            return (
-              <div key={badge.id} style={badgeCard(earned)}>
-                <span style={{ fontSize: "1.5rem", lineHeight: 1, filter: earned ? "none" : "grayscale(100%)", opacity: earned ? 1 : 0.4 }}>
-                  {badge.icon}
-                </span>
-                <span style={badgeName(earned)}>{badge.name}</span>
-                <span style={badgeDesc}>{badge.description}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BadgesSection badges={memberBadges} earnedSet={allEarned} title="Member Badges" />
     </div>
   );
 }
@@ -204,23 +188,7 @@ function HouseholdTab({ household }: { household: GamificationHouseholdView }) {
       </div>
 
       {/* Household Badges */}
-      <div>
-        <p style={sectionTitle}>Household Badges</p>
-        <div style={badgeGrid}>
-          {householdBadges.map((badge) => {
-            const earned = earnedSet.has(badge.id);
-            return (
-              <div key={badge.id} style={badgeCard(earned)}>
-                <span style={{ fontSize: "1.5rem", lineHeight: 1, filter: earned ? "none" : "grayscale(100%)", opacity: earned ? 1 : 0.4 }}>
-                  {badge.icon}
-                </span>
-                <span style={badgeName(earned)}>{badge.name}</span>
-                <span style={badgeDesc}>{badge.description}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BadgesSection badges={householdBadges} earnedSet={earnedSet} title="Household Badges" />
     </div>
   );
 }
@@ -268,28 +236,96 @@ function PetsTab({ pets }: { pets: GamificationPetView[] }) {
       </div>
 
       {/* Pet Badges */}
-      <div>
-        <p style={sectionTitle}>Pet Badges</p>
-        <div style={badgeGrid}>
-          {petBadges.map((badge) => {
-            const earned = allEarned.has(badge.id);
-            return (
-              <div key={badge.id} style={badgeCard(earned)}>
-                <span style={{ fontSize: "1.5rem", lineHeight: 1, filter: earned ? "none" : "grayscale(100%)", opacity: earned ? 1 : 0.4 }}>
-                  {badge.icon}
-                </span>
-                <span style={badgeName(earned)}>{badge.name}</span>
-                <span style={badgeDesc}>{badge.description}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BadgesSection badges={petBadges} earnedSet={allEarned} title="Pet Badges" />
     </div>
   );
 }
 
 // ── Styles ──
+
+// ══════════════════════════════════════════
+// Shared Badges Section (category-grouped)
+// ══════════════════════════════════════════
+
+function BadgesSection({ badges, earnedSet, title }: {
+  badges: BadgeDefinition[];
+  earnedSet: Set<string>;
+  title: string;
+}) {
+  // Group by category
+  const byCategory = new Map<string, BadgeDefinition[]>();
+  for (const badge of badges) {
+    const cat = badge.category ?? "Other";
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat)!.push(badge);
+  }
+
+  // Order categories by BADGE_CATEGORIES order, then any remaining
+  const orderedCats: string[] = [];
+  for (const cat of BADGE_CATEGORIES) {
+    if (byCategory.has(cat)) orderedCats.push(cat);
+  }
+  for (const cat of byCategory.keys()) {
+    if (!orderedCats.includes(cat)) orderedCats.push(cat);
+  }
+
+  const earnedCount = badges.filter((b) => earnedSet.has(b.id)).length;
+
+  return (
+    <div>
+      <p style={sectionTitle}>{title} ({earnedCount}/{badges.length})</p>
+      {orderedCats.map((cat) => {
+        const catBadges = byCategory.get(cat)!;
+        const catEarned = catBadges.filter((b) => earnedSet.has(b.id)).length;
+        return (
+          <details key={cat} style={categoryDetails} open={catEarned < catBadges.length}>
+            <summary style={categorySummary}>
+              {cat} <span style={categoryCount}>{catEarned}/{catBadges.length}</span>
+            </summary>
+            <div style={badgeGrid}>
+              {catBadges.map((badge) => {
+                const earned = earnedSet.has(badge.id);
+                return (
+                  <div key={badge.id} style={badgeCard(earned)}>
+                    <span style={{ fontSize: "1.5rem", lineHeight: 1, filter: earned ? "none" : "grayscale(100%)", opacity: earned ? 1 : 0.4 }}>
+                      {badge.icon}
+                    </span>
+                    <span style={badgeName(earned)}>{badge.name}</span>
+                    <span style={badgeDesc}>{badge.description}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Styles ──
+
+const categoryDetails: React.CSSProperties = {
+  marginBottom: "0.5rem",
+};
+
+const categorySummary: React.CSSProperties = {
+  cursor: "pointer",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  color: "#1A1637",
+  padding: "0.35rem 0",
+  listStyle: "none",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.4rem",
+};
+
+const categoryCount: React.CSSProperties = {
+  fontSize: "0.65rem",
+  fontWeight: 500,
+  color: "#A5A8BA",
+};
 
 const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
