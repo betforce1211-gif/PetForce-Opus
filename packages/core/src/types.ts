@@ -325,6 +325,7 @@ export interface HouseholdSummary {
   theme: HouseholdTheme;
   petCount: number;
   memberCount: number;
+  role: MemberRole;
 }
 
 export interface HouseholdDashboard {

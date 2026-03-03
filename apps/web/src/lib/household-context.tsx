@@ -6,11 +6,13 @@ import type { ReactNode } from "react";
 interface HouseholdContextValue {
   householdId: string | null;
   switchHousehold: (id: string) => void;
+  clearHousehold: () => void;
 }
 
 const HouseholdContext = createContext<HouseholdContextValue>({
   householdId: null,
   switchHousehold: () => {},
+  clearHousehold: () => {},
 });
 
 const STORAGE_KEY = "petforce_household_id";
@@ -28,8 +30,13 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, id);
   }, []);
 
+  const clearHousehold = useCallback(() => {
+    setHouseholdId(null);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
   return (
-    <HouseholdContext.Provider value={{ householdId, switchHousehold }}>
+    <HouseholdContext.Provider value={{ householdId, switchHousehold, clearHousehold }}>
       {children}
     </HouseholdContext.Provider>
   );

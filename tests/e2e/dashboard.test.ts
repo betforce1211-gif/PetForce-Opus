@@ -77,6 +77,7 @@ test.describe("Dashboard with mocked API", () => {
                   },
                   petCount: 0,
                   memberCount: 1,
+                  role: "owner",
                 },
               ],
             },

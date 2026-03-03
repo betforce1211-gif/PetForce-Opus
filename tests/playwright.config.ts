@@ -41,7 +41,7 @@ export default defineConfig({
     // Authenticated tests — reuse session from auth-setup
     {
       name: "authenticated",
-      testMatch: /authenticated|settings|invite-admin|invite-join-page|access-request|add-pet|finance|health|feeding|calendar|gamification/,
+      testMatch: /authenticated|settings|invite-admin|invite-join-page|access-request|add-pet|finance|health|feeding|calendar|gamification|household-creation-limit|onboard-scenarios/,
       dependencies: ["auth-setup"],
       use: {
         browserName: "chromium",

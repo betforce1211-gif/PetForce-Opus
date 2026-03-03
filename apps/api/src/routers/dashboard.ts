@@ -1,9 +1,19 @@
 import { eq, desc, and } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router } from "../trpc";
 import { db, households, members, pets, activities, invitations, accessRequests } from "@petforce/db";
 import { onboardHouseholdSchema } from "@petforce/core";
 import type { HouseholdSummary } from "@petforce/core";
 import { generateJoinCode } from "../utils/join-code";
+
+/** Check if a user already owns (created) a household */
+async function hasCreatedHousehold(userId: string): Promise<boolean> {
+  const ownerRows = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(and(eq(members.userId, userId), eq(members.role, "owner")));
+  return ownerRows.length > 0;
+}
 
 export const dashboardRouter = router({
   myHouseholds: protectedProcedure.query(async ({ ctx }) => {
@@ -40,6 +50,7 @@ export const dashboardRouter = router({
         theme: household.theme,
         petCount: householdPets.length,
         memberCount: householdMembers.length,
+        role: membership.role,
       });
     }
 
@@ -108,9 +119,21 @@ export const dashboardRouter = router({
     };
   }),
 
+  canCreateHousehold: protectedProcedure.query(async ({ ctx }) => {
+    const alreadyOwner = await hasCreatedHousehold(ctx.userId);
+    return { canCreate: !alreadyOwner };
+  }),
+
   onboard: protectedProcedure
     .input(onboardHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
+      if (await hasCreatedHousehold(ctx.userId)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You have already created a household. You can join other households using a join code.",
+        });
+      }
+
       const [household] = await db
         .insert(households)
         .values({

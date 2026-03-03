@@ -27,7 +27,7 @@ import { useTrackEvent } from "@/lib/use-track-event";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { householdId, switchHousehold } = useHousehold();
+  const { householdId, switchHousehold, clearHousehold } = useHousehold();
   const [editingPetId, setEditingPetId] = useState<string | null>(null);
   const [showAddPet, setShowAddPet] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
@@ -45,21 +45,32 @@ export default function DashboardPage() {
     retry: 2,
     retryDelay: 500,
   });
+  const isValidHousehold = !!householdId && !!householdsQuery.data?.some((h) => h.id === householdId);
   const dashboardQuery = trpc.dashboard.get.useQuery(
     { householdId: householdId! },
-    { enabled: !!householdId }
+    { enabled: isValidHousehold }
   );
 
   // Auto-select first household or redirect to onboard
   useEffect(() => {
-    if (!householdsQuery.data || householdId) return;
+    if (!householdsQuery.data) return;
 
     if (householdsQuery.data.length === 0) {
+      // Don't redirect while a refetch is in flight — cache may be stale
+      if (householdsQuery.isFetching) return;
+      // Clear stale householdId (e.g. from previous user session) and redirect
+      if (householdId) clearHousehold();
       router.push("/onboard");
-    } else {
+    } else if (!householdId) {
       switchHousehold(householdsQuery.data[0].id);
+    } else {
+      // Validate that the stored householdId is still valid for this user
+      const valid = householdsQuery.data.some((h) => h.id === householdId);
+      if (!valid) {
+        switchHousehold(householdsQuery.data[0].id);
+      }
     }
-  }, [householdsQuery.data, householdId, switchHousehold, router]);
+  }, [householdsQuery.data, householdsQuery.isFetching, householdId, switchHousehold, clearHousehold, router]);
 
   // --- State 1: Initial query loading ---
   if (householdsQuery.isLoading) {
