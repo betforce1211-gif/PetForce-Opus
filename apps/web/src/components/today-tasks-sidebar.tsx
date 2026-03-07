@@ -77,6 +77,7 @@ function getTodayCalendarTasks(data: UpcomingCalendarEvents): TaskItem[] {
     const evDate = ev.scheduledAt.split("T")[0];
     if (evDate !== todayStr) continue;
     if (ev.kind === "holiday") continue;
+    if (ev.kind === "feeding") continue; // already shown via feeding query
     if (ev.completedAt) continue;
 
     const kind = mapCalendarKind(ev);
