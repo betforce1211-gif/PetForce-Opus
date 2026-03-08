@@ -54,6 +54,9 @@ export const memberRouter = router({
           displayName: input.displayName,
         })
         .returning();
+
+      console.log("[AUDIT]", { action: "member.invite", userId: ctx.userId, targetUserId: input.userId, householdId: ctx.householdId, role: input.role, timestamp: new Date().toISOString() });
+
       return member;
     }),
 
@@ -82,6 +85,9 @@ export const memberRouter = router({
           )
         )
         .returning();
+
+      console.log("[AUDIT]", { action: "member.updateRole", userId: ctx.userId, targetMemberId: input.memberId, householdId: ctx.householdId, newRole: input.role, timestamp: new Date().toISOString() });
+
       return member;
     }),
 
@@ -136,6 +142,9 @@ export const memberRouter = router({
             eq(members.householdId, ctx.householdId)
           )
         );
+
+      console.log("[AUDIT]", { action: "member.remove", userId: ctx.userId, targetMemberId: input.memberId, householdId: ctx.householdId, timestamp: new Date().toISOString() });
+
       return { success: true };
     }),
 });

@@ -24,6 +24,7 @@ import { GamificationTileContent } from "@/components/gamification-tile";
 import { GamificationModal } from "@/components/gamification-modal";
 import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
 import { useTrackEvent } from "@/lib/use-track-event";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -233,10 +234,12 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>🏥</span>
                 Health
               </h2>
-              <HealthTileContent
-                householdId={householdId}
-                onManage={() => setShowHealthModal(true)}
-              />
+              <ErrorBoundary>
+                <HealthTileContent
+                  householdId={householdId}
+                  onManage={() => setShowHealthModal(true)}
+                />
+              </ErrorBoundary>
             </div>
 
             {/* Row 2 */}
@@ -246,10 +249,12 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>{"\uD83C\uDFC6"}</span>
                 Gamification
               </h2>
-              <GamificationTileContent
-                householdId={householdId}
-                onManage={() => { trackEvent("tile.opened", { tile: "gamification" }); setShowGamificationModal(true); }}
-              />
+              <ErrorBoundary>
+                <GamificationTileContent
+                  householdId={householdId}
+                  onManage={() => { trackEvent("tile.opened", { tile: "gamification" }); setShowGamificationModal(true); }}
+                />
+              </ErrorBoundary>
             </div>
 
             <div style={tileStyle}>
@@ -258,10 +263,12 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>🍽️</span>
                 Feeding
               </h2>
-              <FeedingTileContent
-                householdId={householdId}
-                onManage={() => setShowFeedingModal(true)}
-              />
+              <ErrorBoundary>
+                <FeedingTileContent
+                  householdId={householdId}
+                  onManage={() => setShowFeedingModal(true)}
+                />
+              </ErrorBoundary>
             </div>
 
             <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "finance" }); setShowFinanceModal(true); }}>
@@ -270,10 +277,12 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>{"\uD83D\uDCB0"}</span>
                 Finance
               </h2>
-              <FinanceTileContent
-                householdId={householdId}
-                onManage={() => setShowFinanceModal(true)}
-              />
+              <ErrorBoundary>
+                <FinanceTileContent
+                  householdId={householdId}
+                  onManage={() => setShowFinanceModal(true)}
+                />
+              </ErrorBoundary>
             </div>
 
             {/* Row 3 */}
@@ -297,10 +306,12 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>{"\uD83D\uDCCA"}</span>
                 Reporting
               </h2>
-              <ReportingTileContent
-                householdId={householdId}
-                onManage={() => setShowReportingModal(true)}
-              />
+              <ErrorBoundary>
+                <ReportingTileContent
+                  householdId={householdId}
+                  onManage={() => setShowReportingModal(true)}
+                />
+              </ErrorBoundary>
             </div>
 
             <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "calendar" }); setShowCalendarModal(true); }}>
@@ -309,7 +320,9 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>📅</span>
                 Calendar
               </h2>
-              <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
+              <ErrorBoundary>
+                <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
+              </ErrorBoundary>
             </div>
 
             <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "notes" }); setShowNotesModal(true); }}>
@@ -318,20 +331,24 @@ export default function DashboardPage() {
                 <span style={titleEmoji}>📝</span>
                 Notes
               </h2>
-              <NotesTileContent
-                householdId={householdId}
-                onManage={() => setShowNotesModal(true)}
-              />
+              <ErrorBoundary>
+                <NotesTileContent
+                  householdId={householdId}
+                  onManage={() => setShowNotesModal(true)}
+                />
+              </ErrorBoundary>
             </div>
           </div>
 
           {/* ── Right: Today's Tasks sidebar ── */}
-          <TodayTasksSidebar
-            householdId={householdId}
-            pets={pets}
-            onOpenHealth={() => setShowHealthModal(true)}
-            onOpenFeeding={() => setShowFeedingModal(true)}
-          />
+          <ErrorBoundary>
+            <TodayTasksSidebar
+              householdId={householdId}
+              pets={pets}
+              onOpenHealth={() => setShowHealthModal(true)}
+              onOpenFeeding={() => setShowFeedingModal(true)}
+            />
+          </ErrorBoundary>
         </div>
       </div>
       {editingPetId && (

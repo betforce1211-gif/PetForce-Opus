@@ -1,43 +1,126 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { protectedProcedure, router } from "../trpc";
-import { db, activities, members } from "@petforce/db";
+import { TRPCError } from "@trpc/server";
+import { protectedProcedure, householdProcedure, router } from "../trpc";
+import { db, activities, members, pets } from "@petforce/db";
 import { createActivitySchema, updateActivitySchema } from "@petforce/core";
 
+/** Helper: verify user is a member of the activity's household, return membership */
+async function verifyActivityMembership(activityId: string, userId: string) {
+  const [activity] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, activityId));
+
+  if (!activity) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Activity not found" });
+  }
+
+  const [membership] = await db
+    .select()
+    .from(members)
+    .where(
+      and(
+        eq(members.householdId, activity.householdId),
+        eq(members.userId, userId)
+      )
+    );
+
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not a member of this activity's household",
+    });
+  }
+
+  return { activity, membership };
+}
+
 export const activityRouter = router({
-  listByHousehold: protectedProcedure
-    .input(z.object({ householdId: z.string().uuid() }))
-    .query(async ({ input }) => {
-      return db
-        .select()
-        .from(activities)
-        .where(eq(activities.householdId, input.householdId));
-    }),
+  listByHousehold: householdProcedure.query(async ({ ctx }) => {
+    return db
+      .select()
+      .from(activities)
+      .where(eq(activities.householdId, ctx.householdId));
+  }),
 
   listByPet: protectedProcedure
-    .input(z.object({ petId: z.string().uuid() }))
-    .query(async ({ input }) => {
+    .input(z.object({ petId: z.string().uuid(), householdId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Verify membership in the household
+      const [membership] = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, input.householdId),
+            eq(members.userId, ctx.userId)
+          )
+        );
+      if (!membership) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a member of this household",
+        });
+      }
+
+      // Verify the pet belongs to the claimed household
+      const [pet] = await db
+        .select()
+        .from(pets)
+        .where(eq(pets.id, input.petId));
+      if (!pet || pet.householdId !== input.householdId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Pet does not belong to this household",
+        });
+      }
+
       return db
         .select()
         .from(activities)
-        .where(eq(activities.petId, input.petId));
+        .where(
+          and(
+            eq(activities.petId, input.petId),
+            eq(activities.householdId, input.householdId)
+          )
+        );
     }),
 
-  create: protectedProcedure
-    .input(
-      z.object({ householdId: z.string().uuid(), memberId: z.string().uuid() }).merge(
-        createActivitySchema
-      )
-    )
-    .mutation(async ({ input }) => {
-      const [activity] = await db.insert(activities).values(input).returning();
+  create: householdProcedure
+    .input(createActivitySchema)
+    .mutation(async ({ ctx, input }) => {
+      const [activity] = await db
+        .insert(activities)
+        .values({
+          ...input,
+          householdId: ctx.householdId,
+          memberId: ctx.membership.id,
+        })
+        .returning();
       return activity;
     }),
 
   update: protectedProcedure
     .input(z.object({ id: z.string().uuid() }).merge(updateActivitySchema))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
+      const { activity: existing } = await verifyActivityMembership(id, ctx.userId);
+
+      // If petId is being changed, verify the new pet belongs to the same household
+      if (data.petId && data.petId !== existing.petId) {
+        const [pet] = await db
+          .select()
+          .from(pets)
+          .where(eq(pets.id, data.petId));
+        if (!pet || pet.householdId !== existing.householdId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Pet does not belong to this household",
+          });
+        }
+      }
+
       const [activity] = await db
         .update(activities)
         .set(data)
@@ -49,32 +132,13 @@ export const activityRouter = router({
   complete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      // Fetch the activity to get its householdId
-      const [existing] = await db
-        .select()
-        .from(activities)
-        .where(eq(activities.id, input.id));
-
-      if (!existing) {
-        throw new Error("Activity not found");
-      }
-
-      // Look up the member record for this user in the activity's household
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, existing.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
+      const { membership } = await verifyActivityMembership(input.id, ctx.userId);
 
       const [activity] = await db
         .update(activities)
         .set({
           completedAt: new Date(),
-          completedBy: membership?.id ?? null,
+          completedBy: membership.id,
         })
         .where(eq(activities.id, input.id))
         .returning();
@@ -83,7 +147,9 @@ export const activityRouter = router({
 
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      await verifyActivityMembership(input.id, ctx.userId);
+
       await db.delete(activities).where(eq(activities.id, input.id));
       return { success: true };
     }),

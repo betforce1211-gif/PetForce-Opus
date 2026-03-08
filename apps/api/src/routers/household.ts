@@ -26,15 +26,13 @@ export const householdRouter = router({
     return results;
   }),
 
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const [household] = await db
-        .select()
-        .from(households)
-        .where(eq(households.id, input.id));
-      return household ?? null;
-    }),
+  getById: householdProcedure.query(async ({ ctx }) => {
+    const [household] = await db
+      .select()
+      .from(households)
+      .where(eq(households.id, ctx.householdId));
+    return household ?? null;
+  }),
 
   create: protectedProcedure
     .input(createHouseholdSchema)
@@ -74,17 +72,24 @@ export const householdRouter = router({
       return household;
     }),
 
-  update: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }).merge(updateHouseholdSchema))
-    .mutation(async ({ input }) => {
-      const { id, theme, ...rest } = input;
+  update: householdProcedure
+    .input(updateHouseholdSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can update household settings",
+        });
+      }
+
+      const { theme, ...rest } = input;
 
       const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
       if (theme) {
         const [existing] = await db
           .select()
           .from(households)
-          .where(eq(households.id, id));
+          .where(eq(households.id, ctx.householdId));
         if (existing) {
           updateData.theme = { ...existing.theme, ...theme };
         }
@@ -93,17 +98,22 @@ export const householdRouter = router({
       const [household] = await db
         .update(households)
         .set(updateData)
-        .where(eq(households.id, id))
+        .where(eq(households.id, ctx.householdId))
         .returning();
       return household;
     }),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      await db.delete(households).where(eq(households.id, input.id));
-      return { success: true };
-    }),
+  delete: householdProcedure.mutation(async ({ ctx }) => {
+    if (ctx.membership.role !== "owner") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only owners can delete a household",
+      });
+    }
+
+    await db.delete(households).where(eq(households.id, ctx.householdId));
+    return { success: true };
+  }),
 
   regenerateJoinCode: householdProcedure.mutation(async ({ ctx }) => {
     if (ctx.membership.role !== "owner") {

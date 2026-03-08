@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { AppHeader } from "./app-header";
 import "./globals.css";
 
+// Required: ClerkProvider in root layout needs runtime env vars
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {

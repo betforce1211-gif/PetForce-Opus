@@ -136,6 +136,7 @@ export const accessRequestRouter = router({
         .set({ status: "approved", reviewedBy: ctx.membership.id })
         .where(eq(accessRequests.id, input.requestId));
 
+      console.log("[AUDIT]", JSON.stringify({ action: "accessRequest.approve", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, approvedUserId: request.userId, timestamp: new Date().toISOString() }));
       return member;
     }),
 
@@ -168,6 +169,7 @@ export const accessRequestRouter = router({
         });
       }
 
+      console.log("[AUDIT]", JSON.stringify({ action: "accessRequest.deny", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, deniedUserId: request.userId, timestamp: new Date().toISOString() }));
       return { success: true };
     }),
 });

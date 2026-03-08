@@ -36,6 +36,13 @@ export function PetEditModal({ petId, onClose }: PetEditModalProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [existingAvatar, setExistingAvatar] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Revoke blob URL on cleanup to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
   const { upload, isUploading } = usePetAvatarUpload();
 
   // Populate form when pet data loads

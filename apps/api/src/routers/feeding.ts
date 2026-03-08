@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { householdProcedure, router } from "../trpc";
 import {
   db,
@@ -238,7 +239,7 @@ export const feedingRouter = router({
         );
 
       if (!schedule) {
-        throw new Error("Feeding schedule not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feeding schedule not found" });
       }
 
       const [log] = await db

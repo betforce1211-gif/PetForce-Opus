@@ -57,7 +57,6 @@ export default function LogActivityPage() {
 
     createActivity.mutate({
       householdId,
-      memberId: currentMember.id,
       petId,
       type: type as (typeof activityTypes)[number],
       title,
