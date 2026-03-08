@@ -1,0 +1,67 @@
+"use client";
+
+import { Component } from "react";
+import type { ReactNode, ErrorInfo } from "react";
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("[ErrorBoundary]", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
+
+      return (
+        <div
+          style={{
+            padding: "1rem",
+            borderRadius: "0.5rem",
+            background: "#FEF2F2",
+            border: "1px solid #FECACA",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ color: "#991B1B", marginBottom: "0.5rem" }}>
+            Something went wrong loading this section.
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ hasError: false })}
+            style={{
+              padding: "0.375rem 0.75rem",
+              borderRadius: "0.375rem",
+              background: "#DC2626",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem",
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
