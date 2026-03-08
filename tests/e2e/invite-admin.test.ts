@@ -208,18 +208,24 @@ test.describe("Invitation Lifecycle (Admin)", () => {
       fullPage: true,
     }).catch(() => {});
 
-    // Extract the invitation ID from the pending list for cleanup
+    // Extract the token from the visible invite link to find this specific invite
     try {
-      const invites = await trpcQuery(
-        page.request,
-        authToken,
-        "invitation.listByHousehold",
-        { householdId }
-      );
-      if (Array.isArray(invites)) {
-        for (const inv of invites) {
-          if (inv.status === "pending") {
-            createdInvitationIds.push(inv.id);
+      const linkEl = linkText.first();
+      const linkContent = await linkEl.textContent();
+      const tokenMatch = linkContent?.match(/token=([a-zA-Z0-9_-]+)/);
+      if (tokenMatch) {
+        const invites = await trpcQuery(
+          page.request,
+          authToken,
+          "invitation.listByHousehold",
+          { householdId }
+        );
+        if (Array.isArray(invites)) {
+          const thisInvite = invites.find(
+            (i: { token: string }) => i.token === tokenMatch[1]
+          );
+          if (thisInvite) {
+            createdInvitationIds.push(thisInvite.id);
           }
         }
       }

@@ -47,7 +47,7 @@ async function ensureAuthenticated(page: Page): Promise<boolean> {
   const testCode = process.env.CLERK_TEST_CODE ?? "424242";
 
   const emailInput = page.locator('input[name="identifier"]');
-  await emailInput.waitFor({ state: "visible", timeout: 20_000 });
+  await emailInput.waitFor({ state: "visible", timeout: 30_000 });
   await emailInput.fill(email);
   await page.click('button:has-text("Continue")');
 
