@@ -1,6 +1,7 @@
 "use client";
 
 import { trpc } from "@/lib/trpc";
+import { useVisibilityRefetch } from "@/lib/use-visibility-refetch";
 import type { HealthSummary } from "@petforce/core";
 
 interface HealthTileContentProps {
@@ -11,8 +12,9 @@ interface HealthTileContentProps {
 export function HealthTileContent({ householdId, onManage }: HealthTileContentProps) {
   const summaryQuery = trpc.health.summary.useQuery(
     { householdId },
-    { refetchInterval: 60_000 }
+    { refetchInterval: 15_000 }
   );
+  useVisibilityRefetch([() => summaryQuery.refetch()]);
 
   if (summaryQuery.isLoading) {
     return (

@@ -15,6 +15,7 @@ import type {
 } from "@petforce/core";
 import { TASK_KIND_ICONS, TASK_KIND_LABELS } from "@petforce/core";
 import { useTrackEvent } from "@/lib/use-track-event";
+import { useVisibilityRefetch } from "@/lib/use-visibility-refetch";
 
 // ── Internal task item type ──
 
@@ -183,20 +184,26 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
 
   const feedingQuery = trpc.feeding.todayStatus.useQuery(
     { householdId, date: today },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 10_000 }
   );
   const calendarQuery = trpc.calendar.upcoming.useQuery(
     { householdId, limit: 20 },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
   const healthQuery = trpc.health.summary.useQuery(
     { householdId },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
   const medicationQuery = trpc.health.todayMedicationStatus.useQuery(
     { householdId, date: today },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 10_000 }
   );
+  useVisibilityRefetch([
+    () => feedingQuery.refetch(),
+    () => calendarQuery.refetch(),
+    () => healthQuery.refetch(),
+    () => medicationQuery.refetch(),
+  ]);
 
   // Mutations
   const logFeeding = trpc.feeding.logCompletion.useMutation({

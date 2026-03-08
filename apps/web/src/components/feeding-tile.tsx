@@ -1,6 +1,7 @@
 "use client";
 
 import { trpc } from "@/lib/trpc";
+import { useVisibilityRefetch } from "@/lib/use-visibility-refetch";
 import type { HouseholdFeedingStatus, FeedingScheduleStatus } from "@petforce/core";
 
 interface FeedingTileContentProps {
@@ -12,9 +13,10 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
   const today = new Date().toISOString().split("T")[0];
   const statusQuery = trpc.feeding.todayStatus.useQuery(
     { householdId, date: today },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 10_000 }
   );
   const utils = trpc.useContext();
+  useVisibilityRefetch([() => statusQuery.refetch()]);
 
   const logMut = trpc.feeding.logCompletion.useMutation({
     onSuccess: () => utils.feeding.todayStatus.invalidate(),

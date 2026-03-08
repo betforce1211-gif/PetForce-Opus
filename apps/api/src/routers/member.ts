@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { householdProcedure, router } from "../trpc";
 import { db, members } from "@petforce/db";
+import { logActivity } from "../lib/audit";
 
 export const memberRouter = router({
   listByHousehold: householdProcedure.query(async ({ ctx }) => {
@@ -55,7 +56,15 @@ export const memberRouter = router({
         })
         .returning();
 
-      console.log("[AUDIT]", { action: "member.invite", userId: ctx.userId, targetUserId: input.userId, householdId: ctx.householdId, role: input.role, timestamp: new Date().toISOString() });
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.invited",
+        subjectType: "member",
+        subjectId: member.id,
+        subjectName: input.displayName,
+        performedBy: ctx.membership.id,
+        metadata: { role: input.role, targetUserId: input.userId },
+      });
 
       return member;
     }),
@@ -86,7 +95,15 @@ export const memberRouter = router({
         )
         .returning();
 
-      console.log("[AUDIT]", { action: "member.updateRole", userId: ctx.userId, targetMemberId: input.memberId, householdId: ctx.householdId, newRole: input.role, timestamp: new Date().toISOString() });
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.role_changed",
+        subjectType: "member",
+        subjectId: member.id,
+        subjectName: member.displayName,
+        performedBy: ctx.membership.id,
+        metadata: { newRole: input.role },
+      });
 
       return member;
     }),
@@ -143,7 +160,14 @@ export const memberRouter = router({
           )
         );
 
-      console.log("[AUDIT]", { action: "member.remove", userId: ctx.userId, targetMemberId: input.memberId, householdId: ctx.householdId, timestamp: new Date().toISOString() });
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.removed",
+        subjectType: "member",
+        subjectId: target.id,
+        subjectName: target.displayName,
+        performedBy: ctx.membership.id,
+      });
 
       return { success: true };
     }),

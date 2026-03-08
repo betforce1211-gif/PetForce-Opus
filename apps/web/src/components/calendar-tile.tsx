@@ -11,7 +11,7 @@ interface CalendarTileContentProps {
 export function CalendarTileContent({ householdId, onAddEvent }: CalendarTileContentProps) {
   const upcomingQuery = trpc.calendar.upcoming.useQuery(
     { householdId, limit: 5 },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
 
   if (upcomingQuery.isLoading) {
