@@ -3,27 +3,34 @@ import { safeGoto, getHouseholdId } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
+/** Wait for the Finance tile to finish loading on the dashboard. */
+async function waitForFinanceTileLoaded(page: import("@playwright/test").Page) {
+  await safeGoto(page, "/dashboard");
+  await expect(page.getByText("Finance").first()).toBeVisible({ timeout: 15_000 });
+
+  // Wait for tile content to appear (exits "Loading..." state)
+  const summary = page.getByText("This Month").first();
+  const empty = page.getByText("No expenses tracked yet").first();
+  const manage = page.getByText("Manage Finance");
+  const error = page.getByText("Failed to load");
+  await expect(summary.or(empty).or(manage).or(error).first()).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe("Finance Module", () => {
   test.describe.configure({ mode: "serial" });
 
   let householdId: string;
 
   test("dashboard shows Finance tile (not Reminders)", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     householdId = await getHouseholdId(page);
-
-    // Finance tile should be visible
-    await expect(page.getByText("Finance").first()).toBeVisible({ timeout: 15_000 });
 
     // Reminders tile should NOT exist
     const reminders = page.getByText("Reminders");
     await expect(reminders).not.toBeVisible();
 
     // Finance tile should show either summary or empty state
-    // Use .first() — "This Month" appears in both Finance and Reporting tiles
     const hasSummary = await page.getByText("This Month").first().isVisible().catch(() => false);
     const hasEmpty = await page.getByText("No expenses tracked yet").first().isVisible().catch(() => false);
     const hasManage = await page.getByText("Manage Finance").isVisible().catch(() => false);
@@ -32,13 +39,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/40-finance-tile-on-dashboard.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("clicking Finance tile opens modal", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Click on the Finance tile heading
     await page.getByText("Finance").first().click();
@@ -55,13 +60,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/41-finance-modal-overview.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Expenses tab shows add form with category and suggestion chips", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Open modal
     await page.getByText("Finance").first().click();
@@ -88,13 +91,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/42-finance-expenses-tab.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("add an expense and verify it appears", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Open modal → Expenses tab
     await page.getByText("Finance").first().click();
@@ -128,7 +129,7 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/43-finance-expense-form-filled.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Wait for button to enable, then submit
     const addBtn = page.getByRole("button", { name: "Add", exact: true });
@@ -142,13 +143,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/44-finance-expense-added.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("overview tab shows breakdown after adding expense", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Open modal → Overview tab
     await page.getByText("Finance").first().click();
@@ -167,13 +166,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/45-finance-overview-with-data.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("month navigation works in overview", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Open modal
     await page.getByText("Finance").first().click();
@@ -200,13 +197,11 @@ test.describe("Finance Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/46-finance-month-navigation.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("close modal with Done button", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFinanceTileLoaded(page);
 
     // Open modal
     await page.getByText("Finance").first().click();

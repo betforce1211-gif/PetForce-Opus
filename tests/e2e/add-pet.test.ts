@@ -44,7 +44,7 @@ test.describe("Add Pet Form", () => {
     await page.screenshot({
       path: "test-results/screenshots/20-add-pet-form-empty.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("submit pet with all fields and verify on dashboard", async ({ page }) => {
@@ -75,20 +75,20 @@ test.describe("Add Pet Form", () => {
     await page.screenshot({
       path: "test-results/screenshots/21-add-pet-form-filled.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Submit
     await page.getByRole("button", { name: "Add Pet" }).click();
 
     // Should redirect to dashboard
     await page.waitForURL(/\/dashboard$/, { timeout: 15000 });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     await page.screenshot({
       path: "test-results/screenshots/22-dashboard-after-add-pet.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Verify the pet appears on the dashboard
     await expect(page.getByText(petName)).toBeVisible({ timeout: 10000 });
@@ -110,7 +110,7 @@ test.describe("Add Pet Form", () => {
 
     // Should redirect to dashboard
     await page.waitForURL(/\/dashboard$/, { timeout: 15000 });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Verify the pet appears
@@ -119,7 +119,7 @@ test.describe("Add Pet Form", () => {
     await page.screenshot({
       path: "test-results/screenshots/23-dashboard-after-minimal-pet.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("cancel button navigates back without creating a pet", async ({ page }) => {

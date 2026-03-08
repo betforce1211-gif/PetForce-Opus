@@ -3,18 +3,32 @@ import { safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
+/**
+ * Wait for the Calendar tile on the dashboard to finish loading.
+ * The tile shows "Loading..." until the calendar.upcoming query completes
+ * (which runs 7 sequential DB queries and can be slow). After loading it
+ * shows either "+ Add Event" (with or without events) or "Failed to load".
+ */
+async function waitForCalendarTileLoaded(page: import("@playwright/test").Page) {
+  await safeGoto(page, "/dashboard");
+
+  // Wait for the Calendar heading to appear on the dashboard
+  await expect(page.getByText("Calendar").first()).toBeVisible({ timeout: 10_000 });
+
+  // Wait for the tile to exit "Loading..." — look for content that only appears after loading
+  const addEventBtn = page.getByText("+ Add Event");
+  const emptyState = page.getByText("No upcoming events");
+  const errorState = page.getByText("Failed to load");
+  await expect(addEventBtn.or(emptyState).or(errorState).first()).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe("Calendar Module", () => {
   test.describe.configure({ mode: "serial" });
 
   test("dashboard shows Calendar tile with upcoming events", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
-    // Calendar tile should be visible
-    await expect(page.getByText("Calendar").first()).toBeVisible({ timeout: 10000 });
-
-    // Should show upcoming events or empty state
+    // Should show upcoming events or empty state (not error)
     const hasEvents = await page.getByText("+ Add Event").isVisible().catch(() => false);
     const hasEmpty = await page.getByText("No upcoming events").isVisible().catch(() => false);
     expect(hasEvents || hasEmpty).toBeTruthy();
@@ -22,13 +36,11 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/70-calendar-tile-on-dashboard.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("clicking Calendar tile opens full calendar modal", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Click on the Calendar tile heading to open modal
     await page.getByRole("heading", { name: /Calendar/ }).click();
@@ -53,16 +65,14 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/71-calendar-modal-full.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("navigate months with prev/next arrows", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Open calendar modal
-    await page.getByText("Calendar").first().click();
+    await page.getByRole("heading", { name: /Calendar/ }).click();
     await page.waitForTimeout(1500);
 
     // Get current month — scope to the calendar modal h2 (not dashboard h2s)
@@ -79,7 +89,7 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/72-calendar-prev-month.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Click next month twice to go one month ahead
     await page.locator("button", { hasText: ">" }).first().click();
@@ -93,16 +103,14 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/73-calendar-next-month.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Today button returns to current month", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Open calendar modal
-    await page.getByText("Calendar").first().click();
+    await page.getByRole("heading", { name: /Calendar/ }).click();
     await page.waitForTimeout(1500);
 
     // Navigate away from current month
@@ -124,12 +132,10 @@ test.describe("Calendar Module", () => {
   });
 
   test("clicking a day shows detail panel", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Open calendar modal
-    await page.getByText("Calendar").first().click();
+    await page.getByRole("heading", { name: /Calendar/ }).click();
     await page.waitForTimeout(1500);
 
     // Click on day 15 (should exist in any month)
@@ -144,16 +150,14 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/74-calendar-day-detail.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("toggle holiday filter", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Open calendar modal
-    await page.getByText("Calendar").first().click();
+    await page.getByRole("heading", { name: /Calendar/ }).click();
     await page.waitForTimeout(1500);
 
     // Holidays should be on by default
@@ -175,16 +179,14 @@ test.describe("Calendar Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/75-calendar-holiday-toggle.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("close calendar modal with X button", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForCalendarTileLoaded(page);
 
     // Open calendar modal
-    await page.getByText("Calendar").first().click();
+    await page.getByRole("heading", { name: /Calendar/ }).click();
     await page.waitForTimeout(1500);
 
     // Verify modal is open

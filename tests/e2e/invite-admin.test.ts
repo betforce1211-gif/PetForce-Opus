@@ -206,7 +206,7 @@ test.describe("Invitation Lifecycle (Admin)", () => {
     await page.screenshot({
       path: "test-results/screenshots/invite-01-created-via-ui.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Extract the invitation ID from the pending list for cleanup
     try {
@@ -256,7 +256,7 @@ test.describe("Invitation Lifecycle (Admin)", () => {
     await page.screenshot({
       path: "test-results/screenshots/invite-02-pending-list.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("revokes invite via UI Revoke button", async ({ page, request }) => {
@@ -287,6 +287,6 @@ test.describe("Invitation Lifecycle (Admin)", () => {
     await page.screenshot({
       path: "test-results/screenshots/invite-03-revoked-ui.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 });

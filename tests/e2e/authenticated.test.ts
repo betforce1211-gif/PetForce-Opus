@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
@@ -6,8 +7,8 @@ test.describe("Authenticated Dashboard Flow", () => {
   test("dashboard loads after sign-in (no infinite loading)", async ({
     page,
   }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(3000);
 
     const url = page.url();
@@ -15,7 +16,7 @@ test.describe("Authenticated Dashboard Flow", () => {
     await page.screenshot({
       path: "test-results/screenshots/10-authenticated-dashboard.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Should be on dashboard or onboard — NOT stuck on loading, NOT on sign-in
     const isOnDashboard = url.includes("/dashboard");
@@ -28,22 +29,22 @@ test.describe("Authenticated Dashboard Flow", () => {
   });
 
   test("onboard page: create a household if none exists", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     const url = page.url();
     await page.screenshot({
       path: "test-results/screenshots/11-after-login-redirect.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // If redirected to onboard, fill the form
     if (url.includes("/onboard")) {
       await page.screenshot({
         path: "test-results/screenshots/12-onboard-form.png",
         fullPage: true,
-      });
+      }).catch(() => {});
 
       // Fill household name
       const nameInput = page.locator('input[placeholder="The Smith Family"]');
@@ -57,7 +58,7 @@ test.describe("Authenticated Dashboard Flow", () => {
         await page.screenshot({
           path: "test-results/screenshots/13-onboard-filled.png",
           fullPage: true,
-        });
+        }).catch(() => {});
 
         // Submit the form
         await page.click('button[type="submit"]');
@@ -67,7 +68,7 @@ test.describe("Authenticated Dashboard Flow", () => {
         await page.screenshot({
           path: "test-results/screenshots/14-dashboard-after-onboard.png",
           fullPage: true,
-        });
+        }).catch(() => {});
       }
     }
 
@@ -77,7 +78,7 @@ test.describe("Authenticated Dashboard Flow", () => {
       await page.screenshot({
         path: "test-results/screenshots/15-dashboard-loaded.png",
         fullPage: true,
-      });
+      }).catch(() => {});
 
       const body = await page.textContent("body");
       const hasContent =

@@ -11,7 +11,7 @@ test("sign in via UI and verify redirect to dashboard", async ({ page }) => {
   await page.screenshot({
     path: "test-results/screenshots/30-manual-signin-result.png",
     fullPage: true,
-  });
+  }).catch(() => {});
 
   const finalUrl = page.url();
   console.log("Final URL:", finalUrl);

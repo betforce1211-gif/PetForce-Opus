@@ -4,6 +4,7 @@ import {
   trpcMutation,
   trpcQuery,
   getHouseholdId,
+  safeGoto,
 } from "./helpers/api-client";
 
 import "./helpers/load-env";
@@ -21,8 +22,7 @@ test.describe("Access Request Admin + Error Paths", () => {
     const page = await context.newPage();
 
     const tokenPromise = extractAuthToken(page);
-    await page.goto("/dashboard");
-    await page.waitForLoadState("domcontentloaded");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     authToken = await tokenPromise;

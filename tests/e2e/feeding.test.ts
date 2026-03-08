@@ -3,16 +3,24 @@ import { safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
+/** Wait for the Feeding tile to finish loading on the dashboard. */
+async function waitForFeedingTileLoaded(page: import("@playwright/test").Page) {
+  await safeGoto(page, "/dashboard");
+  await expect(page.getByText("Feeding").first()).toBeVisible({ timeout: 10_000 });
+
+  // Wait for tile content to appear (exits "Loading..." state)
+  const schedules = page.getByText("Manage Schedules");
+  const empty = page.getByText("No feeding schedules");
+  const addLink = page.getByText("+ Add Schedule");
+  const error = page.getByText("Failed to load");
+  await expect(schedules.or(empty).or(addLink).or(error).first()).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe("Feeding Module", () => {
   test.describe.configure({ mode: "serial" });
 
   test("dashboard shows Feeding tile", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
-
-    // Feeding tile should be visible
-    await expect(page.getByText("Feeding").first()).toBeVisible({ timeout: 10000 });
+    await waitForFeedingTileLoaded(page);
 
     // Should show schedule status or empty state
     const hasSchedules = await page.getByText("Manage Schedules").isVisible().catch(() => false);
@@ -23,13 +31,11 @@ test.describe("Feeding Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/60-feeding-tile-on-dashboard.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("clicking Manage Schedules opens feeding modal", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFeedingTileLoaded(page);
 
     // Click Manage Schedules or + Add Schedule link on the feeding tile
     const manageBtn = page.getByText("Manage Schedules");
@@ -52,13 +58,11 @@ test.describe("Feeding Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/61-feeding-modal-open.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("feeding modal has suggestion chips", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFeedingTileLoaded(page);
 
     // Open feeding modal
     const manageBtn = page.getByText("Manage Schedules");
@@ -85,9 +89,7 @@ test.describe("Feeding Module", () => {
   });
 
   test("clicking suggestion chip auto-fills label and time", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFeedingTileLoaded(page);
 
     // Open feeding modal
     const manageBtn = page.getByText("Manage Schedules");
@@ -115,13 +117,11 @@ test.describe("Feeding Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/62-feeding-suggestion-chip.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("add a feeding schedule", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForFeedingTileLoaded(page);
 
     // Open feeding modal
     const manageBtn = page.getByText("Manage Schedules");
@@ -185,12 +185,7 @@ test.describe("Feeding Module", () => {
   });
 
   test("close feeding modal with Done", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
-
-    // Verify dashboard loaded before interacting
-    await expect(page.getByText("Feeding").first()).toBeVisible({ timeout: 15_000 });
+    await waitForFeedingTileLoaded(page);
 
     // Open feeding modal
     const manageBtn = page.getByText("Manage Schedules");

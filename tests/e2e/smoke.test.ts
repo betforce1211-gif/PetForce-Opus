@@ -14,7 +14,7 @@ test.describe("PetForce Smoke Tests (Unauthenticated)", () => {
     await page.screenshot({
       path: "test-results/screenshots/01-landing-page.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("dashboard route redirects unauthenticated user to sign-in", async ({
@@ -28,7 +28,7 @@ test.describe("PetForce Smoke Tests (Unauthenticated)", () => {
     await page.screenshot({
       path: "test-results/screenshots/02-auth-redirect.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // Should be on a sign-in page
     expect(page.url()).toContain("sign-in");

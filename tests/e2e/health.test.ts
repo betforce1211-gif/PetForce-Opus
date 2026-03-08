@@ -3,18 +3,26 @@ import { safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
+/** Wait for the Health tile to finish loading on the dashboard. */
+async function waitForHealthTileLoaded(page: import("@playwright/test").Page) {
+  await safeGoto(page, "/dashboard");
+  await expect(page.getByText("Health").first()).toBeVisible({ timeout: 10_000 });
+
+  // Wait for tile content to appear (exits "Loading..." state)
+  const meds = page.getByText("Active Meds").first();
+  const empty = page.getByText("No health records yet").first();
+  const addRecord = page.getByText("Add Record").first();
+  const error = page.getByText("Failed to load");
+  await expect(meds.or(empty).or(addRecord).or(error).first()).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe("Health Module", () => {
   test.describe.configure({ mode: "serial" });
 
   test("dashboard shows Health tile with summary", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
-    // Health tile should be visible
-    await expect(page.getByText("Health").first()).toBeVisible({ timeout: 10000 });
-
-    // Should show summary rows or empty state (use .first() — text may match multiple tiles)
+    // Should show summary rows or empty state
     const hasMeds = await page.getByText("Active Meds").first().isVisible().catch(() => false);
     const hasEmpty = await page.getByText("No health records yet").first().isVisible().catch(() => false);
     const hasAddRecord = await page.getByText("Add Record").first().isVisible().catch(() => false);
@@ -23,13 +31,11 @@ test.describe("Health Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/50-health-tile-on-dashboard.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("clicking Health tile opens modal with tabs", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
     // Click on the Health tile
     await page.getByText("Health").first().click();
@@ -46,13 +52,11 @@ test.describe("Health Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/51-health-modal-vet-visits.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Vet Visits tab has add form with correct fields", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
     // Open health modal
     await page.getByText("Health").first().click();
@@ -74,9 +78,7 @@ test.describe("Health Module", () => {
   });
 
   test("add a vet visit record", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
     // Open health modal
     await page.getByText("Health").first().click();
@@ -109,13 +111,11 @@ test.describe("Health Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/52-health-vet-visit-added.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Vaccinations tab shows form and vaccine suggestions", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
     // Open health modal
     await page.getByText("Health").first().click();
@@ -140,13 +140,11 @@ test.describe("Health Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/53-health-vaccinations-tab.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Medications tab shows form with frequency suggestions", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
+    await waitForHealthTileLoaded(page);
 
     // Open health modal
     await page.getByText("Health").first().click();
@@ -170,16 +168,11 @@ test.describe("Health Module", () => {
     await page.screenshot({
       path: "test-results/screenshots/54-health-medications-tab.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("close health modal with Done button", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(2000);
-
-    // Verify dashboard loaded before interacting
-    await expect(page.getByText("Health").first()).toBeVisible({ timeout: 15_000 });
+    await waitForHealthTileLoaded(page);
 
     // Open modal
     await page.getByText("Health").first().click();

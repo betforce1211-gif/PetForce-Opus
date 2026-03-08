@@ -96,7 +96,7 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     await page.screenshot({
       path: "test-results/screenshots/join-01-valid-token.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("invalid token shows Invitation Not Found", async ({ page }) => {
@@ -110,7 +110,7 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     await page.screenshot({
       path: "test-results/screenshots/join-02-invalid-token.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("revoked token shows expired/non-pending state", async ({
@@ -142,7 +142,7 @@ test.describe("Join Page — Token Mode (Accept Invite)", () => {
     await page.screenshot({
       path: "test-results/screenshots/join-03-revoked-token.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("accepting own invite via API returns CONFLICT", async ({ request }) => {
@@ -255,7 +255,7 @@ test.describe("Join Page — Request Mode (No Token)", () => {
     await page.screenshot({
       path: "test-results/screenshots/join-05-request-form.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("access request with own household join code returns CONFLICT via API", async ({

@@ -15,7 +15,7 @@ test.describe("Settings Page (Real Data)", () => {
     await page.screenshot({
       path: "test-results/screenshots/settings-01-navigation.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Members tab shows tabs, real members, and owner role", async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe("Settings Page (Real Data)", () => {
     await page.screenshot({
       path: "test-results/screenshots/settings-02-members.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 
   test("Invites and Settings tabs show expected content", async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe("Settings Page (Real Data)", () => {
     await page.screenshot({
       path: "test-results/screenshots/settings-03-invites-tab.png",
       fullPage: true,
-    });
+    }).catch(() => {});
 
     // --- Settings tab ---
     const settingsTab = page.getByText("Settings", { exact: true });
@@ -86,6 +86,6 @@ test.describe("Settings Page (Real Data)", () => {
     await page.screenshot({
       path: "test-results/screenshots/settings-04-settings-tab.png",
       fullPage: true,
-    });
+    }).catch(() => {});
   });
 });
