@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { safeGoto } from "./helpers/api-client";
 
 import "./helpers/load-env";
 
 test.describe("Gamification Modal", () => {
   test("tile renders on dashboard", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(3000);
 
     expect(page.url()).toContain("/dashboard");
@@ -20,8 +21,8 @@ test.describe("Gamification Modal", () => {
   });
 
   test("modal Members tab shows category-grouped badges", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(3000);
 
     const viewDetailsBtn = page.locator("text=View Details").first();
@@ -40,8 +41,8 @@ test.describe("Gamification Modal", () => {
   });
 
   test("modal Household tab shows category-grouped badges", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(3000);
 
     const viewDetailsBtn = page.locator("text=View Details").first();
@@ -61,8 +62,8 @@ test.describe("Gamification Modal", () => {
   });
 
   test("modal Pets tab shows category-grouped badges", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle");
+    await safeGoto(page, "/dashboard");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(3000);
 
     const viewDetailsBtn = page.locator("text=View Details").first();

@@ -205,9 +205,7 @@ test.describe("Join Page — Request Mode (No Token)", () => {
   test.describe.configure({ mode: "serial" });
 
   test.beforeAll(async ({ browser }) => {
-    // If Token Mode already set these, reuse them
-    if (authToken && householdId) return;
-
+    // Always re-extract a fresh token — Clerk JWTs expire in ~60s
     const context = await browser.newContext({
       storageState: "e2e/.auth/session.json",
     });

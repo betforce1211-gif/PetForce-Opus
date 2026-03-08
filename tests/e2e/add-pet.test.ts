@@ -6,9 +6,10 @@ import "./helpers/load-env";
 test.describe("Add Pet Form", () => {
   test("form renders all three sections with correct fields", async ({ page }) => {
     await safeGoto(page, "/dashboard/add-pet");
+    await page.waitForLoadState("networkidle").catch(() => {});
 
     // Verify page title
-    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible({ timeout: 15_000 });
 
     // Verify all three fieldset sections
     await expect(page.locator("legend", { hasText: "Basic Info" })).toBeVisible();
@@ -48,7 +49,8 @@ test.describe("Add Pet Form", () => {
 
   test("submit pet with all fields and verify on dashboard", async ({ page }) => {
     await safeGoto(page, "/dashboard/add-pet");
-    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible();
+    await page.waitForLoadState("networkidle").catch(() => {});
+    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible({ timeout: 15_000 });
 
     // Use a unique name so we can find it on the dashboard
     const petName = `TestPet-${Date.now()}`;
@@ -94,7 +96,8 @@ test.describe("Add Pet Form", () => {
 
   test("submit pet with only required fields", async ({ page }) => {
     await safeGoto(page, "/dashboard/add-pet");
-    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible();
+    await page.waitForLoadState("networkidle").catch(() => {});
+    await expect(page.getByRole("heading", { name: "Add a pet" })).toBeVisible({ timeout: 15_000 });
 
     const petName = `MinimalPet-${Date.now()}`;
 
@@ -122,7 +125,7 @@ test.describe("Add Pet Form", () => {
   test("cancel button navigates back without creating a pet", async ({ page }) => {
     // Start on dashboard so "back" has somewhere to go
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     await safeGoto(page, "/dashboard/add-pet");

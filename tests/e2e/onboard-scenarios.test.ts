@@ -397,11 +397,11 @@ test.describe("Header Dropdown Create Button (mocked)", () => {
     await setupDashboardMocks(page, true, "member");
 
     // Set localStorage so dashboard knows which household is active
-    await page.goto("/dashboard");
+    await safeGoto(page, "/dashboard");
     await page.evaluate(() =>
       localStorage.setItem("petforce_household_id", "hh-1")
     );
-    await page.goto("/dashboard");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     await page
@@ -434,11 +434,11 @@ test.describe("Header Dropdown Create Button (mocked)", () => {
   }) => {
     await setupDashboardMocks(page, false, "owner");
 
-    await page.goto("/dashboard");
+    await safeGoto(page, "/dashboard");
     await page.evaluate(() =>
       localStorage.setItem("petforce_household_id", "hh-1")
     );
-    await page.goto("/dashboard");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     await page

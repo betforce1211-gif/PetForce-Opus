@@ -15,14 +15,24 @@ async function ensureAuthenticated(page: Page): Promise<boolean> {
   console.log("Session expired — re-authenticating via Clerk test mode");
 
   // Break the Clerk redirect loop by navigating to a clean page first
-  await page.goto("about:blank");
+  try {
+    await page.goto("about:blank");
+  } catch {
+    // Navigation can be interrupted by an ongoing Clerk redirect — retry
+    await page.waitForTimeout(1000);
+    await page.goto("about:blank").catch(() => {});
+  }
   await page.waitForTimeout(500);
 
   // Navigate to /sign-in — Clerk may restore session via handshake (no form needed)
   // or show the sign-in form if the session is truly gone
   await page.goto("/sign-in");
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(3000);
+  // Wait for Clerk JS to initialize — use networkidle with 3s cap to avoid hanging
+  await Promise.race([
+    page.waitForLoadState("networkidle"),
+    new Promise(resolve => setTimeout(resolve, 3000)),
+  ]).catch(() => {});
 
   // Check if Clerk already restored the session (redirected to dashboard/onboard)
   const currentUrl = page.url();
@@ -98,7 +108,7 @@ export async function extractAuthToken(page: Page): Promise<string> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error("Timed out waiting for auth token from browser requests"));
-    }, 30_000);
+    }, 60_000);
 
     page.on("request", (request) => {
       const url = request.url();

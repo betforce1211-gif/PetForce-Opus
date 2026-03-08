@@ -47,7 +47,7 @@ export default defineConfig({
         browserName: "chromium",
         storageState: authFile,
       },
-      timeout: 60000,
+      timeout: 90000,
     },
     // Dashboard visual tests — no auth needed (uses mocks)
     {

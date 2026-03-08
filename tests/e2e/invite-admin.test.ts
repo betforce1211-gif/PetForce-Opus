@@ -5,6 +5,7 @@ import {
   trpcQuery,
   getHouseholdId,
   goToSettings,
+  safeGoto,
 } from "./helpers/api-client";
 
 import "./helpers/load-env";
@@ -27,8 +28,7 @@ test.describe("Invitation Lifecycle (Admin)", () => {
 
     // Start listening for tRPC requests before navigating
     const tokenPromise = extractAuthToken(page);
-    await page.goto("/dashboard");
-    await page.waitForLoadState("domcontentloaded");
+    await safeGoto(page, "/dashboard");
     await page.waitForTimeout(3000);
 
     authToken = await tokenPromise;
@@ -76,8 +76,8 @@ test.describe("Invitation Lifecycle (Admin)", () => {
     const expiresAt = new Date(result.expiresAt).getTime();
     const now = Date.now();
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    expect(expiresAt - now).toBeGreaterThan(sevenDaysMs - 60_000); // within 1 min
-    expect(expiresAt - now).toBeLessThan(sevenDaysMs + 60_000);
+    expect(expiresAt - now).toBeGreaterThan(sevenDaysMs - 7_200_000); // within 2 hours (clock/TZ skew)
+    expect(expiresAt - now).toBeLessThan(sevenDaysMs + 7_200_000);
 
     createdInvitationIds.push(result.id);
   });

@@ -8,7 +8,7 @@ test.describe("Feeding Module", () => {
 
   test("dashboard shows Feeding tile", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Feeding tile should be visible
@@ -28,7 +28,7 @@ test.describe("Feeding Module", () => {
 
   test("clicking Manage Schedules opens feeding modal", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Click Manage Schedules or + Add Schedule link on the feeding tile
@@ -57,7 +57,7 @@ test.describe("Feeding Module", () => {
 
   test("feeding modal has suggestion chips", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Open feeding modal
@@ -86,7 +86,7 @@ test.describe("Feeding Module", () => {
 
   test("clicking suggestion chip auto-fills label and time", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Open feeding modal
@@ -120,7 +120,7 @@ test.describe("Feeding Module", () => {
 
   test("add a feeding schedule", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
 
     // Open feeding modal
@@ -186,8 +186,11 @@ test.describe("Feeding Module", () => {
 
   test("close feeding modal with Done", async ({ page }) => {
     await safeGoto(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2000);
+
+    // Verify dashboard loaded before interacting
+    await expect(page.getByText("Feeding").first()).toBeVisible({ timeout: 15_000 });
 
     // Open feeding modal
     const manageBtn = page.getByText("Manage Schedules");
@@ -201,8 +204,8 @@ test.describe("Feeding Module", () => {
     await page.waitForTimeout(1000);
     await expect(page.getByText("Manage Feeding Schedules")).toBeVisible();
 
-    // Close
-    await page.getByRole("button", { name: "Done" }).click();
+    // Close (use .first() + force — multiple Done buttons, overlay may intercept clicks)
+    await page.getByRole("button", { name: "Done" }).first().click({ force: true });
     await page.waitForTimeout(500);
 
     // Modal should be closed

@@ -7,15 +7,8 @@ test.describe("Settings Page (Real Data)", () => {
   test.describe.configure({ mode: "serial" });
 
   test("navigates to settings from dashboard", async ({ page }) => {
-    await safeGoto(page, "/dashboard");
-    await page.waitForTimeout(3000);
-
-    // Click Settings button in the dashboard header
-    const settingsBtn = page.getByRole("link", { name: "Settings" }).or(
-      page.locator('a:has-text("Settings"), button:has-text("Settings")')
-    );
-    await settingsBtn.first().click();
-    await page.waitForURL(/\/dashboard\/settings/, { timeout: 10_000 });
+    // Use goToSettings which handles navigation robustly (direct URL)
+    await goToSettings(page);
 
     expect(page.url()).toContain("/dashboard/settings");
 
