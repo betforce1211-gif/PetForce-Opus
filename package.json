@@ -12,6 +12,7 @@
     "roadmap": "./infra/scripts/roadmap"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "prettier": "^3.2.5",
     "turbo": "^2.1.0"
   },

@@ -82,4 +82,6 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 
 ## Environment Variables
 
-See `.env.example` for required variables. Never commit `.env` files.
+All environment variables live in a single root `.env.local` file. Apps load it via `dotenv-cli` in their dev/build scripts. See `.env.example` for required variables. Never commit `.env` files.
+
+Test-only credentials (email, password, OTP code) live in `tests/.env`.

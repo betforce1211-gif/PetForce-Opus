@@ -54,7 +54,7 @@ drizzle/             # Generated migration files (auto-generated)
 
 ## Environment
 
-Requires `DATABASE_URL` environment variable. See root `.env.example`.
+Requires `DATABASE_URL` environment variable. The `db:push` and `db:generate` scripts automatically load `DATABASE_URL` from the root `.env.local` via `dotenv-cli` — no manual `export` needed.
 
 ## Consumers
 

@@ -8,8 +8,8 @@
     "build": "tsc",
     "lint": "eslint src/",
     "clean": "rm -rf dist",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
+    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push"
   },
   "dependencies": {
     "@petforce/core": "workspace:*",

@@ -2,17 +2,20 @@ import { FullConfig } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 
-// Load test env vars
-const envPath = path.resolve(__dirname, ".env");
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
+function loadEnvFile(filePath: string) {
+  if (!fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(filePath, "utf-8");
+  for (const line of content.split("\n")) {
     const [key, ...rest] = line.split("=");
     if (key && rest.length && !key.startsWith("#")) {
       process.env[key.trim()] = rest.join("=").trim();
     }
   }
 }
+
+// Load root .env.local first (shared secrets), then tests/.env (test-only overrides)
+loadEnvFile(path.resolve(__dirname, "../.env.local"));
+loadEnvFile(path.resolve(__dirname, ".env"));
 
 async function globalSetup(_config: FullConfig) {
   // Ensure screenshot output directory exists
