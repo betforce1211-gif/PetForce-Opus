@@ -1,3 +1,5 @@
+[Developer]
+
 # Weekly Agent Review Framework
 
 A structured framework for evaluating each agent's output weekly, identifying improvement areas, and deciding when to add skills or new agents.

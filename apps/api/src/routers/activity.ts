@@ -2,7 +2,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router } from "../trpc";
-import { db, activities, members } from "@petforce/db";
+import { db, activities, members, pets } from "@petforce/db";
 import { createActivitySchema, updateActivitySchema } from "@petforce/core";
 
 /** Helper: verify user is a member of the activity's household, return membership */
@@ -64,10 +64,27 @@ export const activityRouter = router({
         });
       }
 
+      // Verify the pet belongs to the claimed household
+      const [pet] = await db
+        .select()
+        .from(pets)
+        .where(eq(pets.id, input.petId));
+      if (!pet || pet.householdId !== input.householdId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Pet does not belong to this household",
+        });
+      }
+
       return db
         .select()
         .from(activities)
-        .where(eq(activities.petId, input.petId));
+        .where(
+          and(
+            eq(activities.petId, input.petId),
+            eq(activities.householdId, input.householdId)
+          )
+        );
     }),
 
   create: householdProcedure
@@ -88,7 +105,21 @@ export const activityRouter = router({
     .input(z.object({ id: z.string().uuid() }).merge(updateActivitySchema))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      await verifyActivityMembership(id, ctx.userId);
+      const { activity: existing } = await verifyActivityMembership(id, ctx.userId);
+
+      // If petId is being changed, verify the new pet belongs to the same household
+      if (data.petId && data.petId !== existing.petId) {
+        const [pet] = await db
+          .select()
+          .from(pets)
+          .where(eq(pets.id, data.petId));
+        if (!pet || pet.householdId !== existing.householdId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Pet does not belong to this household",
+          });
+        }
+      }
 
       const [activity] = await db
         .update(activities)
