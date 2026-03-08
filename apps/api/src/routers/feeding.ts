@@ -20,6 +20,7 @@ import type {
   PetFeedingStatus,
   FeedingScheduleStatus,
 } from "@petforce/core";
+import { logActivity } from "../lib/audit";
 
 export const feedingRouter = router({
   listSchedules: householdProcedure.query(async ({ ctx }) => {
@@ -66,6 +67,17 @@ export const feedingRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "feeding_schedule.updated",
+        subjectType: "feeding_schedule",
+        subjectId: schedule.id,
+        subjectName: schedule.label,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(data) },
+      });
+
       return schedule;
     }),
 

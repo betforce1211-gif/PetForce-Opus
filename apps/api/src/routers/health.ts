@@ -16,6 +16,7 @@ import {
   updateMedicationSchema,
 } from "@petforce/core";
 import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
+import { logActivity } from "../lib/audit";
 
 export const healthRouter = router({
   // ── Health Records ──
@@ -75,6 +76,17 @@ export const healthRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "health_record.updated",
+        subjectType: "health_record",
+        subjectId: record.id,
+        subjectName: record.type,
+        performedBy: ctx.membership.id,
+        metadata: { recordType: record.type, changedFields: Object.keys(data) },
+      });
+
       return record;
     }),
 
@@ -142,6 +154,17 @@ export const healthRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "medication.updated",
+        subjectType: "medication",
+        subjectId: med.id,
+        subjectName: med.name,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(data) },
+      });
+
       return med;
     }),
 

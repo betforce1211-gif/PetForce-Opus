@@ -5,6 +5,7 @@ import { protectedProcedure, householdProcedure, router } from "../trpc";
 import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
 import { generateJoinCode } from "../utils/join-code";
+import { logActivity } from "../lib/audit";
 
 export const householdRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -100,6 +101,17 @@ export const householdRouter = router({
         .set(updateData)
         .where(eq(households.id, ctx.householdId))
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "household.updated",
+        subjectType: "household",
+        subjectId: household.id,
+        subjectName: household.name,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(input) },
+      });
+
       return household;
     }),
 
@@ -128,6 +140,15 @@ export const householdRouter = router({
       .set({ joinCode: generateJoinCode(), updatedAt: new Date() })
       .where(eq(households.id, ctx.householdId))
       .returning();
+
+    await logActivity({
+      householdId: ctx.householdId,
+      action: "household.join_code_regenerated",
+      subjectType: "household",
+      subjectId: household.id,
+      subjectName: household.name,
+      performedBy: ctx.membership.id,
+    });
 
     return household;
   }),

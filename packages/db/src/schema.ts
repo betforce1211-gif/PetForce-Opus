@@ -166,6 +166,11 @@ export const feedingLogs = pgTable("feeding_logs", {
   skipped: boolean("skipped").notNull().default(false),
 }, (table) => ({
   householdIdx: index("feeding_logs_household_idx").on(table.householdId),
+  scheduleDateMemberUnique: uniqueIndex("feeding_logs_schedule_date_member_idx").on(
+    table.feedingScheduleId,
+    table.feedingDate,
+    table.completedBy
+  ),
 }));
 
 // --- Feeding Snoozes ---
@@ -184,7 +189,13 @@ export const feedingSnoozes = pgTable("feeding_snoozes", {
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  scheduleDateMemberUnique: uniqueIndex("feeding_snoozes_schedule_date_member_idx").on(
+    table.feedingScheduleId,
+    table.snoozeDate,
+    table.snoozedBy
+  ),
+}));
 
 // --- Health Records ---
 
@@ -252,7 +263,13 @@ export const medicationLogs = pgTable("medication_logs", {
     .references(() => members.id, { onDelete: "cascade" }),
   skipped: boolean("skipped").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  medicationDateMemberUnique: uniqueIndex("medication_logs_medication_date_member_idx").on(
+    table.medicationId,
+    table.loggedDate,
+    table.loggedBy
+  ),
+}));
 
 // --- Medication Snoozes ---
 
@@ -270,7 +287,13 @@ export const medicationSnoozes = pgTable("medication_snoozes", {
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  medicationDateMemberUnique: uniqueIndex("medication_snoozes_medication_date_member_idx").on(
+    table.medicationId,
+    table.snoozeDate,
+    table.snoozedBy
+  ),
+}));
 
 // --- Expenses ---
 
@@ -405,6 +428,29 @@ export const petGameStats = pgTable("pet_game_stats", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// --- Activity Log (Audit Trail) ---
+
+export const activityLog = pgTable("activity_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  action: text("action").notNull(), // e.g. "member.role_changed", "pet.updated", "medication.created"
+  subjectType: text("subject_type").notNull(), // e.g. "member", "pet", "medication", "household"
+  subjectId: uuid("subject_id"),
+  subjectName: text("subject_name"), // snapshot: pet name, member name, etc.
+  performedBy: uuid("performed_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  householdCreatedIdx: index("activity_log_household_created_idx").on(
+    table.householdId,
+    table.createdAt
+  ),
+}));
 
 // --- Analytics Events ---
 
