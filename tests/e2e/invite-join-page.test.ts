@@ -266,7 +266,7 @@ test.describe("Join Page — Request Mode (No Token)", () => {
       request,
       authToken,
       "household.getById",
-      { id: householdId }
+      { householdId }
     );
     if (!household.joinCode) {
       household = await trpcMutation(

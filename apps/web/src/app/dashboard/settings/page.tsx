@@ -466,7 +466,7 @@ function HouseholdSettingsTab({
           <button
             onClick={() =>
               updateHousehold.mutate({
-                id: householdId,
+                householdId,
                 name,
                 theme: { primaryColor, secondaryColor },
               })
@@ -536,7 +536,7 @@ function HouseholdSettingsTab({
           <button
             onClick={() => {
               if (confirm("Are you sure? This will permanently delete the household, all pets, activities, and members. This cannot be undone.")) {
-                deleteHousehold.mutate({ id: householdId });
+                deleteHousehold.mutate({ householdId });
               }
             }}
             style={{

@@ -25,23 +25,14 @@ export const reportingRouter = router({
   completionLog: householdProcedure
     .input(reportingCompletionLogSchema)
     .query(async ({ ctx, input }) => {
-      const raw = await fetchUnifiedCompletions(
-        ctx.householdId,
-        input.from,
-        input.to
-      );
+      // Fetch completions and lookup data in parallel
+      const [raw, householdPets, householdMembers] = await Promise.all([
+        fetchUnifiedCompletions(ctx.householdId, input.from, input.to),
+        db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+      ]);
 
-      // Fetch lookup maps
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, ctx.householdId));
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
-
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, ctx.householdId));
       const memberMap = new Map(
         householdMembers.map((m) => [m.id, m.displayName])
       );

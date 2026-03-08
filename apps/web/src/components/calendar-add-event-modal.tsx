@@ -44,7 +44,6 @@ export function CalendarAddEventModal({
     const scheduledAt = new Date(`${date}T${time}:00`);
     createMut.mutate({
       householdId,
-      memberId: currentMember.id,
       petId,
       type: type as (typeof activityTypes)[number],
       title,

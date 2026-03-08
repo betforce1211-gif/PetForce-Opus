@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
@@ -36,6 +36,13 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = usePetAvatarUpload();
+
+  // Revoke blob URL on cleanup to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
   const createPet = trpc.pet.create.useMutation({
     async onSuccess(pet) {

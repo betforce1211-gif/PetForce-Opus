@@ -86,7 +86,7 @@ test.describe("Access Request Admin + Error Paths", () => {
       request,
       authToken,
       "household.getById",
-      { id: householdId }
+      { householdId }
     );
     if (!household.joinCode) {
       household = await trpcMutation(
