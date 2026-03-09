@@ -22,6 +22,10 @@ The PetForce API is a [tRPC](https://trpc.io/) v10 server running on [Hono](http
   - [health](#health)
   - [calendar](#calendar)
   - [finance](#finance)
+  - [notes](#notes)
+  - [reporting](#reporting)
+  - [analytics](#analytics)
+  - [gamification](#gamification)
 - [Common Types](#common-types)
 - [Error Codes](#error-codes)
 
@@ -985,3 +989,263 @@ await createPet.mutateAsync({
 ```
 
 All input validation is handled by Zod schemas defined in `@petforce/core`. Invalid inputs will throw a `BAD_REQUEST` error with field-level details.
+
+---
+
+### notes
+
+Household and pet-specific notes/journals.
+
+#### `notes.list` — query
+
+List all notes, optionally filtered by pet.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID \| null | no (omit = all notes, null = household-only) |
+
+**Returns:** `Note[]`
+
+---
+
+#### `notes.recent` — query
+
+Get the 4 most recent notes with content snippets.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: string }`
+**Returns:**
+
+```ts
+{
+  notes: Note[]       // max 4, newest first
+  totalCount: number  // total notes in household
+}
+```
+
+---
+
+#### `notes.create` — mutation
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID | no (omit for household-level note) |
+| `title` | string (1-200) | yes |
+| `content` | string (1-5000) | yes |
+
+**Returns:** `Note`
+
+---
+
+#### `notes.update` — mutation
+
+All fields optional (partial update).
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID, title?: string, content?: string }`
+**Returns:** `Note`
+
+---
+
+#### `notes.delete` — mutation
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID }`
+**Returns:** `{ success: true }`
+
+---
+
+### reporting
+
+Aggregate completion data (feedings, medications, activities) over configurable date ranges.
+
+#### `reporting.completionLog` — query
+
+Paginated list of all task completions.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `from` | string `YYYY-MM-DD` | yes |
+| `to` | string `YYYY-MM-DD` | yes |
+| `memberId` | UUID | no |
+| `petId` | UUID | no |
+| `taskType` | `feeding \| medication \| activity` | no |
+| `limit` | number (1-200) | no |
+| `offset` | number | no |
+
+**Returns:** `TaskCompletionEntry[]` (sorted by `completedAt` desc)
+
+```ts
+{
+  id: string
+  taskType: "feeding" | "medication" | "activity"
+  title: string
+  petName: string
+  memberName: string
+  completedAt: string    // ISO datetime
+  skipped: boolean
+}
+```
+
+---
+
+#### `reporting.contributions` — query
+
+Per-member breakdown of task completions.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `from` | string `YYYY-MM-DD` | yes |
+| `to` | string `YYYY-MM-DD` | yes |
+
+**Returns:** `MemberContribution[]`
+
+```ts
+{
+  memberId: string
+  memberName: string
+  completed: number
+  skipped: number
+  byType: {
+    feeding: { completed: number, skipped: number }
+    medication: { completed: number, skipped: number }
+    activity: { completed: number, skipped: number }
+  }
+}
+```
+
+---
+
+#### `reporting.trends` — query
+
+Completion counts over time.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `from` | string `YYYY-MM-DD` | yes |
+| `to` | string `YYYY-MM-DD` | yes |
+| `granularity` | `daily \| weekly` | no (default: `daily`) |
+
+**Returns:** `TrendDataPoint[]`
+
+```ts
+{
+  date: string        // YYYY-MM-DD (start of period)
+  completed: number
+  skipped: number
+}
+```
+
+---
+
+#### `reporting.summary` — query
+
+Comprehensive stats for a date range.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `from` | string `YYYY-MM-DD` | yes |
+| `to` | string `YYYY-MM-DD` | yes |
+
+**Returns:**
+
+```ts
+{
+  totalCompleted: number
+  skipped: number
+  missed: number
+  expected: number
+  completionRate: number           // 0-100 percentage
+  topContributor: string | null    // member name
+  contributions: MemberContribution[]
+}
+```
+
+---
+
+### analytics
+
+Usage event tracking.
+
+#### `analytics.track` — mutation
+
+Record an analytics event.
+
+**Auth:** `protectedProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `eventName` | string (1-100) | yes |
+| `householdId` | UUID | no |
+| `metadata` | `Record<string, unknown>` | no |
+
+**Returns:** `AnalyticsEvent`
+
+---
+
+### gamification
+
+XP, levels, streaks, and badges for members, household, and pets.
+
+#### `gamification.getStats` — query
+
+Get full gamification data for all entities in the household.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: string }`
+**Returns:**
+
+```ts
+{
+  members: MemberGameStats[]
+  household: HouseholdGameStats
+  pets: PetGameStats[]
+  currentUserId: string
+}
+
+// Each stats object includes:
+{
+  level: number
+  levelName: string
+  totalXp: number
+  xpToNextLevel: number
+  currentStreak: number
+  longestStreak: number
+  unlockedBadgeIds: string[]
+}
+```
+
+---
+
+#### `gamification.recalculate` — mutation
+
+Rebuild all gamification stats from completion history. Useful if stats appear incorrect.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: string }`
+**Returns:** `{ success: true }`
