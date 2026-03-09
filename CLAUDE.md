@@ -80,6 +80,28 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 - **Database:** All schema changes go through `packages/db/`, use `drizzle-kit` for migrations
 - **API:** All endpoints are tRPC procedures in `apps/api/src/routers/`
 
+## Deep-Dive Docs
+
+This file is the map. For details, go deeper:
+
+| Topic | Location |
+|-------|----------|
+| Architecture & domain model | `docs/dev/architecture.md` |
+| Code conventions & patterns | `docs/dev/conventions.md` |
+| Multi-agent workflow | `docs/dev/multi-agent.md` |
+| Quality scores by domain | `docs/dev/quality-score.md` |
+| Active execution plans | `docs/exec-plans/active/` |
+| API reference (all 15 routers) | `docs/api/README.md` |
+| User guide | `docs/user-guide/README.md` |
+
+## Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `infra/scripts/setup-env.sh` | Symlink env files from `~/.config/petforce/` |
+| `infra/scripts/doc-gardener` | Scan for stale docs, missing test coverage |
+| `infra/scripts/roadmap` | Push ideas to GitHub Issues |
+
 ## Environment Variables
 
 All environment variables live in a single root `.env.local` file. Apps load it via `dotenv-cli` in their dev/build scripts. See `.env.example` for required variables. Never commit `.env` files.
