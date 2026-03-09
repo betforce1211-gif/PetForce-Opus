@@ -32,7 +32,7 @@ export const invitationRouter = router({
         })
         .returning();
 
-      console.log("[AUDIT]", JSON.stringify({ action: "invitation.create", userId: ctx.userId, householdId: ctx.householdId, invitationId: invitation.id, role: input.role, timestamp: new Date().toISOString() }));
+      console.info("[AUDIT]", JSON.stringify({ action: "invitation.create", userId: ctx.userId, householdId: ctx.householdId, invitationId: invitation.id, role: input.role, timestamp: new Date().toISOString() }));
       return invitation;
     }),
 
@@ -79,7 +79,7 @@ export const invitationRouter = router({
         });
       }
 
-      console.log("[AUDIT]", JSON.stringify({ action: "invitation.revoke", userId: ctx.userId, householdId: ctx.householdId, invitationId: input.invitationId, timestamp: new Date().toISOString() }));
+      console.info("[AUDIT]", JSON.stringify({ action: "invitation.revoke", userId: ctx.userId, householdId: ctx.householdId, invitationId: input.invitationId, timestamp: new Date().toISOString() }));
       return invitation;
     }),
 
@@ -176,7 +176,7 @@ export const invitationRouter = router({
         .set({ status: "accepted" })
         .where(eq(invitations.id, invitation.id));
 
-      console.log("[AUDIT]", JSON.stringify({ action: "invitation.accept", userId: ctx.userId, householdId: invitation.householdId, invitationId: invitation.id, timestamp: new Date().toISOString() }));
+      console.info("[AUDIT]", JSON.stringify({ action: "invitation.accept", userId: ctx.userId, householdId: invitation.householdId, invitationId: invitation.id, timestamp: new Date().toISOString() }));
       return member;
     }),
 
@@ -201,7 +201,7 @@ export const invitationRouter = router({
         });
       }
 
-      console.log("[AUDIT]", JSON.stringify({ action: "invitation.decline", token: input.token, invitationId: invitation.id, timestamp: new Date().toISOString() }));
+      console.info("[AUDIT]", JSON.stringify({ action: "invitation.decline", token: input.token, invitationId: invitation.id, timestamp: new Date().toISOString() }));
       return { success: true };
     }),
 });
