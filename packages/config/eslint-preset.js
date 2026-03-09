@@ -69,6 +69,35 @@ module.exports = {
         "no-restricted-syntax": "off",
       },
     },
+    {
+      // Infrastructure/config files that legitimately need process.env
+      files: [
+        "**/client.ts",
+        "**/index.ts",
+        "**/lib/**",
+        "**/*.config.ts",
+      ],
+      rules: {
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "CallExpression[callee.object.name='console'][callee.property.name='log']",
+            message:
+              "AGENT FIX: Do not use console.log in production code. " +
+              "For API routers, use structured logging or remove this debug statement. " +
+              "See docs/dev/conventions.md for logging patterns.",
+          },
+          {
+            selector: "TaggedTemplateExpression[tag.name='sql']",
+            message:
+              "AGENT FIX: Do not use raw SQL template literals. " +
+              "Use Drizzle ORM query builders from '@petforce/db'. " +
+              "See docs/dev/conventions.md for database access patterns.",
+          },
+          // process.env is allowed in these infrastructure files
+        ],
+      },
+    },
   ],
   ignorePatterns: ["node_modules/", "dist/", ".next/", ".expo/"],
 };
