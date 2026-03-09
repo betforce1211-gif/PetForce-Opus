@@ -15,6 +15,11 @@ PetForce is a household pet CRM — a shared space where your family manages eve
 - [Calendar](#calendar)
 - [Finance & Expenses](#finance--expenses)
 - [Activity Timeline](#activity-timeline)
+- [Notes & Journals](#notes--journals)
+- [Reporting & Insights](#reporting--insights)
+- [Gamification](#gamification)
+- [Invitations & Access Requests](#invitations--access-requests)
+- [Settings](#settings)
 
 ---
 
@@ -45,7 +50,8 @@ The dashboard is your home base — a grid of tiles that summarize your househol
 | **Finance** | This month's spending, trend vs last month, top category. Click to manage. |
 | **Quick Actions** | Shortcuts to log activity, add pet, or open settings |
 | **Calendar** | Next 5 upcoming events across all categories. Click to open full calendar. |
-| **Notes** | Coming soon — pet journal and notes |
+| **Notes** | Recent notes and quick add. Click to manage all notes. |
+| **Gamification** | Household level, XP, streaks, and badges. Click to view details. |
 
 ### Activity Sidebar
 
@@ -298,3 +304,158 @@ Use the **Log Activity** button in Quick Actions or at the bottom of the sidebar
 - **Date/Time** — when it happened (defaults to now)
 
 Logged activities also appear on the Calendar.
+
+---
+
+## Notes & Journals
+
+Keep notes about your pets and household — vet instructions, behavioral observations, food preferences, or anything your family needs to remember.
+
+### Types of Notes
+
+- **Household notes** — general notes visible to everyone (not tied to a specific pet)
+- **Pet notes** — notes attached to a specific pet's profile
+
+### Creating a Note
+
+1. Click the **Notes** tile on the dashboard
+2. Enter a **title** and **content**
+3. Optionally select a **pet** (leave blank for a household-level note)
+4. Click **Add**
+
+### Managing Notes
+
+- **View recent notes** on the Notes tile (shows the 4 most recent with snippets)
+- **Edit** any note by clicking it
+- **Delete** notes you no longer need
+- **Filter** by pet or view household-only notes
+
+---
+
+## Reporting & Insights
+
+The Reporting module helps you understand how your household is doing over time — who's contributing, how consistent feeding and medication routines are, and where things might be slipping.
+
+### Completion Log
+
+A chronological list of all completed tasks (feedings, medications, activities) across your household. Filter by:
+- **Date range** — pick a start and end date
+- **Task type** — feeding, medication, or activity
+- **Member** — see one person's contributions
+- **Pet** — see tasks for a specific pet
+
+### Member Contributions
+
+See how each household member is contributing:
+- **Completed** — tasks they finished
+- **Skipped** — tasks they marked as skipped
+- **By type** — breakdown by feeding, medication, and activity
+
+### Trends
+
+Track completion patterns over time:
+- **Daily** view — see each day's completions and skips
+- **Weekly** view — aggregated by week for longer-term trends
+
+### Summary Dashboard
+
+A high-level snapshot for any date range:
+- **Total completed** / **skipped** / **missed** tasks
+- **Completion rate** — percentage of expected tasks that were done
+- **Top contributor** — the member who completed the most tasks
+
+---
+
+## Gamification
+
+PetForce rewards consistent care with XP, levels, streaks, and badges — making pet care a team effort.
+
+### How It Works
+
+Every time you complete a feeding, give a medication, or log an activity, you earn **XP** (experience points). XP accumulates at three levels:
+
+- **Member** — your personal stats
+- **Household** — collective household stats
+- **Pet** — per-pet stats (how well each pet is being cared for)
+
+### Stats
+
+| Stat | What it means |
+|------|---------------|
+| **Level** | Your current level based on total XP |
+| **Total XP** | Cumulative experience points earned |
+| **Current Streak** | Consecutive days with at least one completed task |
+| **Longest Streak** | Your all-time best streak |
+| **Badges** | Achievements unlocked through milestones |
+
+### Viewing Gamification
+
+Click **View Details** on the Gamification tile to see the full breakdown:
+
+- **Members tab** — each member's level, XP, streaks, and unlocked badges grouped by category (Milestones, etc.)
+- **Household tab** — collective household badges and stats
+- **Pets tab** — per-pet badges showing which pets are getting the most attention
+
+### Recalculation
+
+Stats are automatically kept in sync. If data seems off, an admin can trigger a recalculation that rebuilds all stats from the completion history.
+
+---
+
+## Invitations & Access Requests
+
+There are two ways for people to join your household.
+
+### Email Invitations
+
+Owners and Admins can send invitation links:
+
+1. Go to **Settings > Invites**
+2. Choose a **role** (Admin, Member, or Sitter)
+3. Optionally enter an **email address**
+4. Click **Create Invite**
+
+This generates a unique link (valid for 7 days) that anyone can use to join. You can:
+- **View** all pending and past invitations
+- **Revoke** a pending invitation before it's used
+- See whether an invitation was **accepted**, **declined**, or **expired**
+
+### Join Code Access Requests
+
+Each household has a **join code** (visible in Settings). Someone who has the code can request to join:
+
+1. The person enters your join code and a display name
+2. You see the request under **Settings > Members** (Owners and Admins only)
+3. **Approve** to add them as a Member, or **Deny** to reject
+
+Access requests require approval — no one can join without an Owner or Admin accepting them.
+
+### Regenerating the Join Code
+
+If your join code has been shared too widely, the Owner can regenerate it from Settings. The old code stops working immediately.
+
+---
+
+## Settings
+
+Access Settings from the **Quick Actions** tile or the sidebar.
+
+### Members Tab
+
+- View all household members and their roles
+- **Change roles** — Owners and Admins can promote/demote members
+- **Remove members** — Owners and Admins can remove anyone except the last Owner
+
+### Invites Tab
+
+- Create new invitations (see [Invitations & Access Requests](#invitations--access-requests))
+- View pending invitations with their links
+- Revoke pending invitations
+- See past invitations (accepted, declined, expired)
+
+### Settings Tab
+
+- **Household name** — rename your household
+- **Theme colors** — set primary and secondary colors for your dashboard
+- **Avatar** — upload a household icon
+- **Join code** — view or regenerate your household's join code
