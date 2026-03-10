@@ -25,8 +25,8 @@ Solid E2E test coverage across all 15 domains. API and user-guide docs are compl
 | **dashboard** | B | B | No unit tests | 2026-03-09 |
 | **invitation** | B | B | No unit tests | 2026-03-09 |
 | **access-request** | B | B | No unit tests | 2026-03-09 |
-| **member** | C | B | Only tested indirectly via household-manage | 2026-03-09 |
-| **analytics** | C+ | B | Minimal E2E (event tracking only) | 2026-03-09 |
+| **member** | B | B | Dedicated CRUD E2E (list, invite, updateRole, remove, error) | 2026-03-09 |
+| **analytics** | B | B | Track with/without household, complex metadata, batch, validation | 2026-03-09 |
 
 ---
 
@@ -47,8 +47,8 @@ Solid E2E test coverage across all 15 domains. API and user-guide docs are compl
 
 1. **Add unit tests** — Every router at B would jump to A with co-located unit tests for edge cases and error paths
 2. **Run E2E in CI** — Tests exist but only run locally; add to GitHub Actions workflow
-3. **Direct member router tests** — Currently only tested through household-manage; needs its own test file
-4. **Expand analytics coverage** — Only tracks event creation; needs dashboard/aggregation tests
+3. ~~**Direct member router tests**~~ — Done: dedicated `member.test.ts` with 5 tests
+4. ~~**Expand analytics coverage**~~ — Done: `analytics-advanced.test.ts` with 5 tests
 5. **Expand gamification coverage** — Only tests getStats and recalculate; missing badge award and streak edge cases
 6. **Mobile test coverage** — Zero tests for the Expo app
 7. **Load/performance testing** — No baseline exists for API response times under load

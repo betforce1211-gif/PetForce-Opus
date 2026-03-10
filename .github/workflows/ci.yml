@@ -31,4 +31,68 @@ jobs:
           node-version: "20"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter=@petforce/core test
       - run: cd tests && npx vitest run --passWithNoTests
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    # Only run when test secrets are configured
+    if: ${{ vars.E2E_ENABLED == 'true' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      CLERK_JWT_KEY: ${{ secrets.CLERK_JWT_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_WEB_URL: http://localhost:3000
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      CLERK_TEST_CODE: "424242"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Install Playwright browsers
+        run: cd tests && npx playwright install --with-deps chromium
+
+      - name: Start API server
+        run: |
+          cd apps/api
+          node dist/index.js &
+          sleep 3
+          curl -f http://localhost:3001/health || exit 1
+
+      - name: Start web server
+        run: |
+          cd apps/web
+          npx next start &
+          sleep 5
+          curl -f http://localhost:3000 || exit 1
+
+      - name: Run E2E tests
+        run: cd tests && npx playwright test --config=playwright.config.ts
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: tests/test-results/
+          retention-days: 7
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/playwright-report/
+          retention-days: 7

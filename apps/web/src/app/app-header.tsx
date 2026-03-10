@@ -7,6 +7,7 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader() {
   return (
@@ -18,11 +19,11 @@ export function AppHeader() {
       </div>
       <Link href="/" style={brandLink}>
         <svg width="26" height="30" viewBox="0 0 160 180" fill="none" style={{ display: "block", flexShrink: 0 }}>
-          <ellipse cx="32" cy="42" rx="18" ry="24" fill="#6366F1"/>
-          <ellipse cx="66" cy="22" rx="17" ry="23" fill="#6366F1"/>
-          <ellipse cx="100" cy="22" rx="17" ry="23" fill="#6366F1"/>
-          <ellipse cx="130" cy="44" rx="16" ry="22" fill="#6366F1"/>
-          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="#6366F1"/>
+          <ellipse cx="32" cy="42" rx="18" ry="24" fill="var(--pf-primary)"/>
+          <ellipse cx="66" cy="22" rx="17" ry="23" fill="var(--pf-primary)"/>
+          <ellipse cx="100" cy="22" rx="17" ry="23" fill="var(--pf-primary)"/>
+          <ellipse cx="130" cy="44" rx="16" ry="22" fill="var(--pf-primary)"/>
+          <path d="M28 90 C24 72 40 62 58 64 C70 65 80 62 94 64 C118 66 140 76 136 96 C132 120 118 148 100 158 C86 166 72 166 58 158 C42 148 24 116 28 90 Z" fill="var(--pf-primary)"/>
           <text x="56" y="130" fontFamily="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" fontWeight="900" fontSize="36" fill="white" textAnchor="middle">P</text>
           <path d="M82 106 L74 120 L82 116 L72 132" fill="none" stroke="#FBBF24" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
           <text x="104" y="130" fontFamily="'Trebuchet MS', 'Arial Rounded MT Bold', system-ui" fontWeight="900" fontSize="36" fill="white" textAnchor="middle">F</text>
@@ -31,6 +32,7 @@ export function AppHeader() {
       </Link>
       <div style={rightSection}>
         <SignedIn>
+          <ThemeToggle />
           <UserMenu />
         </SignedIn>
       </div>
@@ -85,7 +87,7 @@ function HouseholdSwitcher() {
         >
           <span style={switcherTitle}>{current.name}</span>
           {showDropdown && (
-            <span style={{ fontSize: "0.7rem", color: "#8B8FA3", marginLeft: "0.4rem", transition: "transform 0.2s ease", transform: open ? "rotate(180deg)" : "rotate(0)" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--pf-text-secondary)", marginLeft: "0.4rem", transition: "transform 0.2s ease", transform: open ? "rotate(180deg)" : "rotate(0)" }}>
               ▾
             </span>
           )}
@@ -107,32 +109,32 @@ function HouseholdSwitcher() {
               }}
               style={{
                 ...switcherItem,
-                backgroundColor: h.id === householdId ? "rgba(99, 102, 241, 0.08)" : "transparent",
+                backgroundColor: h.id === householdId ? "var(--pf-highlight)" : "transparent",
               }}
             >
               <span style={{ ...switcherDot, backgroundColor: h.theme.primaryColor }} />
-              <span style={{ flex: 1, textAlign: "left", color: "#1A1637", fontWeight: h.id === householdId ? 600 : 400 }}>
+              <span style={{ flex: 1, textAlign: "left", color: "var(--pf-text)", fontWeight: h.id === householdId ? 600 : 400 }}>
                 {h.name}
               </span>
-              <span style={{ color: "#A5A8BA", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
+              <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
                 {h.petCount}🐾 {h.memberCount}👥
               </span>
             </button>
           ))}
-          <div style={{ borderTop: "1px solid rgba(99, 102, 241, 0.08)", margin: "0.35rem 0.5rem" }} />
+          <div style={{ borderTop: "1px solid var(--pf-border)", margin: "0.35rem 0.5rem" }} />
           {canCreateQuery.data?.canCreate && (
             <button
               onClick={() => { setOpen(false); router.push("/onboard"); }}
               style={switcherItem}
             >
-              <span style={{ color: "#6366F1", fontWeight: 600, fontSize: "0.85rem" }}>+ Create New Household</span>
+              <span style={{ color: "var(--pf-primary)", fontWeight: 600, fontSize: "0.85rem" }}>+ Create New Household</span>
             </button>
           )}
           <button
             onClick={() => { setOpen(false); router.push("/join"); }}
             style={switcherItem}
           >
-            <span style={{ color: "#6366F1", fontWeight: 600, fontSize: "0.85rem" }}>Join a Household</span>
+            <span style={{ color: "var(--pf-primary)", fontWeight: 600, fontSize: "0.85rem" }}>Join a Household</span>
           </button>
         </div>
       )}
@@ -147,8 +149,8 @@ const headerStyle: React.CSSProperties = {
   gridTemplateColumns: "1fr auto 1fr",
   alignItems: "center",
   padding: "0.4rem 1.25rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.08)",
-  background: "rgba(255, 255, 255, 0.8)",
+  borderBottom: "1px solid var(--pf-border)",
+  background: "var(--pf-overlay)",
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
   minHeight: 44,
@@ -164,6 +166,7 @@ const rightSection: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
+  gap: "0.5rem",
 };
 
 const brandLink: React.CSSProperties = {
@@ -172,7 +175,7 @@ const brandLink: React.CSSProperties = {
   gap: "0.45rem",
   fontWeight: 800,
   fontSize: "1.35rem",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   textDecoration: "none",
   letterSpacing: "-0.03em",
 };
@@ -181,11 +184,11 @@ const switcherIconWrap: React.CSSProperties = {
   width: 36,
   height: 36,
   borderRadius: "0.625rem",
-  background: "linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))",
+  background: "var(--pf-highlight)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  border: "1px solid rgba(99, 102, 241, 0.12)",
+  border: "1px solid var(--pf-border-strong)",
   flexShrink: 0,
 };
 
@@ -201,13 +204,13 @@ const switcherButton: React.CSSProperties = {
 const switcherTitle: React.CSSProperties = {
   fontSize: "0.95rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.015em",
 };
 
 const switcherSubtext: React.CSSProperties = {
   margin: "0.1rem 0 0",
-  color: "#8B8FA3",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.7rem",
   fontWeight: 500,
   letterSpacing: "0.01em",
@@ -218,13 +221,13 @@ const switcherDropdown: React.CSSProperties = {
   top: "calc(100% + 0.5rem)",
   left: 0,
   minWidth: 280,
-  background: "rgba(255, 255, 255, 0.95)",
+  background: "var(--pf-overlay-strong)",
   backdropFilter: "blur(24px)",
   WebkitBackdropFilter: "blur(24px)",
   borderRadius: "0.875rem",
   padding: "0.5rem",
-  boxShadow: "0 8px 40px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05), 0 0 0 1px rgba(99, 102, 241, 0.06)",
-  border: "1px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: "0 8px 40px var(--pf-shadow), 0 2px 8px var(--pf-shadow-soft), 0 0 0 1px var(--pf-border)",
+  border: "1px solid var(--pf-border)",
   zIndex: 50,
 };
 
@@ -248,5 +251,5 @@ const switcherDot: React.CSSProperties = {
   height: 10,
   borderRadius: "50%",
   flexShrink: 0,
-  boxShadow: "0 0 0 2px rgba(255,255,255,0.8)",
+  boxShadow: "0 0 0 2px var(--pf-overlay)",
 };

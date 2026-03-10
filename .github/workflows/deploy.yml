@@ -1,0 +1,41 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Run database migrations before deploying new code (uses migration files, not destructive db:push)
+      - name: Run database migrations
+        run: pnpm --filter=@petforce/db db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Build and deploy API via Railway
+      # Uncomment and configure once Railway project is set up:
+      # - name: Deploy to Railway
+      #   uses: bervProject/railway-deploy@main
+      #   with:
+      #     railway_token: ${{ secrets.RAILWAY_TOKEN }}
+      #     service: petforce-api
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    # Vercel handles deployment automatically via GitHub integration.
+    # This job is a placeholder for any pre-deploy steps.
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Web deployment handled by Vercel GitHub integration"

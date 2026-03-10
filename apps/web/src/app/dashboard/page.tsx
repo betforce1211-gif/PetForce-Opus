@@ -79,7 +79,7 @@ export default function DashboardPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={spinner} />
-          <p style={{ color: "#8B8FA3", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Loading your households...</p>
+          <p style={{ color: "var(--pf-text-secondary)", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Loading your households...</p>
         </div>
       </main>
     );
@@ -91,10 +91,10 @@ export default function DashboardPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={glassCard}>
-            <h2 style={{ margin: "0 0 0.75rem 0", fontSize: "1.3rem", color: "#1A1637", fontWeight: 700, letterSpacing: "-0.01em" }}>
+            <h2 style={{ margin: "0 0 0.75rem 0", fontSize: "1.3rem", color: "var(--pf-text)", fontWeight: 700, letterSpacing: "-0.01em" }}>
               Could not load your households
             </h2>
-            <p style={{ color: "#8B8FA3", margin: "0 0 1.25rem 0", fontSize: "0.875rem", lineHeight: 1.5 }}>
+            <p style={{ color: "var(--pf-text-secondary)", margin: "0 0 1.25rem 0", fontSize: "0.875rem", lineHeight: 1.5 }}>
               {householdsQuery.error?.message ?? "An unexpected error occurred."}
               {" "}Make sure the API server is running on port 3001.
             </p>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={spinner} />
-          <p style={{ color: "#8B8FA3", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Redirecting to setup...</p>
+          <p style={{ color: "var(--pf-text-secondary)", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Redirecting to setup...</p>
         </div>
       </main>
     );
@@ -125,7 +125,7 @@ export default function DashboardPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={spinner} />
-          <p style={{ color: "#8B8FA3", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Loading dashboard...</p>
+          <p style={{ color: "var(--pf-text-secondary)", margin: 0, fontSize: "0.9rem", letterSpacing: "0.01em" }}>Loading dashboard...</p>
         </div>
       </main>
     );
@@ -137,10 +137,10 @@ export default function DashboardPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={glassCard}>
-            <h2 style={{ margin: "0 0 0.75rem 0", fontSize: "1.3rem", color: "#1A1637", fontWeight: 700, letterSpacing: "-0.01em" }}>
+            <h2 style={{ margin: "0 0 0.75rem 0", fontSize: "1.3rem", color: "var(--pf-text)", fontWeight: 700, letterSpacing: "-0.01em" }}>
               Could not load dashboard
             </h2>
-            <p style={{ color: "#8B8FA3", margin: "0 0 1.25rem 0", fontSize: "0.875rem", lineHeight: 1.5 }}>
+            <p style={{ color: "var(--pf-text-secondary)", margin: "0 0 1.25rem 0", fontSize: "0.875rem", lineHeight: 1.5 }}>
               {dashboardQuery.error?.message ?? "An unexpected error occurred."}
             </p>
             <button onClick={() => dashboardQuery.refetch()} style={actionButton}>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                   { icon: "👥", label: "Members", value: members.length },
                   { icon: "🏠", label: "Household", value: household.name },
                 ].map((stat, i, arr) => (
-                  <div key={stat.label} style={{ ...statRow, borderBottom: i < arr.length - 1 ? "1px solid rgba(99, 102, 241, 0.06)" : "none" }}>
+                  <div key={stat.label} style={{ ...statRow, borderBottom: i < arr.length - 1 ? "1px solid var(--pf-border)" : "none" }}>
                     <span style={statIcon}>{stat.icon}</span>
                     <span style={statLabel}>{stat.label}</span>
                     <span style={statValue}>{stat.value}</span>
@@ -438,7 +438,7 @@ const tileAccents = {
 const pageShell: React.CSSProperties = {
   height: "calc(100vh - 45px)",
   overflow: "hidden",
-  background: "linear-gradient(145deg, #EEEDFA 0%, #F0EEFB 20%, #F5F0FA 40%, #FAF0F5 60%, #FDF5F0 80%, #EEEDFA 100%)",
+  background: "var(--pf-bg)",
   fontFamily: "'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif",
 };
 
@@ -475,13 +475,13 @@ const gridArea: React.CSSProperties = {
 };
 
 const tileStyle: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.6)",
+  background: "var(--pf-overlay)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
   borderRadius: "0.75rem",
   padding: "0.875rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99, 102, 241, 0.05), inset 0 1px 0 rgba(255,255,255,0.7)",
-  border: "1px solid rgba(255, 255, 255, 0.5)",
+  boxShadow: "0 1px 3px var(--pf-shadow-soft), 0 4px 24px var(--pf-shadow-soft)",
+  border: "1px solid var(--pf-border)",
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
@@ -500,7 +500,7 @@ const sectionTitle: React.CSSProperties = {
   fontSize: "0.9rem",
   fontWeight: 700,
   margin: "0 0 0.5rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   textAlign: "center",
   letterSpacing: "-0.01em",
   display: "flex",
@@ -531,7 +531,7 @@ const statIcon: React.CSSProperties = {
 const statLabel: React.CSSProperties = {
   flex: 1,
   fontSize: "0.825rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-muted)",
   fontWeight: 500,
   letterSpacing: "0.01em",
 };
@@ -539,15 +539,15 @@ const statLabel: React.CSSProperties = {
 const statValue: React.CSSProperties = {
   fontSize: "1.05rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.01em",
 };
 
 const tileLink: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-border)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -560,25 +560,25 @@ const quickActionBtn: React.CSSProperties = {
   display: "block",
   padding: "0.6rem 0.875rem",
   borderRadius: "0.625rem",
-  background: "rgba(99, 102, 241, 0.05)",
-  color: "#1A1637",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-text)",
   fontSize: "0.825rem",
   fontWeight: 500,
   textDecoration: "none",
   textAlign: "center",
-  border: "1px solid rgba(99, 102, 241, 0.1)",
+  border: "1px solid var(--pf-border-strong)",
   transition: "all 0.2s ease",
   letterSpacing: "0.01em",
 };
 
 const glassCard: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.65)",
+  background: "var(--pf-overlay-strong)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
   borderRadius: "1rem",
   padding: "2rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 24px rgba(99, 102, 241, 0.06), inset 0 1px 0 rgba(255,255,255,0.7)",
-  border: "1px solid rgba(255, 255, 255, 0.5)",
+  boxShadow: "0 1px 3px var(--pf-shadow-soft), 0 4px 24px var(--pf-shadow-soft)",
+  border: "1px solid var(--pf-border)",
   maxWidth: 400,
   textAlign: "center",
 };
@@ -597,10 +597,10 @@ const petCard: React.CSSProperties = {
   flexDirection: "column",
   gap: "0.2rem",
   padding: "0.75rem",
-  background: "rgba(255, 255, 255, 0.8)",
+  background: "var(--pf-surface)",
   borderRadius: "0.75rem",
-  border: "1px solid rgba(139, 92, 246, 0.1)",
-  boxShadow: "0 1px 4px rgba(99, 102, 241, 0.05)",
+  border: "1px solid var(--pf-border-strong)",
+  boxShadow: "0 1px 4px var(--pf-shadow-soft)",
   transition: "all 0.2s ease",
   alignItems: "flex-start",
   cursor: "pointer",
@@ -615,7 +615,7 @@ const petAvatarImg: React.CSSProperties = {
 };
 
 const petCardName: React.CSSProperties = {
-  color: "#1A1637",
+  color: "var(--pf-text)",
   fontSize: "0.85rem",
   fontWeight: 600,
   letterSpacing: "-0.01em",
@@ -623,7 +623,7 @@ const petCardName: React.CSSProperties = {
 };
 
 const petCardBreed: React.CSSProperties = {
-  color: "#8B8FA3",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.72rem",
   fontWeight: 500,
   letterSpacing: "0.01em",
@@ -678,13 +678,13 @@ const emptyStateIcon: React.CSSProperties = {
 const emptyStateTitle: React.CSSProperties = {
   fontWeight: 600,
   margin: "0.5rem 0 0.25rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   fontSize: "0.9rem",
   letterSpacing: "-0.01em",
 };
 
 const emptyStateSubtext: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.8rem",
   margin: 0,
   fontWeight: 500,
@@ -694,8 +694,8 @@ const emptyStateSubtext: React.CSSProperties = {
 const spinner: React.CSSProperties = {
   width: 36,
   height: 36,
-  border: "3px solid rgba(99, 102, 241, 0.15)",
-  borderTopColor: "#6366F1",
+  border: "3px solid var(--pf-border-strong)",
+  borderTopColor: "var(--pf-primary)",
   borderRadius: "50%",
   animation: "spin 0.8s linear infinite",
 };
