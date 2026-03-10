@@ -93,8 +93,12 @@ export async function safeGoto(page: Page, url: string): Promise<void> {
   }
   const didReAuth = await ensureAuthenticated(page);
   if (didReAuth) {
-    // After re-auth, navigate to the original target
+    // After re-auth, navigate to the original target and reload to ensure
+    // fresh tRPC calls fire (so extractAuthToken can capture the new JWT)
     await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000);
+    await page.reload();
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
   }
@@ -106,15 +110,22 @@ export async function safeGoto(page: Page, url: string): Promise<void> {
  */
 export async function extractAuthToken(page: Page): Promise<string> {
   return new Promise((resolve, reject) => {
+    let resolved = false;
     const timeout = setTimeout(() => {
-      reject(new Error("Timed out waiting for auth token from browser requests"));
+      if (!resolved) {
+        reject(new Error(
+          `Timed out waiting for auth token. Current URL: ${page.url()}`
+        ));
+      }
     }, 60_000);
 
     page.on("request", (request) => {
+      if (resolved) return;
       const url = request.url();
       if (url.includes("/trpc/")) {
         const auth = request.headers()["authorization"];
         if (auth?.startsWith("Bearer ")) {
+          resolved = true;
           clearTimeout(timeout);
           resolve(auth.replace("Bearer ", ""));
         }
