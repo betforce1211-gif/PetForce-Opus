@@ -31,6 +31,7 @@ jobs:
           node-version: "20"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter=@petforce/core test
       - run: cd tests && npx vitest run --passWithNoTests
 
   e2e-tests:
