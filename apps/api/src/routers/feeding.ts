@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   feedingSchedules,
@@ -20,7 +20,7 @@ import type {
   PetFeedingStatus,
   FeedingScheduleStatus,
 } from "@petforce/core";
-import { logActivity } from "../lib/audit";
+import { logActivity } from "../lib/audit.js";
 
 export const feedingRouter = router({
   listSchedules: householdProcedure.query(async ({ ctx }) => {

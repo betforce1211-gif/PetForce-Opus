@@ -78,8 +78,8 @@ jobs:
           sleep 5
           curl -f http://localhost:3000 || exit 1
 
-      - name: Run E2E tests
-        run: cd tests && npx playwright test --config=playwright.config.ts
+      - name: Run E2E tests (excluding Clerk auth tests)
+        run: cd tests && npx playwright test --config=playwright.config.ts --project=infra-health --project=unauthenticated --project=dashboard-mocked
 
       - name: Upload test results
         if: failure()

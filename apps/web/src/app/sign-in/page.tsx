@@ -17,7 +17,7 @@ export default function SignInPage() {
       </h1>
       <p
         style={{
-          color: "#6B7280",
+          color: "var(--pf-text-muted)",
           fontSize: "1.1rem",
           marginBottom: "2rem",
         }}

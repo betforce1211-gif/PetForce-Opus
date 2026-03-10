@@ -18,7 +18,7 @@ export function AuthTabs() {
           cursor: "pointer",
           fontWeight: 600,
           fontSize: "0.95rem",
-          backgroundColor: "#6366F1",
+          backgroundColor: "var(--pf-primary)",
           color: "white",
         }}
       >

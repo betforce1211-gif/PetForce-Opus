@@ -66,7 +66,7 @@ export default function LogActivityPage() {
   };
 
   if (!householdId) {
-    return <p style={{ padding: "2rem", color: "#6B7280" }}>No household selected.</p>;
+    return <p style={{ padding: "2rem", color: "var(--pf-text-muted)" }}>No household selected.</p>;
   }
 
   const pets = petsQuery.data ?? [];
@@ -74,7 +74,7 @@ export default function LogActivityPage() {
   return (
     <main style={{ maxWidth: 480, margin: "0 auto", padding: "3rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>Log an activity</h1>
-      <p style={{ color: "#6B7280", marginBottom: "2rem" }}>Record a care activity for one of your pets.</p>
+      <p style={{ color: "var(--pf-text-muted)", marginBottom: "2rem" }}>Record a care activity for one of your pets.</p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <label style={labelStyle}>
@@ -130,7 +130,7 @@ export default function LogActivityPage() {
         </label>
 
         {createActivity.error && (
-          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{createActivity.error.message}</p>
+          <p style={{ color: "var(--pf-error)", fontSize: "0.875rem" }}>{createActivity.error.message}</p>
         )}
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -151,15 +151,15 @@ const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.875r
 const inputStyle: React.CSSProperties = {
   padding: "0.625rem 0.75rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "1rem",
   outline: "none",
 };
 const cancelButtonStyle: React.CSSProperties = {
   padding: "0.75rem 1.5rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#F3F4F6",
-  color: "#374151",
+  backgroundColor: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   border: "none",
   cursor: "pointer",
@@ -168,7 +168,7 @@ const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   flex: 1,
   padding: "0.75rem 1.5rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#6366F1",
+  backgroundColor: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   border: "none",

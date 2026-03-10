@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   healthRecords,
@@ -16,7 +16,7 @@ import {
   updateMedicationSchema,
 } from "@petforce/core";
 import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
-import { logActivity } from "../lib/audit";
+import { logActivity } from "../lib/audit.js";
 
 export const healthRouter = router({
   // ── Health Records ──

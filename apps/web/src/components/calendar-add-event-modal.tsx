@@ -154,7 +154,7 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1.25rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const formGrid: React.CSSProperties = {
@@ -172,13 +172,13 @@ const labelStyle: React.CSSProperties = {
 const labelText: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.75rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.45rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.85rem",
   outline: "none",
 };
@@ -200,8 +200,8 @@ const btnGroup: React.CSSProperties = {
 const cancelBtn: React.CSSProperties = {
   padding: "0.5rem 1.1rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.85rem",
   border: "none",
@@ -222,7 +222,7 @@ const submitBtn = (loading: boolean): React.CSSProperties => ({
 });
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.825rem",
   margin: 0,
 };

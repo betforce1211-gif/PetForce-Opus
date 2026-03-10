@@ -114,7 +114,7 @@ export default function OnboardPage() {
     return (
       <main style={pageShell}>
         <div style={centeredContainer}>
-          <p style={{ color: "#6B7280", fontSize: "0.95rem" }}>Loading...</p>
+          <p style={{ color: "var(--pf-text-muted)", fontSize: "0.95rem" }}>Loading...</p>
         </div>
       </main>
     );
@@ -161,7 +161,7 @@ export default function OnboardPage() {
             <div style={{ textAlign: "center" }}>
               <span style={{ fontSize: "2.5rem" }}>🎉</span>
               <h2 style={{ ...formHeading, marginTop: "0.5rem" }}>Request Sent!</h2>
-              <p style={{ color: "#6B7280", fontSize: "0.875rem", margin: "0.5rem 0 1.25rem" }}>
+              <p style={{ color: "var(--pf-text-muted)", fontSize: "0.875rem", margin: "0.5rem 0 1.25rem" }}>
                 The household owner will review your request. You&apos;ll be added once approved.
               </p>
               <button type="button" onClick={() => router.push("/dashboard")} style={primaryButton}>
@@ -312,7 +312,7 @@ export default function OnboardPage() {
 
 const pageShell: React.CSSProperties = {
   minHeight: "calc(100vh - 73px)",
-  background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 25%, #FDF2F8 50%, #FFF7ED 75%, #EEF2FF 100%)",
+  background: "var(--pf-page-gradient)",
   fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
 };
 
@@ -327,13 +327,13 @@ const centeredContainer: React.CSSProperties = {
 const heading: React.CSSProperties = {
   fontSize: "1.75rem",
   fontWeight: 700,
-  color: "#1E1B4B",
+  color: "var(--pf-text)",
   margin: "0 0 0.25rem",
   letterSpacing: "-0.02em",
 };
 
 const subtitle: React.CSSProperties = {
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontSize: "0.95rem",
   margin: "0 0 2rem",
 };
@@ -347,12 +347,12 @@ const cardRow: React.CSSProperties = {
 const optionCard: React.CSSProperties = {
   flex: "1 1 0",
   maxWidth: 260,
-  background: "rgba(255, 255, 255, 0.75)",
+  background: "var(--pf-glass-bg)",
   backdropFilter: "blur(10px)",
   borderRadius: "0.875rem",
   padding: "2rem 1.5rem",
-  border: "1px solid rgba(255, 255, 255, 0.6)",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(99, 102, 241, 0.06)",
+  border: "1px solid var(--pf-glass-border)",
+  boxShadow: "0 1px 3px var(--pf-shadow-soft), 0 4px 20px var(--pf-highlight)",
   cursor: "pointer",
   textAlign: "center",
   transition: "all 0.2s ease",
@@ -371,24 +371,24 @@ const cardEmoji: React.CSSProperties = {
 const cardTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
-  color: "#1E1B4B",
+  color: "var(--pf-text)",
   letterSpacing: "-0.01em",
 };
 
 const cardDesc: React.CSSProperties = {
   fontSize: "0.825rem",
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   margin: 0,
   lineHeight: 1.5,
 };
 
 const formCard: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.75)",
+  background: "var(--pf-glass-bg)",
   backdropFilter: "blur(10px)",
   borderRadius: "0.875rem",
   padding: "2rem",
-  border: "1px solid rgba(255, 255, 255, 0.6)",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(99, 102, 241, 0.06)",
+  border: "1px solid var(--pf-glass-border)",
+  boxShadow: "0 1px 3px var(--pf-shadow-soft), 0 4px 20px var(--pf-highlight)",
   width: "100%",
   maxWidth: 480,
 };
@@ -396,7 +396,7 @@ const formCard: React.CSSProperties = {
 const backLink: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontSize: "0.825rem",
   fontWeight: 600,
   cursor: "pointer",
@@ -408,13 +408,13 @@ const backLink: React.CSSProperties = {
 const formHeading: React.CSSProperties = {
   fontSize: "1.4rem",
   fontWeight: 700,
-  color: "#1E1B4B",
+  color: "var(--pf-text)",
   margin: "0 0 0.25rem",
   letterSpacing: "-0.02em",
 };
 
 const formSubtitle: React.CSSProperties = {
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontSize: "0.875rem",
   margin: "0 0 1.5rem",
 };
@@ -440,13 +440,13 @@ const fieldWrap: React.CSSProperties = {
 const labelText: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.8rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.6rem 0.75rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.925rem",
   outline: "none",
   width: "100%",
@@ -475,7 +475,7 @@ const primaryButton: React.CSSProperties = {
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.85rem",
   margin: 0,
 };
