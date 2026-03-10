@@ -1,3 +1,39 @@
+:root {
+  --pf-bg: #FAFAFA;
+  --pf-surface: #FFFFFF;
+  --pf-text: #1A1A2E;
+  --pf-text-muted: #6B7280;
+  --pf-text-secondary: #8B8FA3;
+  --pf-primary: #6366F1;
+  --pf-primary-hover: #4F46E5;
+  --pf-secondary: #EC4899;
+  --pf-border: rgba(99, 102, 241, 0.08);
+  --pf-border-strong: rgba(99, 102, 241, 0.12);
+  --pf-overlay: rgba(255, 255, 255, 0.8);
+  --pf-overlay-strong: rgba(255, 255, 255, 0.95);
+  --pf-shadow: rgba(0, 0, 0, 0.1);
+  --pf-shadow-soft: rgba(0, 0, 0, 0.05);
+  --pf-highlight: rgba(99, 102, 241, 0.08);
+}
+
+[data-theme="dark"] {
+  --pf-bg: #0F0F1A;
+  --pf-surface: #1A1A2E;
+  --pf-text: #E8E8F0;
+  --pf-text-muted: #9CA3AF;
+  --pf-text-secondary: #6B7280;
+  --pf-primary: #818CF8;
+  --pf-primary-hover: #6366F1;
+  --pf-secondary: #F472B6;
+  --pf-border: rgba(129, 140, 248, 0.1);
+  --pf-border-strong: rgba(129, 140, 248, 0.18);
+  --pf-overlay: rgba(15, 15, 26, 0.85);
+  --pf-overlay-strong: rgba(26, 26, 46, 0.95);
+  --pf-shadow: rgba(0, 0, 0, 0.3);
+  --pf-shadow-soft: rgba(0, 0, 0, 0.15);
+  --pf-highlight: rgba(129, 140, 248, 0.1);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -7,6 +43,9 @@ html, body {
   padding: 0;
   overflow: hidden;
   height: 100vh;
+  background-color: var(--pf-bg);
+  color: var(--pf-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 input[type="number"]::-webkit-outer-spin-button,

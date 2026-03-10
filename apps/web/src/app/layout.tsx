@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "./providers";
+import { ThemeProvider } from "./theme-provider";
 import { AppHeader } from "./app-header";
 import "./globals.css";
 
@@ -19,12 +20,14 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body>
-          <Providers>
-            <AppHeader />
-            {children}
-          </Providers>
+          <ThemeProvider>
+            <Providers>
+              <AppHeader />
+              {children}
+            </Providers>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

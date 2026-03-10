@@ -9,8 +9,7 @@ export default function Home() {
         height: "calc(100vh - 73px)",
         fontFamily: "system-ui, sans-serif",
         overflow: "hidden",
-        background:
-          "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 25%, #FDF2F8 50%, #FFF7ED 75%, #EEF2FF 100%)",
+        background: "var(--pf-bg)",
       }}
     >
       <SignedOut>
@@ -37,7 +36,7 @@ export default function Home() {
               style={{
                 fontSize: "2.5rem",
                 fontWeight: 800,
-                color: "#1E1B4B",
+                color: "var(--pf-text)",
                 margin: "0 0 0.75rem",
                 lineHeight: 1.1,
                 whiteSpace: "nowrap",
@@ -57,7 +56,7 @@ export default function Home() {
             <p
               style={{
                 fontSize: "1.1rem",
-                color: "#6B7280",
+                color: "var(--pf-text-muted)",
                 maxWidth: "480px",
                 lineHeight: 1.6,
                 margin: "0 0 2rem",
@@ -102,7 +101,7 @@ export default function Home() {
             <p
               style={{
                 marginTop: "2rem",
-                color: "#9CA3AF",
+                color: "var(--pf-text-secondary)",
                 fontSize: "0.8rem",
               }}
             >
@@ -120,15 +119,15 @@ export default function Home() {
               alignItems: "center",
               justifyContent: "center",
               padding: "2rem",
-              background: "rgba(255, 255, 255, 0.55)",
+              background: "var(--pf-overlay)",
               backdropFilter: "blur(16px)",
-              borderLeft: "1px solid rgba(255, 255, 255, 0.6)",
+              borderLeft: "1px solid var(--pf-border)",
             }}
           >
             <p
               style={{
                 fontSize: "1.1rem",
-                color: "#4B5563",
+                color: "var(--pf-text-muted)",
                 marginBottom: "1rem",
                 fontWeight: 500,
               }}
@@ -159,12 +158,12 @@ function FeatureCard({
   return (
     <div
       style={{
-        background: "rgba(255, 255, 255, 0.7)",
+        background: "var(--pf-surface)",
         backdropFilter: "blur(10px)",
         borderRadius: "0.875rem",
         padding: "1.25rem",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        border: "1px solid rgba(255,255,255,0.6)",
+        boxShadow: "0 1px 3px var(--pf-shadow-soft), 0 1px 2px var(--pf-shadow-soft)",
+        border: "1px solid var(--pf-border)",
         textAlign: "left",
       }}
     >
@@ -173,7 +172,7 @@ function FeatureCard({
         style={{
           fontSize: "0.95rem",
           fontWeight: 700,
-          color: "#1E1B4B",
+          color: "var(--pf-text)",
           margin: "0 0 0.25rem",
         }}
       >
@@ -182,7 +181,7 @@ function FeatureCard({
       <p
         style={{
           fontSize: "0.825rem",
-          color: "#6B7280",
+          color: "var(--pf-text-muted)",
           lineHeight: 1.45,
           margin: 0,
         }}
