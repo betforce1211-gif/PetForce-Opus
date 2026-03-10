@@ -9,7 +9,8 @@
     "db:push": "turbo db:push",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "roadmap": "./infra/scripts/roadmap"
+    "roadmap": "./infra/scripts/roadmap",
+    "postinstall": "bash infra/scripts/setup-env.sh"
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",

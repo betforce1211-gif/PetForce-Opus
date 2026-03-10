@@ -91,7 +91,7 @@ function SummaryTab({ householdId }: { householdId: string }) {
       </div>
 
       {summaryQuery.isLoading && <p style={emptyText}>Loading...</p>}
-      {summaryQuery.isError && <p style={{ ...emptyText, color: "#EF4444" }}>Failed to load summary</p>}
+      {summaryQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load summary</p>}
 
       {data && (
         <>
@@ -108,11 +108,11 @@ function SummaryTab({ householdId }: { householdId: string }) {
               <span style={statCardLabel}>Completed</span>
             </div>
             <div style={statCard}>
-              <span style={{ ...statCardValue, color: data.totalSkipped > 0 ? "#DC2626" : "#1A1637" }}>{data.totalSkipped}</span>
+              <span style={{ ...statCardValue, color: data.totalSkipped > 0 ? "var(--pf-error-strong)" : "var(--pf-text)" }}>{data.totalSkipped}</span>
               <span style={statCardLabel}>Skipped</span>
             </div>
             <div style={statCard}>
-              <span style={{ ...statCardValue, color: data.totalMissed > 0 ? "#D97706" : "#1A1637" }}>{data.totalMissed}</span>
+              <span style={{ ...statCardValue, color: data.totalMissed > 0 ? "var(--pf-warning)" : "var(--pf-text)" }}>{data.totalMissed}</span>
               <span style={statCardLabel}>Missed</span>
             </div>
           </div>
@@ -229,7 +229,7 @@ function ActivityLogTab({ householdId }: { householdId: string }) {
       </div>
 
       {logQuery.isLoading && <p style={emptyText}>Loading...</p>}
-      {logQuery.isError && <p style={{ ...emptyText, color: "#EF4444" }}>Failed to load log</p>}
+      {logQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load log</p>}
 
       {!logQuery.isLoading && entries.length === 0 && (
         <p style={emptyText}>No entries match the current filters</p>
@@ -293,7 +293,7 @@ function TrendsTab({ householdId }: { householdId: string }) {
       </div>
 
       {trendsQuery.isLoading && <p style={emptyText}>Loading...</p>}
-      {trendsQuery.isError && <p style={{ ...emptyText, color: "#EF4444" }}>Failed to load trends</p>}
+      {trendsQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load trends</p>}
 
       {!trendsQuery.isLoading && points.length === 0 && (
         <p style={emptyText}>No trend data for this period</p>
@@ -313,7 +313,7 @@ function TrendsTab({ householdId }: { householdId: string }) {
                   <div key={p.date} style={barColumn}>
                     <div style={{ ...barWrapper, height: `${heightPct}%` }}>
                       <div
-                        style={{ width: "100%", height: `${100 - completedPct}%`, background: "#EF4444", borderRadius: completedPct === 0 ? "3px 3px 0 0" : "3px 3px 0 0" }}
+                        style={{ width: "100%", height: `${100 - completedPct}%`, background: "var(--pf-error)", borderRadius: completedPct === 0 ? "3px 3px 0 0" : "3px 3px 0 0" }}
                         title={`Skipped: ${p.skipped}`}
                       />
                       <div
@@ -334,7 +334,7 @@ function TrendsTab({ householdId }: { householdId: string }) {
               completed
             </span>
             <span style={legendItem}>
-              <span style={{ ...legendDot, background: "#EF4444" }} />
+              <span style={{ ...legendDot, background: "var(--pf-error)" }} />
               skipped
             </span>
           </div>
@@ -355,9 +355,9 @@ const taskTypeEmoji: Record<string, string> = {
 };
 
 const taskTypeColor: Record<string, string> = {
-  feeding: "#F59E0B",
+  feeding: "var(--pf-warning)",
   medication: "#EC4899",
-  activity: "#6366F1",
+  activity: "var(--pf-primary)",
 };
 
 function formatTimestamp(iso: string): string {
@@ -375,14 +375,14 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "0.35rem",
   marginBottom: "1.25rem",
-  borderBottom: "2px solid #E5E7EB",
+  borderBottom: "2px solid var(--pf-border-muted)",
   paddingBottom: "0",
 };
 
@@ -391,10 +391,10 @@ const tabBtn = (active: boolean): React.CSSProperties => ({
   fontSize: "0.85rem",
   fontWeight: 600,
   border: "none",
-  borderBottom: active ? "2px solid #6366F1" : "2px solid transparent",
+  borderBottom: active ? "2px solid var(--pf-primary)" : "2px solid transparent",
   marginBottom: "-2px",
   background: "none",
-  color: active ? "#6366F1" : "#6B7280",
+  color: active ? "var(--pf-primary)" : "var(--pf-text-muted)",
   cursor: "pointer",
   transition: "all 0.15s ease",
 });
@@ -412,14 +412,14 @@ const arrowBtn: React.CSSProperties = {
   border: "none",
   fontSize: "0.9rem",
   cursor: "pointer",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: "0.25rem 0.5rem",
 };
 
 const monthLabelStyle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   minWidth: "10rem",
   textAlign: "center",
 };
@@ -432,7 +432,7 @@ const totalSection: React.CSSProperties = {
 const bigRate: React.CSSProperties = {
   fontSize: "2.5rem",
   fontWeight: 800,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   display: "block",
   letterSpacing: "-0.02em",
 };
@@ -440,7 +440,7 @@ const bigRate: React.CSSProperties = {
 const bigRateLabel: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 600,
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   display: "block",
   marginTop: "0.15rem",
 };
@@ -459,26 +459,26 @@ const statCard: React.CSSProperties = {
   padding: "0.75rem",
   borderRadius: "0.75rem",
   background: "rgba(99, 102, 241, 0.04)",
-  border: "1px solid rgba(99, 102, 241, 0.08)",
+  border: "1px solid var(--pf-highlight)",
 };
 
 const statCardValue: React.CSSProperties = {
   fontSize: "1.5rem",
   fontWeight: 800,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   display: "block",
 };
 
 const statCardLabel: React.CSSProperties = {
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   display: "block",
   marginTop: "0.15rem",
 };
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -488,7 +488,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const contributionsList: React.CSSProperties = {
@@ -506,7 +506,7 @@ const contributionRow: React.CSSProperties = {
 const contributionName: React.CSSProperties = {
   fontSize: "0.825rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   width: "6rem",
   flexShrink: 0,
   overflow: "hidden",
@@ -517,7 +517,7 @@ const contributionName: React.CSSProperties = {
 const contributionBarContainer: React.CSSProperties = {
   flex: 1,
   height: 14,
-  background: "rgba(99, 102, 241, 0.06)",
+  background: "var(--pf-highlight)",
   borderRadius: 7,
   overflow: "hidden",
 };
@@ -533,7 +533,7 @@ const contributionBarOuter: React.CSSProperties = {
 const contributionCount: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   width: "2rem",
   textAlign: "right",
   flexShrink: 0,
@@ -551,7 +551,7 @@ const legendItem: React.CSSProperties = {
   alignItems: "center",
   gap: "0.3rem",
   fontSize: "0.7rem",
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontWeight: 500,
   textTransform: "capitalize",
 };
@@ -576,10 +576,10 @@ const filterRow: React.CSSProperties = {
 const filterSelect: React.CSSProperties = {
   padding: "0.35rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.8rem",
   outline: "none",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const chipRow: React.CSSProperties = {
@@ -596,8 +596,8 @@ const typeChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer",
   background: active
     ? "linear-gradient(135deg, #6366F1, #8B5CF6)"
-    : "rgba(99, 102, 241, 0.06)",
-  color: active ? "white" : "#6366F1",
+    : "var(--pf-highlight)",
+  color: active ? "white" : "var(--pf-primary)",
   transition: "all 0.15s ease",
   textTransform: "capitalize",
 });
@@ -628,23 +628,23 @@ const logIcon: React.CSSProperties = {
 
 const logTaskName: React.CSSProperties = {
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const logPetName: React.CSSProperties = {
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontWeight: 500,
   fontSize: "0.75rem",
 };
 
 const logMember: React.CSSProperties = {
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
   fontSize: "0.75rem",
 };
 
 const logTimestamp: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
   fontSize: "0.72rem",
   marginLeft: "auto",
@@ -655,7 +655,7 @@ const skipBadge: React.CSSProperties = {
   padding: "0.1rem 0.45rem",
   borderRadius: "999px",
   background: "rgba(239, 68, 68, 0.08)",
-  color: "#DC2626",
+  color: "var(--pf-error-strong)",
   fontSize: "0.65rem",
   fontWeight: 700,
   flexShrink: 0,
@@ -664,8 +664,8 @@ const skipBadge: React.CSSProperties = {
 const loadMoreBtn: React.CSSProperties = {
   padding: "0.45rem 1rem",
   borderRadius: "0.5rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.8rem",
   border: "none",
@@ -710,7 +710,7 @@ const barWrapper: React.CSSProperties = {
 
 const barLabel: React.CSSProperties = {
   fontSize: "0.55rem",
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   marginTop: "0.2rem",
   whiteSpace: "nowrap",
   overflow: "hidden",
@@ -721,8 +721,8 @@ const barLabel: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.6rem 1.5rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.875rem",
   border: "none",
@@ -730,7 +730,7 @@ const closeBtnStyle: React.CSSProperties = {
 };
 
 const emptyText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   margin: "1rem 0 0.5rem",

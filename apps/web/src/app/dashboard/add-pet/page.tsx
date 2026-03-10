@@ -87,13 +87,13 @@ export default function AddPetPage() {
   };
 
   if (!householdId) {
-    return <p style={{ padding: "2rem", color: "#6B7280" }}>No household selected.</p>;
+    return <p style={{ padding: "2rem", color: "var(--pf-text-muted)" }}>No household selected.</p>;
   }
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>
       <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Add a pet</h1>
-      <p style={{ color: "#6B7280", marginBottom: "1.5rem" }}>Add a new pet to your household.</p>
+      <p style={{ color: "var(--pf-text-muted)", marginBottom: "1.5rem" }}>Add a new pet to your household.</p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {/* Basic Info — responsive grid: 2 cols on desktop, 1 on mobile */}
@@ -129,7 +129,7 @@ export default function AddPetPage() {
                 if (file) handlePhotoSelect(file);
               }}
             />
-            <span style={{ fontSize: "0.8rem", color: "#8B8FA3" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--pf-text-secondary)" }}>
               {photoFile ? photoFile.name : "Click or drag to add a photo"}
             </span>
           </div>
@@ -211,7 +211,7 @@ export default function AddPetPage() {
         </fieldset>
 
         {createPet.error && (
-          <p style={{ color: "#EF4444", fontSize: "0.875rem" }}>{createPet.error.message}</p>
+          <p style={{ color: "var(--pf-error)", fontSize: "0.875rem" }}>{createPet.error.message}</p>
         )}
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -228,7 +228,7 @@ export default function AddPetPage() {
 }
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "1rem 1.25rem",
   margin: 0,
@@ -237,7 +237,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.95rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 const gridStyle: React.CSSProperties = {
   display: "grid",
@@ -249,15 +249,15 @@ const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.875r
 const inputStyle: React.CSSProperties = {
   padding: "0.5rem 0.75rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.9375rem",
   outline: "none",
 };
 const cancelButtonStyle: React.CSSProperties = {
   padding: "0.75rem 1.5rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#F3F4F6",
-  color: "#374151",
+  backgroundColor: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   border: "none",
   cursor: "pointer",
@@ -266,7 +266,7 @@ const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   flex: 1,
   padding: "0.75rem 1.5rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#6366F1",
+  backgroundColor: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   border: "none",
@@ -277,7 +277,7 @@ const photoPickerStyle: React.CSSProperties = {
   width: 80,
   height: 80,
   borderRadius: "50%",
-  border: "2px dashed #D1D5DB",
+  border: "2px dashed var(--pf-input-border)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -285,7 +285,7 @@ const photoPickerStyle: React.CSSProperties = {
   position: "relative",
   overflow: "hidden",
   flexShrink: 0,
-  background: "#F9FAFB",
+  background: "var(--pf-surface-muted)",
 };
 const photoOverlayStyle: React.CSSProperties = {
   position: "absolute",
@@ -294,7 +294,7 @@ const photoOverlayStyle: React.CSSProperties = {
   width: 24,
   height: 24,
   borderRadius: "50%",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   display: "flex",
   alignItems: "center",

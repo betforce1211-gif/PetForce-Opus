@@ -123,7 +123,7 @@ export function CalendarModal({ householdId, onClose }: CalendarModalProps) {
             </button>
             <button
               onClick={() => setShowFeedings(!showFeedings)}
-              style={toggleBtn(showFeedings, "#D97706")}
+              style={toggleBtn(showFeedings, "var(--pf-warning)")}
               title={showFeedings ? "Hide feeding schedules" : "Show feeding schedules"}
             >
               🍽️ Feedings {showFeedings ? "On" : "Off"}
@@ -221,7 +221,7 @@ export function CalendarModal({ householdId, onClose }: CalendarModalProps) {
 
               {selectedEvents.length === 0 ? (
                 <div style={detailEmpty}>
-                  <p style={{ color: "#A5A8BA", fontSize: "0.85rem", margin: 0 }}>
+                  <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.85rem", margin: 0 }}>
                     No events scheduled
                   </p>
                 </div>
@@ -331,7 +331,7 @@ const closeBtn: React.CSSProperties = {
   background: "none",
   border: "none",
   fontSize: "1.5rem",
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   cursor: "pointer",
   lineHeight: 1,
   width: 32,
@@ -363,7 +363,7 @@ const navBtn: React.CSSProperties = {
   borderRadius: "0.5rem",
   border: "1px solid rgba(99, 102, 241, 0.15)",
   background: "rgba(245, 245, 255, 0.8)",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontSize: "1rem",
   fontWeight: 700,
   cursor: "pointer",
@@ -375,7 +375,7 @@ const navBtn: React.CSSProperties = {
 const monthTitle: React.CSSProperties = {
   fontSize: "1.15rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   margin: 0,
   letterSpacing: "-0.01em",
   minWidth: "13rem",
@@ -388,14 +388,14 @@ const headerActions: React.CSSProperties = {
   marginRight: "2rem",
 };
 
-const toggleBtn = (active: boolean, activeColor = "#D97706"): React.CSSProperties => ({
+const toggleBtn = (active: boolean, activeColor = "var(--pf-warning)"): React.CSSProperties => ({
   padding: "0.35rem 0.8rem",
   borderRadius: "0.5rem",
   border: `1px solid ${active ? activeColor + "30" : "rgba(99, 102, 241, 0.15)"}`,
   background: active
     ? `${activeColor}14`
     : "rgba(245, 245, 255, 0.8)",
-  color: active ? activeColor : "#8B8FA3",
+  color: active ? activeColor : "var(--pf-text-secondary)",
   fontSize: "0.75rem",
   fontWeight: 600,
   cursor: "pointer",
@@ -407,7 +407,7 @@ const todayBtnStyle: React.CSSProperties = {
   borderRadius: "0.5rem",
   border: "1px solid rgba(99, 102, 241, 0.15)",
   background: "rgba(245, 245, 255, 0.8)",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   cursor: "pointer",
@@ -455,7 +455,7 @@ const dowCell: React.CSSProperties = {
   textAlign: "center",
   fontSize: "0.7rem",
   fontWeight: 700,
-  color: "#8B8FA3",
+  color: "var(--pf-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
   padding: "0.3rem 0",
@@ -498,12 +498,12 @@ const dayCellSelected: React.CSSProperties = {
 const dayNumber: React.CSSProperties = {
   fontSize: "0.7rem",
   fontWeight: 600,
-  color: "#374151",
+  color: "var(--pf-text-muted)",
   lineHeight: 1,
 };
 
 const dayNumberToday: React.CSSProperties = {
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontWeight: 800,
 };
 
@@ -530,7 +530,7 @@ const eventPill = (completed: boolean): React.CSSProperties => ({
 const pillText: React.CSSProperties = {
   fontSize: "0.55rem",
   fontWeight: 500,
-  color: "#374151",
+  color: "var(--pf-text-muted)",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -538,7 +538,7 @@ const pillText: React.CSSProperties = {
 
 const overflowText: React.CSSProperties = {
   fontSize: "0.55rem",
-  color: "#8B8FA3",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
   paddingLeft: "0.2rem",
 };
@@ -568,15 +568,15 @@ const detailHeader: React.CSSProperties = {
 const detailTitle: React.CSSProperties = {
   fontSize: "0.95rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   margin: 0,
 };
 
 const detailAddBtn: React.CSSProperties = {
   padding: "0.2rem 0.55rem",
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -618,12 +618,12 @@ const detailIcon: React.CSSProperties = {
 const detailEventTitle: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.8rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.005em",
 };
 
 const detailEventMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.7rem",
   fontWeight: 500,
   marginTop: "0.1rem",
@@ -634,7 +634,7 @@ const completedBadge: React.CSSProperties = {
   padding: "0.15rem 0.5rem",
   borderRadius: "999px",
   background: "rgba(16, 185, 129, 0.1)",
-  color: "#059669",
+  color: "var(--pf-success-strong)",
   fontSize: "0.65rem",
   fontWeight: 600,
 };

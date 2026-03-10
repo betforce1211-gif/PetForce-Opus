@@ -10,5 +10,5 @@ export function DashboardRedirect() {
     router.replace("/dashboard");
   }, [router]);
 
-  return <p style={{ color: "#6B7280" }}>Redirecting to dashboard...</p>;
+  return <p style={{ color: "var(--pf-text-muted)" }}>Redirecting to dashboard...</p>;
 }
