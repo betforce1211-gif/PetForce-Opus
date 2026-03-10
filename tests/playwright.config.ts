@@ -41,7 +41,7 @@ export default defineConfig({
     // Authenticated tests — reuse session from auth-setup
     {
       name: "authenticated",
-      testMatch: /authenticated|settings|invite-admin|invite-join-page|access-request|add-pet|pet-crud|finance|finance-crud|health|health-advanced|feeding|feeding-advanced|calendar|gamification|household-creation-limit|household-manage|onboard-scenarios|notes|reporting|activity|analytics/,
+      testMatch: /authenticated|settings|invite-admin|invite-join-page|access-request|add-pet|pet-crud|finance|finance-crud|health|health-advanced|feeding|feeding-advanced|calendar|gamification|household-creation-limit|household-manage|onboard-scenarios|notes|reporting|activity|analytics|member/,
       dependencies: ["auth-setup"],
       use: {
         browserName: "chromium",
