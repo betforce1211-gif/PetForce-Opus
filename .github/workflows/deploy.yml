@@ -4,9 +4,21 @@ on:
   push:
     branches: [main]
 
+# Prevent concurrent deploys to the same environment
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
+  # Gate: only deploy if CI passes
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   deploy-api:
     runs-on: ubuntu-latest
+    needs: ci
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
@@ -18,24 +30,57 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Run database migrations before deploying new code (uses migration files, not destructive db:push)
+      # Run database migrations before deploying new code
       - name: Run database migrations
         run: pnpm --filter=@petforce/db db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      # Build and deploy API via Railway
-      # Uncomment and configure once Railway project is set up:
-      # - name: Deploy to Railway
-      #   uses: bervProject/railway-deploy@main
-      #   with:
-      #     railway_token: ${{ secrets.RAILWAY_TOKEN }}
-      #     service: petforce-api
+      # Deploy API to Railway
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up --service petforce-api --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      # Verify deployment health
+      - name: Health check
+        run: |
+          sleep 15
+          for i in 1 2 3 4 5; do
+            if curl -sf "${{ vars.API_PRODUCTION_URL }}/health"; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1
 
   deploy-web:
     runs-on: ubuntu-latest
-    # Vercel handles deployment automatically via GitHub integration.
-    # This job is a placeholder for any pre-deploy steps.
+    needs: ci
+    environment: production
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Web deployment handled by Vercel GitHub integration"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Deploy web to Vercel via CLI (gives us control over env vars and build)
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
