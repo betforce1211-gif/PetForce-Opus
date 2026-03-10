@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { eq, and } from "drizzle-orm";
 import { db, pets, members } from "@petforce/db";
 import { PET_AVATAR_MAX_SIZE, PET_AVATAR_ALLOWED_TYPES } from "@petforce/core";
-import { verifyClerkToken } from "../lib/clerk-auth";
-import { uploadPetAvatar } from "../lib/supabase-storage";
+import { verifyClerkToken } from "../lib/clerk-auth.js";
+import { uploadPetAvatar } from "../lib/supabase-storage.js";
 
 const uploadApp = new Hono();
 

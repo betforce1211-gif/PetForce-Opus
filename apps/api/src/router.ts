@@ -1,19 +1,19 @@
-import { router } from "./trpc";
-import { householdRouter } from "./routers/household";
-import { petRouter } from "./routers/pet";
-import { activityRouter } from "./routers/activity";
-import { memberRouter } from "./routers/member";
-import { dashboardRouter } from "./routers/dashboard";
-import { invitationRouter } from "./routers/invitation";
-import { accessRequestRouter } from "./routers/access-request";
-import { feedingRouter } from "./routers/feeding";
-import { calendarRouter } from "./routers/calendar";
-import { healthRouter } from "./routers/health";
-import { financeRouter } from "./routers/finance";
-import { notesRouter } from "./routers/notes";
-import { reportingRouter } from "./routers/reporting";
-import { analyticsRouter } from "./routers/analytics";
-import { gamificationRouter } from "./routers/gamification";
+import { router } from "./trpc.js";
+import { householdRouter } from "./routers/household.js";
+import { petRouter } from "./routers/pet.js";
+import { activityRouter } from "./routers/activity.js";
+import { memberRouter } from "./routers/member.js";
+import { dashboardRouter } from "./routers/dashboard.js";
+import { invitationRouter } from "./routers/invitation.js";
+import { accessRequestRouter } from "./routers/access-request.js";
+import { feedingRouter } from "./routers/feeding.js";
+import { calendarRouter } from "./routers/calendar.js";
+import { healthRouter } from "./routers/health.js";
+import { financeRouter } from "./routers/finance.js";
+import { notesRouter } from "./routers/notes.js";
+import { reportingRouter } from "./routers/reporting.js";
+import { analyticsRouter } from "./routers/analytics.js";
+import { gamificationRouter } from "./routers/gamification.js";
 
 export const appRouter = router({
   household: householdRouter,

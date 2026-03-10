@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import { db, petNotes, pets } from "@petforce/db";
 import { createNoteSchema, updateNoteSchema } from "@petforce/core";
 

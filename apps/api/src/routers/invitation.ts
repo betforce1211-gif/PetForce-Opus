@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc";
+import { householdProcedure, protectedProcedure, router } from "../trpc.js";
 import { db, invitations, members, households } from "@petforce/db";
 import { createInvitationSchema } from "@petforce/core";
-import { generateInviteToken } from "../utils/join-code";
+import { generateInviteToken } from "../utils/join-code.js";
 
 export const invitationRouter = router({
   create: householdProcedure

@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   feedingSchedules,
@@ -19,7 +19,7 @@ import type {
   TrendDataPoint,
   ReportingSummary,
 } from "@petforce/core";
-import { fetchUnifiedCompletions } from "../lib/unified-completions";
+import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
 
 export const reportingRouter = router({
   completionLog: householdProcedure

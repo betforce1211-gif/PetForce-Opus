@@ -1,5 +1,5 @@
 import { and, eq, gte, lte, isNull, asc } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   activities,

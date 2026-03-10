@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc";
+import { householdProcedure, protectedProcedure, router } from "../trpc.js";
 import { db, accessRequests, members, households } from "@petforce/db";
 import { createAccessRequestSchema } from "@petforce/core";
 
