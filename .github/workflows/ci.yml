@@ -39,7 +39,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: lint-and-build
-    # Only run when test secrets are configured
     if: ${{ vars.E2E_ENABLED == 'true' }}
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -61,7 +60,10 @@ jobs:
           node-version: "20"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+
+      # Build with NEXT_PUBLIC_* vars available (set via job-level env)
+      - name: Build all packages
+        run: pnpm build
 
       - name: Install Playwright browsers
         run: cd tests && npx playwright install --with-deps chromium
@@ -69,22 +71,36 @@ jobs:
       - name: Start API server
         run: |
           cd apps/api
-          npx tsx src/index.ts &
-          sleep 3
+          node dist/index.js &
+          # Wait for API to be ready (up to 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
           curl -f http://localhost:3001/health || exit 1
 
       - name: Start web server
         run: |
           cd apps/web
           npx next start &
-          sleep 5
+          # Wait for web to be ready (up to 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
+              echo "Web ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
           curl -f http://localhost:3000 || exit 1
 
-      - name: Run E2E tests (excluding Clerk auth tests)
-        run: cd tests && npx playwright test --config=playwright.config.ts --project=infra-health --project=unauthenticated --project=dashboard-mocked
+      - name: Run E2E tests
+        run: cd tests && npx playwright test --config=playwright.config.ts
 
       - name: Upload test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
@@ -92,7 +108,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Playwright report
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

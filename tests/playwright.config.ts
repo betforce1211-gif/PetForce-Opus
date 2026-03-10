@@ -3,16 +3,18 @@ import path from "path";
 
 const authFile = path.join(__dirname, "e2e/.auth/session.json");
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   globalSetup: require.resolve("./global.setup"),
   testDir: "./e2e",
   outputDir: "./test-results",
   timeout: 30000,
-  retries: process.env.CI ? 1 : 0,
-  workers: 2,
+  retries: isCI ? 1 : 0,
+  workers: isCI ? 1 : 2,
   use: {
     baseURL: "http://localhost:3000",
-    screenshot: "on",
+    screenshot: isCI ? "only-on-failure" : "on",
     trace: "on-first-retry",
     video: "retain-on-failure",
   },
