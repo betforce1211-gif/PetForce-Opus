@@ -10,7 +10,8 @@
     "lint": "eslint src/",
     "clean": "rm -rf dist",
     "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
-    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push"
+    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push",
+    "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
     "@petforce/core": "workspace:*",

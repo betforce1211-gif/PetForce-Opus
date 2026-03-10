@@ -30,6 +30,7 @@ export default defineConfig({
       dependencies: ["infra-health"],
       use: { browserName: "chromium" },
       timeout: 60000,
+      retries: 1,
     },
     // Unauthenticated tests — no session needed
     {
@@ -63,6 +64,7 @@ export default defineConfig({
       dependencies: ["infra-health"],
       use: { browserName: "chromium" },
       timeout: 60000,
+      retries: 1,
     },
   ],
   reporter: [

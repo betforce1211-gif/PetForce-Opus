@@ -43,7 +43,13 @@ export async function clerkTestSignIn(
 
   // Step 3: Handle OTP / device-trust verification if prompted
   // Clerk test mode: +clerk_test emails accept the code 424242
-  await page.waitForTimeout(2000);
+  // Wait for either OTP input, a URL change, or Clerk processing
+  await Promise.race([
+    page.locator('input[autocomplete="one-time-code"]').waitFor({ state: "visible", timeout: 10_000 }).catch(() => {}),
+    page.waitForURL(/\/(dashboard|onboard|factor)/, { timeout: 10_000 }).catch(() => {}),
+  ]);
+
+  console.log("After password submit, URL:", page.url());
 
   const otpInput = page.locator('input[autocomplete="one-time-code"]');
   const otpVisible = await otpInput.isVisible().catch(() => false);
@@ -64,7 +70,8 @@ export async function clerkTestSignIn(
     }
   }
 
-  // Wait for redirect to dashboard or onboard (30s for slow CI environments)
+  // Wait for redirect to dashboard or onboard (longer timeout for CI)
+  console.log("Waiting for redirect, current URL:", page.url());
   await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 30_000 });
   await page.waitForLoadState("domcontentloaded");
 }

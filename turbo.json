@@ -25,6 +25,9 @@
     },
     "db:push": {
       "cache": false
+    },
+    "db:migrate": {
+      "cache": false
     }
   }
 }

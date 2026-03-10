@@ -7,9 +7,11 @@
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push",
+    "db:migrate": "turbo db:migrate",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "roadmap": "./infra/scripts/roadmap",
+    "setup:deploy": "bash infra/scripts/setup-deploy.sh",
     "postinstall": "bash infra/scripts/setup-env.sh"
   },
   "devDependencies": {
