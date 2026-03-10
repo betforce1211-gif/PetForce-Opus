@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -28,10 +32,8 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Create Railway preview environment
-        run: |
-          railway environment create "pr-${{ github.event.pull_request.number }}" 2>/dev/null || true
-          railway up --service petforce-api --environment "pr-${{ github.event.pull_request.number }}" --detach
+      - name: Deploy to Railway
+        run: railway up --service petforce-api --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -40,7 +42,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const body = `🚀 **API Preview deployed** to Railway environment \`pr-${prNumber}\`\n\nPreview will be cleaned up when this PR is closed.`;
+            const body = `🚀 **API Preview deployed** to Railway for PR #${prNumber}`;
             // Check for existing comment to avoid duplicates
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -85,7 +87,7 @@ jobs:
       - name: Deploy to Vercel (preview)
         id: vercel-deploy
         run: |
-          URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
+          URL=$(vercel deploy --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }})
           echo "preview_url=$URL" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -119,16 +121,3 @@ jobs:
                 body,
               });
             }
-
-  # Clean up Railway preview environments when PRs close
-  cleanup:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Delete Railway preview environment
-        run: railway environment delete "pr-${{ github.event.pull_request.number }}" --yes 2>/dev/null || true
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
