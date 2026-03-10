@@ -1,3 +1,9 @@
+/*
+ * CSS custom property defaults for PetForce theming.
+ * Source of truth: petforceThemes in @petforce/ui (tamagui.config.ts).
+ * These :root values provide SSR/initial-load defaults; ThemeSync overrides
+ * them client-side based on the active Tamagui theme.
+ */
 :root {
   --pf-bg: #FAFAFA;
   --pf-surface: #FFFFFF;

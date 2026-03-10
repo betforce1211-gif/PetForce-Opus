@@ -1,5 +1,7 @@
 # Privacy Policy
 
+[End User]
+
 **Last updated:** 2026-03-09
 
 PetForce ("we", "us", "our") operates the PetForce mobile application and website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service.

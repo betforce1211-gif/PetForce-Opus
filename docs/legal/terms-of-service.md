@@ -1,5 +1,7 @@
 # Terms of Service
 
+[End User]
+
 **Last updated:** 2026-03-09
 
 Welcome to PetForce. By using our application and website (the "Service"), you agree to these Terms of Service ("Terms").

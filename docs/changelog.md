@@ -1,5 +1,7 @@
 # Changelog
 
+[Developer]
+
 All notable changes to PetForce are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---

@@ -18,9 +18,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Run database migrations before deploying new code
+      # Run database migrations before deploying new code (uses migration files, not destructive db:push)
       - name: Run database migrations
-        run: pnpm --filter=@petforce/db db:push
+        run: pnpm --filter=@petforce/db db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 

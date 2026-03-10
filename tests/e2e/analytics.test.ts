@@ -11,6 +11,7 @@ import "./helpers/load-env";
 
 let authToken: string;
 let householdId: string;
+const createdEventIds: string[] = [];
 
 test.describe("Analytics & Gamification API", () => {
   test.describe.configure({ mode: "serial" });
@@ -32,6 +33,16 @@ test.describe("Analytics & Gamification API", () => {
     await context.close();
   });
 
+  test.afterAll(async ({ request }) => {
+    for (const id of createdEventIds) {
+      try {
+        await trpcMutation(request, authToken, "analytics.delete", { id });
+      } catch {
+        // Already deleted or not found
+      }
+    }
+  });
+
   // --- Analytics ---
 
   test("tracks an analytics event", async ({ request }) => {
@@ -47,6 +58,7 @@ test.describe("Analytics & Gamification API", () => {
     );
 
     expect(result).toBeDefined();
+    if (result.id) createdEventIds.push(result.id);
   });
 
   test("tracks event without householdId", async ({ request }) => {
@@ -61,6 +73,7 @@ test.describe("Analytics & Gamification API", () => {
     );
 
     expect(result).toBeDefined();
+    if (result.id) createdEventIds.push(result.id);
   });
 
   // --- Gamification API ---

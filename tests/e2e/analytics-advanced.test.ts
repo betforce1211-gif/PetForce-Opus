@@ -10,6 +10,7 @@ import "./helpers/load-env";
 
 let authToken: string;
 let householdId: string;
+const createdEventIds: string[] = [];
 
 test.describe("Analytics Router — Advanced", () => {
   test.describe.configure({ mode: "serial" });
@@ -31,6 +32,16 @@ test.describe("Analytics Router — Advanced", () => {
     await context.close();
   });
 
+  test.afterAll(async ({ request }) => {
+    for (const id of createdEventIds) {
+      try {
+        await trpcMutation(request, authToken, "analytics.delete", { id });
+      } catch {
+        // Already deleted or not found
+      }
+    }
+  });
+
   test("tracks event with householdId", async ({ request }) => {
     const event = await trpcMutation(
       request,
@@ -48,6 +59,7 @@ test.describe("Analytics Router — Advanced", () => {
     expect(event.eventName).toBe("e2e_test_event");
     expect(event.householdId).toBe(householdId);
     expect(event.userId).toBeDefined();
+    createdEventIds.push(event.id);
   });
 
   test("tracks event without householdId", async ({ request }) => {
@@ -64,6 +76,7 @@ test.describe("Analytics Router — Advanced", () => {
     expect(event.id).toBeDefined();
     expect(event.eventName).toBe("e2e_global_event");
     expect(event.householdId).toBeNull();
+    createdEventIds.push(event.id);
   });
 
   test("tracks event with complex metadata", async ({ request }) => {
@@ -84,6 +97,7 @@ test.describe("Analytics Router — Advanced", () => {
 
     expect(event).toBeDefined();
     expect(event.eventName).toBe("e2e_complex_metadata");
+    createdEventIds.push(event.id);
   });
 
   test("tracks multiple events in sequence", async ({ request }) => {
@@ -100,6 +114,7 @@ test.describe("Analytics Router — Advanced", () => {
         }
       );
       events.push(event);
+      createdEventIds.push(event.id);
     }
 
     expect(events).toHaveLength(3);
