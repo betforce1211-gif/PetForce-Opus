@@ -245,7 +245,7 @@ export const EXPENSE_DESCRIPTION_SUGGESTIONS: Record<string, string[]> = {
 
 // --- Today's Tasks ---
 
-import type { TaskKind } from "./types";
+import type { TaskKind } from "./types.js";
 
 export const TASK_KIND_ICONS: Record<TaskKind, string> = {
   alert: "\u26A0\uFE0F",
