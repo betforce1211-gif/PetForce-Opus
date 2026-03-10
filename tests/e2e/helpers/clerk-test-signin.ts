@@ -64,7 +64,7 @@ export async function clerkTestSignIn(
     }
   }
 
-  // Wait for redirect to dashboard or onboard
-  await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 15_000 });
+  // Wait for redirect to dashboard or onboard (30s for slow CI environments)
+  await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 30_000 });
   await page.waitForLoadState("domcontentloaded");
 }

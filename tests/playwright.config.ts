@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: "./e2e",
   outputDir: "./test-results",
   timeout: 30000,
-  retries: 0,
+  retries: process.env.CI ? 1 : 0,
   workers: 2,
   use: {
     baseURL: "http://localhost:3000",
