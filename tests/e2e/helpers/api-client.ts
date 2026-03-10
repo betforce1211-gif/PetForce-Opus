@@ -105,10 +105,34 @@ export async function safeGoto(page: Page, url: string): Promise<void> {
 }
 
 /**
- * Intercepts outbound tRPC requests from the browser to capture the real
- * Clerk JWT token. Call this BEFORE navigating to a page that makes API calls.
+ * Extracts the Clerk session token from the browser.
+ *
+ * Tries two approaches:
+ * 1. Use Clerk's JS API (window.Clerk.session.getToken()) — most reliable
+ * 2. Fall back to intercepting outbound tRPC requests
+ *
+ * Call this AFTER navigating to an authenticated page.
  */
 export async function extractAuthToken(page: Page): Promise<string> {
+  // Approach 1: Get token directly from Clerk's JS API
+  for (let attempt = 0; attempt < 15; attempt++) {
+    try {
+      const token = await page.evaluate(async () => {
+        const clerk = (window as any).Clerk;
+        if (clerk?.session) {
+          return await clerk.session.getToken();
+        }
+        return null;
+      });
+      if (token) return token;
+    } catch {
+      // Clerk not loaded yet
+    }
+    await page.waitForTimeout(2000);
+  }
+
+  // Approach 2: Fall back to intercepting a tRPC request
+  console.log("Clerk JS API unavailable, falling back to request interception");
   return new Promise((resolve, reject) => {
     let resolved = false;
     const timeout = setTimeout(() => {
@@ -117,7 +141,7 @@ export async function extractAuthToken(page: Page): Promise<string> {
           `Timed out waiting for auth token. Current URL: ${page.url()}`
         ));
       }
-    }, 60_000);
+    }, 30_000);
 
     page.on("request", (request) => {
       if (resolved) return;
@@ -131,6 +155,9 @@ export async function extractAuthToken(page: Page): Promise<string> {
         }
       }
     });
+
+    // Trigger a tRPC call by reloading
+    page.reload().catch(() => {});
   });
 }
 
