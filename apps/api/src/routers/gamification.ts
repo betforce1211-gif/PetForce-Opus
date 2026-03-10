@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   members,
@@ -21,7 +21,7 @@ import type {
   GamificationPetView,
   GamificationFullStats,
 } from "@petforce/core";
-import { fetchUnifiedCompletions } from "../lib/unified-completions";
+import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
 
 function levelFromXp(xp: number): number {
   for (let i = GAMIFICATION_LEVELS.length - 1; i >= 0; i--) {

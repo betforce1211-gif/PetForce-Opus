@@ -41,7 +41,7 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
   if (statusQuery.isLoading) {
     return (
       <div style={centered}>
-        <span style={{ color: "#A5A8BA", fontSize: "0.8rem" }}>Loading...</span>
+        <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
   if (statusQuery.isError) {
     return (
       <div style={centered}>
-        <span style={{ color: "#EF4444", fontSize: "0.8rem" }}>Failed to load</span>
+        <span style={{ color: "var(--pf-error)", fontSize: "0.8rem" }}>Failed to load</span>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
       <>
         <div style={centered}>
           <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>🍽️</span>
-          <p style={{ color: "#A5A8BA", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
+          <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
             No feeding schedules
           </p>
         </div>
@@ -152,7 +152,7 @@ const completionBadge = (allDone: boolean): React.CSSProperties => ({
   background: allDone
     ? "linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.12))"
     : "linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.12))",
-  color: allDone ? "#059669" : "#D97706",
+  color: allDone ? "var(--pf-success-strong)" : "var(--pf-warning)",
   fontSize: "0.75rem",
   fontWeight: 700,
   letterSpacing: "0.02em",
@@ -175,7 +175,7 @@ const petSection: React.CSSProperties = {
 const petNameRow: React.CSSProperties = {
   fontSize: "0.78rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.005em",
 };
 
@@ -196,16 +196,16 @@ const chip = (done: boolean): React.CSSProperties => ({
   border: "none",
   cursor: "pointer",
   transition: "all 0.15s ease",
-  background: done ? "rgba(16, 185, 129, 0.1)" : "rgba(99, 102, 241, 0.06)",
-  color: done ? "#059669" : "#6B7280",
+  background: done ? "rgba(16, 185, 129, 0.1)" : "var(--pf-highlight)",
+  color: done ? "var(--pf-success-strong)" : "var(--pf-text-muted)",
   textDecoration: done ? "line-through" : "none",
 });
 
 const linkBtn: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -215,6 +215,6 @@ const linkBtn: React.CSSProperties = {
   border: "none",
   borderTopStyle: "solid",
   borderTopWidth: "1px",
-  borderTopColor: "rgba(99, 102, 241, 0.08)",
+  borderTopColor: "var(--pf-highlight)",
   cursor: "pointer",
 };

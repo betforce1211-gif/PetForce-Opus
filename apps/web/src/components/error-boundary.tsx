@@ -35,12 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
           style={{
             padding: "1rem",
             borderRadius: "0.5rem",
-            background: "#FEF2F2",
+            background: "var(--pf-highlight)",
             border: "1px solid #FECACA",
             textAlign: "center",
           }}
         >
-          <p style={{ color: "#991B1B", marginBottom: "0.5rem" }}>
+          <p style={{ color: "var(--pf-error-strong)", marginBottom: "0.5rem" }}>
             Something went wrong loading this section.
           </p>
           <button
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
             style={{
               padding: "0.375rem 0.75rem",
               borderRadius: "0.375rem",
-              background: "#DC2626",
+              background: "var(--pf-error-strong)",
               color: "white",
               border: "none",
               cursor: "pointer",

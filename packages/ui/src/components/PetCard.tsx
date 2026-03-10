@@ -13,7 +13,7 @@ const PetCardFrame = styled(YStack, {
   backgroundColor: "$petforceSurface",
   borderRadius: "$4",
   padding: "$4",
-  shadowColor: "#000",
+  shadowColor: "$pfShadow",
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.05,
   shadowRadius: 8,

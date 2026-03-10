@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc.js";
 import { db, analyticsEvents } from "@petforce/db";
 import { trackEventSchema } from "@petforce/core";
 

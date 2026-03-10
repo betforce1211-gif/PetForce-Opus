@@ -1,10 +1,10 @@
 import { styled, Text, XStack } from "tamagui";
 
-const roleBadgeColors: Record<string, string> = {
-  owner: "#6366F1",
-  admin: "#3B82F6",
-  member: "#6B7280",
-  sitter: "#22C55E",
+const roleBadgeColors: Record<string, { bg: string; text: string }> = {
+  owner: { bg: "rgba(99, 102, 241, 0.15)", text: "$petforcePrimary" },
+  admin: { bg: "rgba(59, 130, 246, 0.15)", text: "#3B82F6" },
+  member: { bg: "rgba(107, 114, 128, 0.15)", text: "$petforceTextMuted" },
+  sitter: { bg: "rgba(34, 197, 94, 0.15)", text: "#22C55E" },
 };
 
 const MemberRowFrame = styled(XStack, {
@@ -36,7 +36,7 @@ export function MemberRow({
     .slice(0, 2)
     .toUpperCase();
 
-  const badgeColor = roleBadgeColors[role] ?? "#6B7280";
+  const badge = roleBadgeColors[role] ?? { bg: "rgba(107, 114, 128, 0.15)", text: "$petforceTextMuted" };
 
   return (
     <MemberRowFrame>
@@ -52,9 +52,9 @@ export function MemberRow({
         paddingHorizontal="$2"
         paddingVertical="$1"
         borderRadius="$2"
-        backgroundColor={badgeColor}
+        backgroundColor={badge.bg}
       >
-        <Text fontSize="$2" color="white" textTransform="capitalize">
+        <Text fontSize="$2" color={badge.text} fontWeight="600" textTransform="capitalize">
           {role}
         </Text>
       </XStack>

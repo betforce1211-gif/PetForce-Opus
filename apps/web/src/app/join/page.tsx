@@ -40,7 +40,7 @@ function AcceptInvite({ token }: { token: string }) {
       <div style={glassCard}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
           <div style={spinner} />
-          <p style={{ color: "#6B7280", margin: 0 }}>Looking up invitation...</p>
+          <p style={{ color: "var(--pf-text-muted)", margin: 0 }}>Looking up invitation...</p>
         </div>
       </div>
     );
@@ -49,10 +49,10 @@ function AcceptInvite({ token }: { token: string }) {
   if (inviteQuery.isError) {
     return (
       <div style={glassCard}>
-        <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "#1E1B4B" }}>
+        <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "var(--pf-text)" }}>
           Invitation Not Found
         </h2>
-        <p style={{ color: "#6B7280", margin: "0 0 1rem", fontSize: "0.875rem" }}>
+        <p style={{ color: "var(--pf-text-muted)", margin: "0 0 1rem", fontSize: "0.875rem" }}>
           {inviteQuery.error?.message ?? "This invitation link may be invalid or expired."}
         </p>
         <button onClick={() => router.push("/dashboard")} style={actionButton}>
@@ -67,10 +67,10 @@ function AcceptInvite({ token }: { token: string }) {
   if (invite.status !== "pending") {
     return (
       <div style={glassCard}>
-        <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "#1E1B4B" }}>
+        <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "var(--pf-text)" }}>
           Invitation {invite.status}
         </h2>
-        <p style={{ color: "#6B7280", margin: "0 0 1rem", fontSize: "0.875rem" }}>
+        <p style={{ color: "var(--pf-text-muted)", margin: "0 0 1rem", fontSize: "0.875rem" }}>
           This invitation has already been {invite.status}.
         </p>
         <button onClick={() => router.push("/dashboard")} style={actionButton}>
@@ -87,19 +87,19 @@ function AcceptInvite({ token }: { token: string }) {
       <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
         <span style={{ fontSize: "2.5rem" }}>🏠</span>
       </div>
-      <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "#1E1B4B", textAlign: "center" }}>
+      <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", color: "var(--pf-text)", textAlign: "center" }}>
         You&apos;re invited to join
       </h2>
-      <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.5rem", color: "#6366F1", textAlign: "center", fontWeight: 700 }}>
+      <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.5rem", color: "var(--pf-primary)", textAlign: "center", fontWeight: 700 }}>
         {invite.householdName}
       </h3>
-      <p style={{ color: "#6B7280", margin: "0 0 1.5rem", fontSize: "0.85rem", textAlign: "center" }}>
+      <p style={{ color: "var(--pf-text-muted)", margin: "0 0 1.5rem", fontSize: "0.85rem", textAlign: "center" }}>
         You&apos;ll join as a <strong style={{ textTransform: "capitalize" }}>{invite.role}</strong>
       </p>
 
       {isExpired ? (
         <div style={{ textAlign: "center" }}>
-          <p style={{ color: "#EF4444", fontWeight: 600, margin: "0 0 1rem" }}>
+          <p style={{ color: "var(--pf-error)", fontWeight: 600, margin: "0 0 1rem" }}>
             This invitation has expired.
           </p>
           <button onClick={() => router.push("/dashboard")} style={actionButton}>
@@ -109,7 +109,7 @@ function AcceptInvite({ token }: { token: string }) {
       ) : (
         <>
           {(acceptMutation.isError || declineMutation.isError) && (
-            <p style={{ color: "#EF4444", fontSize: "0.8rem", textAlign: "center", margin: "0 0 0.75rem" }}>
+            <p style={{ color: "var(--pf-error)", fontSize: "0.8rem", textAlign: "center", margin: "0 0 0.75rem" }}>
               {acceptMutation.error?.message ?? declineMutation.error?.message}
             </p>
           )}
@@ -152,10 +152,10 @@ function RequestAccess() {
       <div style={glassCard}>
         <div style={{ textAlign: "center" }}>
           <span style={{ fontSize: "2.5rem" }}>🎉</span>
-          <h2 style={{ margin: "0.5rem 0", fontSize: "1.25rem", color: "#1E1B4B" }}>
+          <h2 style={{ margin: "0.5rem 0", fontSize: "1.25rem", color: "var(--pf-text)" }}>
             Request Sent!
           </h2>
-          <p style={{ color: "#6B7280", margin: "0 0 1.25rem", fontSize: "0.875rem" }}>
+          <p style={{ color: "var(--pf-text-muted)", margin: "0 0 1.25rem", fontSize: "0.875rem" }}>
             The household owner will review your request. You&apos;ll be added once approved.
           </p>
           <button onClick={() => (window.location.href = "/dashboard")} style={actionButton}>
@@ -171,10 +171,10 @@ function RequestAccess() {
       <div style={{ textAlign: "center", marginBottom: "1rem" }}>
         <span style={{ fontSize: "2.5rem" }}>🔑</span>
       </div>
-      <h2 style={{ margin: "0 0 0.25rem", fontSize: "1.25rem", color: "#1E1B4B", textAlign: "center" }}>
+      <h2 style={{ margin: "0 0 0.25rem", fontSize: "1.25rem", color: "var(--pf-text)", textAlign: "center" }}>
         Join a Household
       </h2>
-      <p style={{ color: "#6B7280", margin: "0 0 1.25rem", fontSize: "0.85rem", textAlign: "center" }}>
+      <p style={{ color: "var(--pf-text-muted)", margin: "0 0 1.25rem", fontSize: "0.85rem", textAlign: "center" }}>
         Enter the household&apos;s join code to request access.
       </p>
 
@@ -211,7 +211,7 @@ function RequestAccess() {
         </div>
 
         {createRequest.isError && (
-          <p style={{ color: "#EF4444", fontSize: "0.8rem", margin: 0 }}>
+          <p style={{ color: "var(--pf-error)", fontSize: "0.8rem", margin: 0 }}>
             {createRequest.error?.message}
           </p>
         )}
@@ -244,7 +244,7 @@ function RequestAccess() {
 const pageShell: React.CSSProperties = {
   height: "calc(100vh - 73px)",
   overflow: "hidden",
-  background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 25%, #FDF2F8 50%, #FFF7ED 75%, #EEF2FF 100%)",
+  background: "var(--pf-page-gradient)",
   fontFamily: "system-ui, sans-serif",
 };
 
@@ -257,12 +257,12 @@ const centeredContainer: React.CSSProperties = {
 };
 
 const glassCard: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.7)",
+  background: "var(--pf-glass-bg)",
   backdropFilter: "blur(10px)",
   borderRadius: "0.875rem",
   padding: "2rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-  border: "1px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: "var(--pf-glass-shadow)",
+  border: "1px solid var(--pf-glass-border)",
   width: "100%",
   maxWidth: 420,
 };
@@ -271,7 +271,7 @@ const inputLabel: React.CSSProperties = {
   display: "block",
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   marginBottom: "0.25rem",
 };
 
@@ -279,7 +279,7 @@ const inputField: React.CSSProperties = {
   width: "100%",
   padding: "0.5rem 0.75rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.875rem",
   fontFamily: "inherit",
   outline: "none",
@@ -302,11 +302,11 @@ const actionButton: React.CSSProperties = {
 const outlineButton: React.CSSProperties = {
   padding: "0.5rem 1.25rem",
   borderRadius: "0.5rem",
-  background: "rgba(255, 255, 255, 0.7)",
-  color: "#6B7280",
+  background: "var(--pf-glass-bg)",
+  color: "var(--pf-text-muted)",
   fontSize: "0.85rem",
   fontWeight: 600,
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   cursor: "pointer",
   whiteSpace: "nowrap",
 };
@@ -314,8 +314,8 @@ const outlineButton: React.CSSProperties = {
 const spinner: React.CSSProperties = {
   width: 32,
   height: 32,
-  border: "3px solid rgba(99, 102, 241, 0.2)",
-  borderTopColor: "#6366F1",
+  border: "3px solid var(--pf-border-strong)",
+  borderTopColor: "var(--pf-primary)",
   borderRadius: "50%",
   animation: "spin 0.8s linear infinite",
 };

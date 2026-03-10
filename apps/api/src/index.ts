@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "./router";
-import { verifyClerkToken } from "./lib/clerk-auth";
-import uploadApp from "./routes/upload";
-import type { Context } from "./trpc";
+import { appRouter } from "./router.js";
+import { verifyClerkToken } from "./lib/clerk-auth.js";
+import uploadApp from "./routes/upload.js";
+import type { Context } from "./trpc.js";
 
 const app = new Hono();
 

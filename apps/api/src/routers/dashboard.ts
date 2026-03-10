@@ -1,10 +1,10 @@
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc";
+import { protectedProcedure, householdProcedure, router } from "../trpc.js";
 import { db, households, members, pets, activities, invitations, accessRequests } from "@petforce/db";
 import { onboardHouseholdSchema } from "@petforce/core";
 import type { HouseholdSummary } from "@petforce/core";
-import { generateJoinCode } from "../utils/join-code";
+import { generateJoinCode } from "../utils/join-code.js";
 
 /** Check if a user already owns (created) a household */
 async function hasCreatedHousehold(userId: string): Promise<boolean> {

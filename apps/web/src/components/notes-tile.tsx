@@ -16,7 +16,7 @@ export function NotesTileContent({ householdId, onManage }: NotesTileContentProp
   if (recentQuery.isLoading) {
     return (
       <div style={centered}>
-        <span style={{ color: "#A5A8BA", fontSize: "0.8rem" }}>Loading...</span>
+        <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export function NotesTileContent({ householdId, onManage }: NotesTileContentProp
   if (recentQuery.isError) {
     return (
       <div style={centered}>
-        <span style={{ color: "#EF4444", fontSize: "0.8rem" }}>Failed to load</span>
+        <span style={{ color: "var(--pf-error)", fontSize: "0.8rem" }}>Failed to load</span>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function NotesTileContent({ householdId, onManage }: NotesTileContentProp
       <>
         <div style={centered}>
           <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{"📝"}</span>
-          <p style={{ color: "#A5A8BA", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
+          <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
             No notes yet
           </p>
         </div>
@@ -90,7 +90,7 @@ const notesList: React.CSSProperties = {
 
 const noteRow: React.CSSProperties = {
   padding: "0.3rem 0.25rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.06)",
+  borderBottom: "1px solid var(--pf-highlight)",
 };
 
 const noteHeader: React.CSSProperties = {
@@ -103,7 +103,7 @@ const noteHeader: React.CSSProperties = {
 const noteTitle: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   flex: 1,
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -123,8 +123,8 @@ const petBadge: React.CSSProperties = {
 const householdBadge: React.CSSProperties = {
   padding: "0.1rem 0.45rem",
   borderRadius: "999px",
-  background: "rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.6rem",
   fontWeight: 600,
   flexShrink: 0,
@@ -132,7 +132,7 @@ const householdBadge: React.CSSProperties = {
 
 const noteSnippet: React.CSSProperties = {
   fontSize: "0.72rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   margin: 0,
   lineHeight: 1.3,
   overflow: "hidden",
@@ -143,8 +143,8 @@ const noteSnippet: React.CSSProperties = {
 const linkBtn: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -154,6 +154,6 @@ const linkBtn: React.CSSProperties = {
   border: "none",
   borderTopStyle: "solid",
   borderTopWidth: "1px",
-  borderTopColor: "rgba(99, 102, 241, 0.08)",
+  borderTopColor: "var(--pf-highlight)",
   cursor: "pointer",
 };
