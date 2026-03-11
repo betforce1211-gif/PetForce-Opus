@@ -72,7 +72,7 @@ jobs:
       - name: Start API server
         run: |
           cd apps/api
-          node dist/index.js > /tmp/api.log 2>&1 &
+          node --dns-result-order=ipv4first dist/index.js > /tmp/api.log 2>&1 &
           echo $! > /tmp/api.pid
           # Wait for API to be ready (up to 30s)
           for i in $(seq 1 30); do
