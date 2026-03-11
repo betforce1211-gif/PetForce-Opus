@@ -67,7 +67,7 @@ app.use("/trpc/*", async (c) => {
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
-const port = Number(process.env.API_PORT) || 3001;
+const port = Number(process.env.PORT) || Number(process.env.API_PORT) || 3001;
 
 console.info(`🐾 PetForce API running on http://localhost:${port}`);
 
