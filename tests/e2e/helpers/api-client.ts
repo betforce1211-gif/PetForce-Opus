@@ -227,26 +227,27 @@ export async function trpcQuery(
 
 /**
  * Reads the active household ID from the browser's localStorage.
- * Polls for up to 15s if not immediately available (React useEffect timing).
- * Falls back to querying the API directly via the page's Clerk token.
+ * If not found, waits for the dashboard to set it (React useEffect).
+ * As a last resort, extracts the Clerk token and queries the API directly
+ * using Node.js fetch (bypasses browser CSP/CORS entirely).
  */
 export async function getHouseholdId(page: Page): Promise<string> {
   // Try immediately
   let id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
   if (id) return id;
 
-  // Poll for React hydration + useEffect to set localStorage
-  for (let i = 0; i < 10; i++) {
-    await page.waitForTimeout(1500);
+  // Wait for React to hydrate and set localStorage (up to 10s)
+  for (let i = 0; i < 5; i++) {
+    await page.waitForTimeout(2000);
     id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
     if (id) return id;
   }
 
-  // Fallback: extract Clerk token and query API directly
-  console.log("getHouseholdId: localStorage empty after 15s, trying direct API query");
+  // Fallback: extract Clerk token and query API directly via Node.js fetch
+  console.log("getHouseholdId: localStorage empty after 10s, trying direct API query");
   try {
     const token = await page.evaluate(async () => {
-      const clerk = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string> } } }).Clerk;
+      const clerk = (window as any).Clerk;
       if (clerk?.session) return await clerk.session.getToken();
       return null;
     });
@@ -260,18 +261,28 @@ export async function getHouseholdId(page: Page): Promise<string> {
       if (Array.isArray(households) && households.length > 0) {
         id = households[0].id;
         await page.evaluate(
-          (hid: string) => localStorage.setItem("petforce_household_id", hid),
+          (hid) => localStorage.setItem("petforce_household_id", hid),
           id
         );
         console.log("getHouseholdId: set via direct API query:", id);
         return id;
       }
+      console.log("getHouseholdId: API returned", JSON.stringify(households));
+    } else {
+      console.log("getHouseholdId: Clerk token not available");
     }
-  } catch (err: unknown) {
-    console.log("getHouseholdId: API fallback failed:", (err as Error).message);
+  } catch (err: any) {
+    console.log("getHouseholdId: direct API query failed:", err.message);
   }
 
-  throw new Error("No petforce_household_id found in localStorage after 15s + API fallback");
+  // Last resort: reload and wait
+  await page.reload();
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await page.waitForTimeout(5000);
+  id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+  if (id) return id;
+
+  throw new Error("No petforce_household_id found in localStorage after retries + API fallback");
 }
 
 /**
