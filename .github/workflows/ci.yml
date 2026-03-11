@@ -37,6 +37,7 @@ jobs:
 
   e2e-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: lint-and-build
     # Only run when test secrets are configured
     if: ${{ vars.E2E_ENABLED == 'true' }}
