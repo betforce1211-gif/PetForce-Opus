@@ -189,11 +189,51 @@ export async function trpcQuery(
 
 /**
  * Reads the active household ID from the browser's localStorage.
+ * Polls for up to 15s if not immediately available (React useEffect timing).
+ * Falls back to querying the API directly via the page's Clerk token.
  */
 export async function getHouseholdId(page: Page): Promise<string> {
-  const id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
-  if (!id) throw new Error("No petforce_household_id found in localStorage");
-  return id;
+  // Try immediately
+  let id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+  if (id) return id;
+
+  // Poll for React hydration + useEffect to set localStorage
+  for (let i = 0; i < 10; i++) {
+    await page.waitForTimeout(1500);
+    id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+    if (id) return id;
+  }
+
+  // Fallback: extract Clerk token and query API directly
+  console.log("getHouseholdId: localStorage empty after 15s, trying direct API query");
+  try {
+    const token = await page.evaluate(async () => {
+      const clerk = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string> } } }).Clerk;
+      if (clerk?.session) return await clerk.session.getToken();
+      return null;
+    });
+    if (token) {
+      const res = await fetch(`${API_BASE}/trpc/household.list`, {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      const households =
+        body.result?.data?.json ?? body.result?.data ?? body.result;
+      if (Array.isArray(households) && households.length > 0) {
+        id = households[0].id;
+        await page.evaluate(
+          (hid: string) => localStorage.setItem("petforce_household_id", hid),
+          id
+        );
+        console.log("getHouseholdId: set via direct API query:", id);
+        return id;
+      }
+    }
+  } catch (err: unknown) {
+    console.log("getHouseholdId: API fallback failed:", (err as Error).message);
+  }
+
+  throw new Error("No petforce_household_id found in localStorage after 15s + API fallback");
 }
 
 /**
