@@ -69,6 +69,9 @@ jobs:
       - name: Install Playwright browsers
         run: cd tests && npx playwright install --with-deps chromium
 
+      - name: Disable IPv6 (Supabase resolves to IPv6 which GHA can't route)
+        run: sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+
       - name: Start API server
         run: |
           cd apps/api
