@@ -64,9 +64,11 @@ setup("sign in with Clerk test mode", async ({ page }) => {
           headers: { authorization: `Bearer ${token}` },
         });
         const body = await res.json();
-        console.log("API response status:", res.status, "body keys:", Object.keys(body));
+        // tRPC may return single object or batch array
+        const item = Array.isArray(body) ? body[0] : body;
+        console.log("API response status:", res.status, "body shape:", Array.isArray(body) ? "batch" : "single");
         const households =
-          body.result?.data?.json ?? body.result?.data ?? body.result;
+          item?.result?.data?.json ?? item?.result?.data ?? item?.result;
         console.log(
           "API household.list:",
           Array.isArray(households)

@@ -1,6 +1,6 @@
 import { Page, APIRequestContext } from "@playwright/test";
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // Module-level cache for the last successfully extracted auth token.
 // extractAuthToken() stores it here so getHouseholdId() can reuse it
@@ -187,8 +187,10 @@ export async function trpcMutation(
     },
     data: { json: input },
   });
-  const body = await response.json();
-  if (body.error) {
+  const raw = await response.json();
+  // tRPC may return single object or batch array
+  const body = Array.isArray(raw) ? raw[0] : raw;
+  if (body?.error) {
     const parsed =
       typeof body.error.json === "object"
         ? body.error.json
@@ -196,10 +198,10 @@ export async function trpcMutation(
     throw Object.assign(new Error(parsed.message ?? JSON.stringify(parsed)), {
       code: parsed.data?.code ?? parsed.code,
       httpStatus: parsed.data?.httpStatus ?? response.status(),
-      raw: body,
+      raw,
     });
   }
-  return body.result?.data?.json ?? body.result?.data ?? body.result;
+  return body?.result?.data?.json ?? body?.result?.data ?? body?.result;
 }
 
 /**
@@ -220,8 +222,10 @@ export async function trpcQuery(
       authorization: `Bearer ${token}`,
     },
   });
-  const body = await response.json();
-  if (body.error) {
+  const raw = await response.json();
+  // tRPC may return single object or batch array
+  const body = Array.isArray(raw) ? raw[0] : raw;
+  if (body?.error) {
     const parsed =
       typeof body.error.json === "object"
         ? body.error.json
@@ -229,10 +233,10 @@ export async function trpcQuery(
     throw Object.assign(new Error(parsed.message ?? JSON.stringify(parsed)), {
       code: parsed.data?.code ?? parsed.code,
       httpStatus: parsed.data?.httpStatus ?? response.status(),
-      raw: body,
+      raw,
     });
   }
-  return body.result?.data?.json ?? body.result?.data ?? body.result;
+  return body?.result?.data?.json ?? body?.result?.data ?? body?.result;
 }
 
 /**
@@ -278,30 +282,42 @@ export async function getHouseholdId(page: Page): Promise<string> {
   }
 
   if (token) {
-    try {
-      const res = await fetch(`${API_BASE}/trpc/household.list`, {
-        headers: { authorization: `Bearer ${token}` },
-      });
-      const body = await res.json();
-      const households =
-        body.result?.data?.json ?? body.result?.data ?? body.result;
-      diag.push(`api=${res.status}`);
-      if (Array.isArray(households)) {
-        diag.push(`households=${households.length}`);
-        if (households.length > 0) {
-          id = households[0].id;
-          await page.evaluate(
-            (hid) => localStorage.setItem("petforce_household_id", hid),
-            id
-          );
-          console.log("getHouseholdId: set via direct API query:", id);
-          return id;
+    // Retry up to 3 times with backoff (handles 429 rate limiting)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`${API_BASE}/trpc/household.list`, {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        diag.push(`api=${res.status}`);
+        if (res.status === 429) {
+          diag.push(`retry=${attempt}`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+          continue;
         }
-      } else {
-        diag.push(`body=${JSON.stringify(body).substring(0, 150)}`);
+        const body = await res.json();
+        // tRPC may return single object or batch array
+        const item = Array.isArray(body) ? body[0] : body;
+        const households =
+          item?.result?.data?.json ?? item?.result?.data ?? item?.result;
+        if (Array.isArray(households)) {
+          diag.push(`households=${households.length}`);
+          if (households.length > 0) {
+            id = households[0].id;
+            await page.evaluate(
+              (hid) => localStorage.setItem("petforce_household_id", hid),
+              id
+            );
+            console.log("getHouseholdId: set via direct API query:", id);
+            return id;
+          }
+        } else {
+          diag.push(`body=${JSON.stringify(body).substring(0, 150)}`);
+        }
+        break; // Don't retry on non-429 responses
+      } catch (err: any) {
+        diag.push(`fetchErr=${err.message}`);
+        break;
       }
-    } catch (err: any) {
-      diag.push(`fetchErr=${err.message}`);
     }
   }
 
