@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { useTrackEvent } from "@/lib/use-track-event";
@@ -526,6 +527,9 @@ function HouseholdSettingsTab({
         </div>
       </div>
 
+      {/* Leave Household */}
+      <LeaveHouseholdSection householdId={householdId} />
+
       {/* Danger Zone */}
       {isAdmin && (
         <div style={{ ...glassCard, borderColor: "rgba(239, 68, 68, 0.3)" }}>
@@ -548,6 +552,51 @@ function HouseholdSettingsTab({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Leave Household ──
+
+function LeaveHouseholdSection({ householdId }: { householdId: string }) {
+  const router = useRouter();
+  const { clearHousehold } = useHousehold();
+  const utils = trpc.useContext();
+
+  const leaveMutation = trpc.member.leave.useMutation({
+    onSuccess: () => {
+      clearHousehold();
+      utils.dashboard.myHouseholds.invalidate();
+      router.push("/dashboard");
+    },
+  });
+
+  return (
+    <div style={{ ...glassCard, borderColor: "rgba(245, 158, 11, 0.3)" }}>
+      <h2 style={{ ...sectionTitle, color: "var(--pf-text)" }}>Leave Household</h2>
+      <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.75rem" }}>
+        Remove yourself from this household. You can rejoin later with an invite or join code.
+      </p>
+      {leaveMutation.isError && (
+        <p style={{ fontSize: "0.8rem", color: "var(--pf-error)", margin: "0 0 0.5rem" }}>
+          {leaveMutation.error?.message}
+        </p>
+      )}
+      <button
+        onClick={() => {
+          if (confirm("Are you sure you want to leave this household?")) {
+            leaveMutation.mutate({ householdId });
+          }
+        }}
+        disabled={leaveMutation.isLoading}
+        style={{
+          ...actionButton,
+          background: "linear-gradient(135deg, #F59E0B, #FBBF24)",
+          color: "#1a1a1a",
+        }}
+      >
+        {leaveMutation.isLoading ? "Leaving..." : "Leave Household"}
+      </button>
     </div>
   );
 }

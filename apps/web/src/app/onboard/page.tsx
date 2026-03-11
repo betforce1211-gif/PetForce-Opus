@@ -14,7 +14,6 @@ export default function OnboardPage() {
   const trackEvent = useTrackEvent();
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery();
-  const canCreateQuery = trpc.dashboard.canCreateHousehold.useQuery();
 
   const [mode, setMode] = useState<Mode>("loading");
   const [didRoute, setDidRoute] = useState(false);
@@ -22,27 +21,19 @@ export default function OnboardPage() {
   // ── Scenario routing ──
   useEffect(() => {
     if (didRoute) return;
-    if (householdsQuery.isLoading || canCreateQuery.isLoading) return;
+    if (householdsQuery.isLoading) return;
 
     const hh = householdsQuery.data ?? [];
-    const canCreate = canCreateQuery.data?.canCreate ?? false;
 
-    if (hh.length > 0 && !canCreate) {
-      // Already an owner — redirect to dashboard
-      router.replace("/dashboard");
-      setDidRoute(true);
-      return;
-    }
-
-    if (hh.length > 0 && canCreate) {
-      // Joined households but hasn't created — go straight to create form
+    if (hh.length > 0) {
+      // Existing user adding another household — go straight to create form
       setMode("create");
     } else {
       // Brand new user — show welcome choose screen
       setMode("choose");
     }
     setDidRoute(true);
-  }, [householdsQuery.isLoading, canCreateQuery.isLoading, householdsQuery.data, canCreateQuery.data, didRoute, router]);
+  }, [householdsQuery.isLoading, householdsQuery.data, didRoute]);
 
   // ── Create state ──
   const [name, setName] = useState("");
@@ -66,15 +57,12 @@ export default function OnboardPage() {
           role: "owner" as const,
         },
       ]);
-      utils.dashboard.canCreateHousehold.setData(undefined, { canCreate: false });
       switchHousehold(household.id);
       router.push("/dashboard");
     },
-    onError(err) {
-      // Race condition: another tab created while this was open
-      if (err.data?.code === "FORBIDDEN") {
-        utils.dashboard.canCreateHousehold.invalidate();
-      }
+    onError() {
+      // Refresh household list on error
+      utils.dashboard.myHouseholds.invalidate();
     },
   });
 
@@ -179,7 +167,11 @@ export default function OnboardPage() {
     <main style={pageShell}>
       <div style={centeredContainer}>
         <div style={formCard}>
-          {!hasHouseholds && (
+          {hasHouseholds ? (
+            <button type="button" onClick={() => router.push("/dashboard")} style={backLink}>
+              ← Back to Dashboard
+            </button>
+          ) : (
             <button type="button" onClick={() => setMode("choose")} style={backLink}>
               ← Back
             </button>
@@ -187,8 +179,8 @@ export default function OnboardPage() {
 
           {mode === "create" ? (
             <>
-              <h1 style={formHeading}>Create your household</h1>
-              <p style={formSubtitle}>Set up your household to start managing your pets.</p>
+              <h1 style={formHeading}>{hasHouseholds ? "Create another household" : "Create your household"}</h1>
+              <p style={formSubtitle}>{hasHouseholds ? "Add a new household to your account." : "Set up your household to start managing your pets."}</p>
 
               <form onSubmit={handleCreate} style={formStack}>
                 <div style={fieldRow}>

@@ -171,4 +171,46 @@ export const memberRouter = router({
 
       return { success: true };
     }),
+
+  leave: householdProcedure.mutation(async ({ ctx }) => {
+    // Prevent the last owner from leaving
+    if (ctx.membership.role === "owner") {
+      const owners = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, ctx.householdId),
+            eq(members.role, "owner")
+          )
+        );
+      if (owners.length <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "You are the last owner. Transfer ownership to another member before leaving.",
+        });
+      }
+    }
+
+    await db
+      .delete(members)
+      .where(
+        and(
+          eq(members.id, ctx.membership.id),
+          eq(members.householdId, ctx.householdId)
+        )
+      );
+
+    await logActivity({
+      householdId: ctx.householdId,
+      action: "member.left",
+      subjectType: "member",
+      subjectId: ctx.membership.id,
+      subjectName: ctx.membership.displayName,
+      performedBy: ctx.membership.id,
+    });
+
+    return { success: true };
+  }),
 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router } from "../trpc.js";
 import { db, households, members } from "@petforce/db";
@@ -38,18 +38,6 @@ export const householdRouter = router({
   create: protectedProcedure
     .input(createHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
-      // Enforce one-household-creation limit
-      const ownerRows = await db
-        .select({ id: members.id })
-        .from(members)
-        .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
-      if (ownerRows.length > 0) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You have already created a household. You can join other households using a join code.",
-        });
-      }
-
       const [household] = await db
         .insert(households)
         .values({
