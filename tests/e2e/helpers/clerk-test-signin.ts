@@ -61,11 +61,15 @@ export async function clerkTestSignIn(
     await otpInput.waitFor({ state: "visible", timeout: 10_000 });
     await otpInput.click();
     await otpInput.pressSequentially(testCode, { delay: 150 });
-    await page.waitForTimeout(2000);
 
-    // OTP input usually auto-submits; click Continue as fallback
+    // Wait for OTP auto-submit or for navigation away from factor page
+    // The OTP code usually auto-submits; give it time before trying Continue
+    await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 10_000 }).catch(() => {});
+
+    // If still on factor page, click Continue (wait for it to be enabled)
     if (page.url().includes("factor")) {
-      const continueBtn = page.locator('button:has-text("Continue")');
+      const continueBtn = page.locator('button:has-text("Continue"):not([disabled])');
+      await continueBtn.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
       if (await continueBtn.isVisible().catch(() => false)) {
         await continueBtn.click();
       }

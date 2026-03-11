@@ -39,23 +39,8 @@ setup("sign in with Clerk test mode", async ({ page }) => {
   );
   console.log("Household ID from React:", householdId ?? "not set");
 
-  // Poll localStorage if not set yet (React useEffect may be slow on CI)
-  if (!householdId) {
-    for (let i = 0; i < 10; i++) {
-      await page.waitForTimeout(1000);
-      householdId = await page.evaluate(() =>
-        localStorage.getItem("petforce_household_id")
-      );
-      if (householdId) {
-        console.log("Household ID found after polling:", householdId);
-        break;
-      }
-    }
-  }
-
   // If not set, try direct API query using Clerk token + Node.js fetch
   if (!householdId) {
-    console.log("auth.setup: polling failed, querying API directly");
     let token: string | null = null;
     for (let attempt = 0; attempt < 10; attempt++) {
       try {

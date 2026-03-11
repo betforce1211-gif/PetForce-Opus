@@ -101,8 +101,18 @@ jobs:
           done
           curl -f http://localhost:3000 || { echo "Web failed to start:"; cat /tmp/web.log; exit 1; }
 
+      - name: Verify CSP header includes API URL
+        run: |
+          CSP=$(curl -sI http://localhost:3000 | grep -i content-security-policy || echo "NO CSP HEADER")
+          echo "CSP: $CSP"
+          echo "Looking for connect-src with API URL..."
+          echo "$CSP" | grep -o "connect-src[^;]*" || echo "connect-src not found"
+
       - name: Run E2E tests
-        run: cd tests && npx playwright test --config=playwright.config.ts
+        shell: bash
+        run: |
+          set -o pipefail
+          cd tests && npx playwright test --config=playwright.config.ts 2>&1 | tee /tmp/e2e-output.log
 
       - name: Upload test results
         if: always()
@@ -117,7 +127,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-logs
-          path: /tmp/api.log
+          path: |
+            /tmp/api.log
+            /tmp/web.log
+            /tmp/e2e-output.log
           retention-days: 7
           if-no-files-found: ignore
 
