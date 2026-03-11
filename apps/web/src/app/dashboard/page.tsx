@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { PetEditModal } from "@/components/pet-edit-modal";
@@ -25,6 +24,8 @@ import { GamificationModal } from "@/components/gamification-modal";
 import { TodayTasksSidebar } from "@/components/today-tasks-sidebar";
 import { useTrackEvent } from "@/lib/use-track-event";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { type TileId, TILE_MAP, TILE_DEFINITIONS } from "@/lib/dashboard-tiles";
+import { useDashboardLayout } from "@/lib/use-dashboard-layout";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,8 +40,47 @@ export default function DashboardPage() {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showReportingModal, setShowReportingModal] = useState(false);
   const [showGamificationModal, setShowGamificationModal] = useState(false);
+  const [isCustomizing, setIsCustomizing] = useState(false);
   const trackEvent = useTrackEvent();
   const trackedView = useRef(false);
+
+  const { layout, visibleTiles, moveTile, toggleTile, resetLayout } = useDashboardLayout();
+
+  // Drag-and-drop state
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = useCallback((index: number) => {
+    dragIndexRef.current = index;
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, toIndex: number) => {
+      e.preventDefault();
+      const fromIndex = dragIndexRef.current;
+      if (fromIndex !== null && fromIndex !== toIndex) {
+        // Map visible indices to layout.order indices
+        const fromTile = visibleTiles[fromIndex];
+        const toTile = visibleTiles[toIndex];
+        const fromOrderIdx = layout.order.indexOf(fromTile);
+        const toOrderIdx = layout.order.indexOf(toTile);
+        moveTile(fromOrderIdx, toOrderIdx);
+      }
+      dragIndexRef.current = null;
+      setDragOverIndex(null);
+    },
+    [visibleTiles, layout.order, moveTile]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+  }, []);
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery(undefined, {
     retry: 2,
@@ -163,194 +203,262 @@ export default function DashboardPage() {
     trackEvent("dashboard.viewed", { petCount: pets.length, memberCount: members.length });
   }
 
+  // Compute grid columns: 3 cols for 4+ tiles, 2 for 2-3, 1 for 1
+  const colCount = visibleTiles.length >= 4 ? 3 : visibleTiles.length >= 2 ? 2 : 1;
+  const rowCount = Math.ceil(visibleTiles.length / colCount);
+
+  // At this point householdId is guaranteed non-null (guarded above)
+  const activeHouseholdId = householdId as string;
+
+  /** Render the content for a given tile ID */
+  function renderTileContent(tileId: TileId) {
+    switch (tileId) {
+      case "stats":
+        return (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            {[
+              { icon: "\uD83D\uDC3E", label: "Pets", value: pets.length },
+              { icon: "\uD83D\uDCCB", label: "Activities", value: recentActivities.length },
+              { icon: "\uD83D\uDC65", label: "Members", value: members.length },
+              { icon: "\uD83C\uDFE0", label: "Household", value: household.name },
+            ].map((stat, i, arr) => (
+              <div key={stat.label} style={{ ...statRow, borderBottom: i < arr.length - 1 ? "1px solid var(--pf-border)" : "none" }}>
+                <span style={statIcon}>{stat.icon}</span>
+                <span style={statLabel}>{stat.label}</span>
+                <span style={statValue}>{stat.value}</span>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "pets":
+        return (
+          <>
+            {pets.length === 0 ? (
+              <div style={emptyState}>
+                <span style={emptyStateIcon}>{"\uD83D\uDC3E"}</span>
+                <p style={emptyStateTitle}>No pets yet</p>
+                <p style={emptyStateSubtext}>Add your first pet to get started</p>
+              </div>
+            ) : (
+              <div style={petGrid}>
+                {pets.map((pet) => (
+                  <div key={pet.id} onClick={() => !isCustomizing && setEditingPetId(pet.id)} style={{ cursor: isCustomizing ? "grab" : "pointer" }}>
+                    <div style={petCard}>
+                      {pet.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={pet.avatarUrl} alt={pet.name} style={petAvatarImg} />
+                      ) : (
+                        <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{speciesEmoji[pet.species] ?? "\uD83D\uDC3E"}</span>
+                      )}
+                      <strong style={petCardName}>{pet.name}</strong>
+                      {pet.breed && <span style={petCardBreed}>{pet.breed}</span>}
+                      <span style={speciesBadge}>{pet.species}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!isCustomizing && (
+              <button type="button" onClick={() => setShowAddPet(true)} style={{ ...tileLink, background: "none", border: "none", cursor: "pointer" }}>+ Add Pet</button>
+            )}
+          </>
+        );
+
+      case "health":
+        return (
+          <ErrorBoundary>
+            <HealthTileContent
+              householdId={activeHouseholdId}
+              onManage={() => !isCustomizing && setShowHealthModal(true)}
+            />
+          </ErrorBoundary>
+        );
+
+      case "gamification":
+        return (
+          <ErrorBoundary>
+            <GamificationTileContent
+              householdId={activeHouseholdId}
+              onManage={() => { if (!isCustomizing) { trackEvent("tile.opened", { tile: "gamification" }); setShowGamificationModal(true); }}}
+            />
+          </ErrorBoundary>
+        );
+
+      case "feeding":
+        return (
+          <ErrorBoundary>
+            <FeedingTileContent
+              householdId={activeHouseholdId}
+              onManage={() => !isCustomizing && setShowFeedingModal(true)}
+            />
+          </ErrorBoundary>
+        );
+
+      case "finance":
+        return (
+          <ErrorBoundary>
+            <FinanceTileContent
+              householdId={activeHouseholdId}
+              onManage={() => !isCustomizing && setShowFinanceModal(true)}
+            />
+          </ErrorBoundary>
+        );
+
+      case "reporting":
+        return (
+          <ErrorBoundary>
+            <ReportingTileContent
+              householdId={activeHouseholdId}
+              onManage={() => !isCustomizing && setShowReportingModal(true)}
+            />
+          </ErrorBoundary>
+        );
+
+      case "calendar":
+        return (
+          <ErrorBoundary>
+            <CalendarTileContent
+              householdId={activeHouseholdId}
+              onAddEvent={() => !isCustomizing && setShowAddEventModal(true)}
+            />
+          </ErrorBoundary>
+        );
+
+      case "notes":
+        return (
+          <ErrorBoundary>
+            <NotesTileContent
+              householdId={activeHouseholdId}
+              onManage={() => !isCustomizing && setShowNotesModal(true)}
+            />
+          </ErrorBoundary>
+        );
+    }
+  }
+
+  /** Handle tile click to open modal (non-customize mode only) */
+  function getTileClickHandler(tileId: TileId): (() => void) | undefined {
+    if (isCustomizing) return undefined;
+    const handlers: Partial<Record<TileId, () => void>> = {
+      health: () => { trackEvent("tile.opened", { tile: "health" }); setShowHealthModal(true); },
+      finance: () => { trackEvent("tile.opened", { tile: "finance" }); setShowFinanceModal(true); },
+      reporting: () => { trackEvent("tile.opened", { tile: "reporting" }); setShowReportingModal(true); },
+      calendar: () => { trackEvent("tile.opened", { tile: "calendar" }); setShowCalendarModal(true); },
+      notes: () => { trackEvent("tile.opened", { tile: "notes" }); setShowNotesModal(true); },
+    };
+    return handlers[tileId];
+  }
+
   // --- State 6: Dashboard loaded ---
   return (
     <main style={pageShell}>
       <div style={dashboardLayout}>
-        {/* ── Content: 3x3 grid + sidebar ── */}
+        {/* ── Customize toolbar ── */}
+        <div style={toolbarStyle}>
+          <button
+            type="button"
+            onClick={() => setIsCustomizing(!isCustomizing)}
+            style={isCustomizing ? customizeBtnActive : customizeBtn}
+          >
+            {isCustomizing ? "Done" : "Customize"}
+          </button>
+          {isCustomizing && (
+            <button type="button" onClick={resetLayout} style={resetBtn}>
+              Reset to default
+            </button>
+          )}
+        </div>
+
+        {/* ── Content: tile grid + sidebar ── */}
         <div style={contentArea}>
-          {/* ── Left: 3x3 tile grid ── */}
-          <div style={gridArea}>
-            {/* Row 1 */}
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.stats }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>📊</span>
-                Quick Stats
-              </h2>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                {[
-                  { icon: "🐾", label: "Pets", value: pets.length },
-                  { icon: "📋", label: "Activities", value: recentActivities.length },
-                  { icon: "👥", label: "Members", value: members.length },
-                  { icon: "🏠", label: "Household", value: household.name },
-                ].map((stat, i, arr) => (
-                  <div key={stat.label} style={{ ...statRow, borderBottom: i < arr.length - 1 ? "1px solid var(--pf-border)" : "none" }}>
-                    <span style={statIcon}>{stat.icon}</span>
-                    <span style={statLabel}>{stat.label}</span>
-                    <span style={statValue}>{stat.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* ── Left: dynamic tile grid ── */}
+          <div
+            style={{
+              ...gridArea,
+              gridTemplateColumns: `repeat(${colCount}, 1fr)`,
+              gridTemplateRows: `repeat(${rowCount}, 1fr)`,
+            }}
+          >
+            {visibleTiles.map((tileId, visIdx) => {
+              const def = TILE_MAP[tileId];
+              const clickHandler = getTileClickHandler(tileId);
+              const isDragOver = dragOverIndex === visIdx;
 
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.pets }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>🐾</span>
-                Pets
-              </h2>
-              {pets.length === 0 ? (
-                <div style={emptyState}>
-                  <span style={emptyStateIcon}>🐾</span>
-                  <p style={emptyStateTitle}>No pets yet</p>
-                  <p style={emptyStateSubtext}>Add your first pet to get started</p>
-                </div>
-              ) : (
-                <div style={petGrid}>
-                  {pets.map((pet) => (
-                    <div key={pet.id} onClick={() => setEditingPetId(pet.id)} style={{ cursor: "pointer" }}>
-                      <div style={petCard}>
-                        {pet.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={pet.avatarUrl} alt={pet.name} style={petAvatarImg} />
-                        ) : (
-                          <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{speciesEmoji[pet.species] ?? "🐾"}</span>
-                        )}
-                        <strong style={petCardName}>{pet.name}</strong>
-                        {pet.breed && <span style={petCardBreed}>{pet.breed}</span>}
-                        <span style={speciesBadge}>{pet.species}</span>
-                      </div>
+              return (
+                <div
+                  key={tileId}
+                  draggable={isCustomizing}
+                  onDragStart={() => handleDragStart(visIdx)}
+                  onDragOver={(e) => handleDragOver(e, visIdx)}
+                  onDrop={(e) => handleDrop(e, visIdx)}
+                  onDragEnd={handleDragEnd}
+                  onClick={clickHandler}
+                  style={{
+                    ...tileStyle,
+                    cursor: isCustomizing ? "grab" : clickHandler ? "pointer" : undefined,
+                    outline: isDragOver ? "2px solid var(--pf-primary)" : undefined,
+                    outlineOffset: isDragOver ? -2 : undefined,
+                    opacity: isDragOver ? 0.7 : 1,
+                  }}
+                >
+                  <div style={{ ...tileAccentBar, background: def.accent }} />
+                  {isCustomizing && (
+                    <div style={dragHandle} title="Drag to reorder">
+                      <span style={{ fontSize: "0.85rem", opacity: 0.5 }}>{"\u2630"}</span>
                     </div>
-                  ))}
+                  )}
+                  <h2 style={sectionTitle}>
+                    <span style={titleEmoji}>{def.emoji}</span>
+                    {def.label}
+                  </h2>
+                  {renderTileContent(tileId)}
                 </div>
-              )}
-              <button type="button" onClick={() => setShowAddPet(true)} style={{ ...tileLink, background: "none", border: "none", cursor: "pointer" }}>+ Add Pet</button>
-            </div>
-
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "health" }); setShowHealthModal(true); }}>
-              <div style={{ ...tileAccentBar, background: tileAccents.health }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>🏥</span>
-                Health
-              </h2>
-              <ErrorBoundary>
-                <HealthTileContent
-                  householdId={householdId}
-                  onManage={() => setShowHealthModal(true)}
-                />
-              </ErrorBoundary>
-            </div>
-
-            {/* Row 2 */}
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.gamification }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>{"\uD83C\uDFC6"}</span>
-                Gamification
-              </h2>
-              <ErrorBoundary>
-                <GamificationTileContent
-                  householdId={householdId}
-                  onManage={() => { trackEvent("tile.opened", { tile: "gamification" }); setShowGamificationModal(true); }}
-                />
-              </ErrorBoundary>
-            </div>
-
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.feeding }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>🍽️</span>
-                Feeding
-              </h2>
-              <ErrorBoundary>
-                <FeedingTileContent
-                  householdId={householdId}
-                  onManage={() => setShowFeedingModal(true)}
-                />
-              </ErrorBoundary>
-            </div>
-
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "finance" }); setShowFinanceModal(true); }}>
-              <div style={{ ...tileAccentBar, background: tileAccents.finance }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>{"\uD83D\uDCB0"}</span>
-                Finance
-              </h2>
-              <ErrorBoundary>
-                <FinanceTileContent
-                  householdId={householdId}
-                  onManage={() => setShowFinanceModal(true)}
-                />
-              </ErrorBoundary>
-            </div>
-
-            {/* Row 3 */}
-            {/* Quick Actions — preserved for future custom dashboard
-            <div style={tileStyle}>
-              <div style={{ ...tileAccentBar, background: tileAccents.actions }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>⚡</span>
-                Quick Actions
-              </h2>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.6rem", justifyContent: "center" }}>
-                <Link href="/dashboard/log-activity" style={quickActionBtn}>📋 Log Activity</Link>
-                <button type="button" onClick={() => setShowAddPet(true)} style={{ ...quickActionBtn, cursor: "pointer", fontFamily: "inherit" }}>🐾 Add Pet</button>
-                <Link href="/dashboard/settings" style={quickActionBtn}>⚙️ Settings</Link>
-              </div>
-            </div>
-            */}
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "reporting" }); setShowReportingModal(true); }}>
-              <div style={{ ...tileAccentBar, background: tileAccents.reporting }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>{"\uD83D\uDCCA"}</span>
-                Reporting
-              </h2>
-              <ErrorBoundary>
-                <ReportingTileContent
-                  householdId={householdId}
-                  onManage={() => setShowReportingModal(true)}
-                />
-              </ErrorBoundary>
-            </div>
-
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "calendar" }); setShowCalendarModal(true); }}>
-              <div style={{ ...tileAccentBar, background: tileAccents.calendar }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>📅</span>
-                Calendar
-              </h2>
-              <ErrorBoundary>
-                <CalendarTileContent householdId={householdId} onAddEvent={() => setShowAddEventModal(true)} />
-              </ErrorBoundary>
-            </div>
-
-            <div style={{ ...tileStyle, cursor: "pointer" }} onClick={() => { trackEvent("tile.opened", { tile: "notes" }); setShowNotesModal(true); }}>
-              <div style={{ ...tileAccentBar, background: tileAccents.notes }} />
-              <h2 style={sectionTitle}>
-                <span style={titleEmoji}>📝</span>
-                Notes
-              </h2>
-              <ErrorBoundary>
-                <NotesTileContent
-                  householdId={householdId}
-                  onManage={() => setShowNotesModal(true)}
-                />
-              </ErrorBoundary>
-            </div>
+              );
+            })}
           </div>
 
           {/* ── Right: Today's Tasks sidebar ── */}
           <ErrorBoundary>
             <TodayTasksSidebar
-              householdId={householdId}
+              householdId={activeHouseholdId}
               pets={pets}
               onOpenHealth={() => setShowHealthModal(true)}
               onOpenFeeding={() => setShowFeedingModal(true)}
             />
           </ErrorBoundary>
         </div>
+
+        {/* ── Customize panel: show/hide tiles ── */}
+        {isCustomizing && (
+          <div style={customizePanel}>
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--pf-text-muted)" }}>
+              Show/hide tiles:
+            </span>
+            {TILE_DEFINITIONS.map((def) => {
+              const isHidden = layout.hidden.includes(def.id);
+              return (
+                <button
+                  key={def.id}
+                  type="button"
+                  onClick={() => toggleTile(def.id)}
+                  style={{
+                    ...tilePillBtn,
+                    background: isHidden ? "var(--pf-surface)" : "var(--pf-primary)",
+                    color: isHidden ? "var(--pf-text-muted)" : "white",
+                    border: isHidden ? "1px solid var(--pf-border)" : "1px solid transparent",
+                    opacity: isHidden ? 0.6 : 1,
+                  }}
+                >
+                  {def.emoji} {def.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* ── Modals ── */}
       {editingPetId && (
         <PetEditModal petId={editingPetId} onClose={() => setEditingPetId(null)} />
       )}
@@ -359,49 +467,49 @@ export default function DashboardPage() {
       )}
       {showFeedingModal && (
         <FeedingManageModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowFeedingModal(false)}
         />
       )}
       {showCalendarModal && (
         <CalendarModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowCalendarModal(false)}
         />
       )}
       {showHealthModal && (
         <HealthModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowHealthModal(false)}
         />
       )}
       {showFinanceModal && (
         <FinanceModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowFinanceModal(false)}
         />
       )}
       {showNotesModal && (
         <NotesModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowNotesModal(false)}
         />
       )}
       {showReportingModal && (
         <ReportingModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowReportingModal(false)}
         />
       )}
       {showGamificationModal && (
         <GamificationModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           onClose={() => setShowGamificationModal(false)}
         />
       )}
       {showAddEventModal && (
         <CalendarAddEventModal
-          householdId={householdId}
+          householdId={activeHouseholdId}
           defaultDate={new Date().toISOString().split("T")[0]}
           onClose={() => setShowAddEventModal(false)}
           onCreated={() => setShowAddEventModal(false)}
@@ -414,23 +522,7 @@ export default function DashboardPage() {
 // ── Utility data ──
 
 const speciesEmoji: Record<string, string> = {
-  dog: "🐕", cat: "🐈", bird: "🐦", fish: "🐟", reptile: "🦎", other: "🐾",
-};
-
-// ── Tile accent color mapping (unique gradient per tile) ──
-
-const tileAccents = {
-  stats:     "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)",
-  pets:      "linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)",
-  health:    "linear-gradient(135deg, #EC4899 0%, #F472B6 100%)",
-  members:   "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
-  feeding:   "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
-  finance:   "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-  actions:   "linear-gradient(135deg, #6366F1 0%, #A78BFA 100%)",
-  reporting: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",
-  calendar:     "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-  notes:        "linear-gradient(135deg, #6366F1 0%, #EC4899 100%)",
-  gamification: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+  dog: "\uD83D\uDC15", cat: "\uD83D\uDC08", bird: "\uD83D\uDC26", fish: "\uD83D\uDC1F", reptile: "\uD83E\uDD8E", other: "\uD83D\uDC3E",
 };
 
 // ── Styles ──
@@ -468,8 +560,6 @@ const contentArea: React.CSSProperties = {
 const gridArea: React.CSSProperties = {
   flex: 1,
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gridTemplateRows: "repeat(3, 1fr)",
   gap: "0.625rem",
   minHeight: 0,
 };
@@ -485,7 +575,8 @@ const tileStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
-  transition: "box-shadow 0.25s ease, transform 0.25s ease",
+  transition: "box-shadow 0.25s ease, transform 0.25s ease, opacity 0.15s ease",
+  position: "relative",
 };
 
 const tileAccentBar: React.CSSProperties = {
@@ -554,21 +645,6 @@ const tileLink: React.CSSProperties = {
   textAlign: "center",
   letterSpacing: "0.01em",
   transition: "color 0.2s ease",
-};
-
-const quickActionBtn: React.CSSProperties = {
-  display: "block",
-  padding: "0.6rem 0.875rem",
-  borderRadius: "0.625rem",
-  background: "var(--pf-highlight)",
-  color: "var(--pf-text)",
-  fontSize: "0.825rem",
-  fontWeight: 500,
-  textDecoration: "none",
-  textAlign: "center",
-  border: "1px solid var(--pf-border-strong)",
-  transition: "all 0.2s ease",
-  letterSpacing: "0.01em",
 };
 
 const glassCard: React.CSSProperties = {
@@ -700,3 +776,71 @@ const spinner: React.CSSProperties = {
   animation: "spin 0.8s linear infinite",
 };
 
+// ── Customize mode styles ──
+
+const toolbarStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  marginBottom: "0.5rem",
+  justifyContent: "flex-end",
+};
+
+const customizeBtn: React.CSSProperties = {
+  padding: "0.35rem 0.75rem",
+  borderRadius: "0.5rem",
+  background: "var(--pf-surface)",
+  color: "var(--pf-text-muted)",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  border: "1px solid var(--pf-border)",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+};
+
+const customizeBtnActive: React.CSSProperties = {
+  ...customizeBtn,
+  background: "var(--pf-primary)",
+  color: "white",
+  border: "1px solid transparent",
+};
+
+const resetBtn: React.CSSProperties = {
+  padding: "0.35rem 0.75rem",
+  borderRadius: "0.5rem",
+  background: "none",
+  color: "var(--pf-text-muted)",
+  fontSize: "0.75rem",
+  fontWeight: 500,
+  border: "1px solid var(--pf-border)",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+};
+
+const dragHandle: React.CSSProperties = {
+  position: "absolute",
+  top: "0.5rem",
+  right: "0.5rem",
+  cursor: "grab",
+  padding: "0.15rem 0.3rem",
+  borderRadius: "0.25rem",
+  background: "var(--pf-highlight)",
+};
+
+const customizePanel: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.4rem",
+  padding: "0.5rem 0",
+  flexWrap: "wrap",
+};
+
+const tilePillBtn: React.CSSProperties = {
+  padding: "0.3rem 0.6rem",
+  borderRadius: "999px",
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  transition: "all 0.15s ease",
+  whiteSpace: "nowrap",
+};
