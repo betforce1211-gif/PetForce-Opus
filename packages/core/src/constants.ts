@@ -272,6 +272,14 @@ export const PET_AVATAR_ALLOWED_TYPES = [
   "image/webp",
 ] as const;
 
+export const PET_PHOTO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
+export const PET_PHOTO_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export const PET_PHOTO_MAX_PER_PET = 50;
+
 // --- Gamification ---
 
 export const GAMIFICATION_XP_VALUES: Record<string, number> = {

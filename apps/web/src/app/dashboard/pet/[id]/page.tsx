@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
+import { PetPhotoGallery } from "@/components/pet-photo-gallery";
 import { PET_AVATAR_MAX_SIZE, PET_AVATAR_ALLOWED_TYPES } from "@petforce/core";
 
 const speciesOptions = ["dog", "cat", "bird", "fish", "reptile", "other"] as const;
@@ -275,6 +276,9 @@ export default function PetDetailPage() {
             <textarea value={medicalNotes} onChange={(e) => setMedicalNotes(e.target.value)} placeholder="Allergies, medications, special needs..." rows={3} maxLength={5000} style={{ ...inputStyle, resize: "vertical" }} />
           </label>
         </fieldset>
+
+        {/* Photo Gallery */}
+        <PetPhotoGallery petId={petId} petName={petQuery.data.name} />
 
         {updatePet.error && (
           <p style={{ color: "var(--pf-error)", fontSize: "0.875rem" }}>{updatePet.error.message}</p>

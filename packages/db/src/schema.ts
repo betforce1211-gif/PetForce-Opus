@@ -69,6 +69,28 @@ export const pets = pgTable("pets", {
   householdIdx: index("pets_household_idx").on(table.householdId),
 }));
 
+// --- Pet Photos ---
+
+export const petPhotos = pgTable("pet_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  caption: text("caption"),
+  takenAt: timestamp("taken_at", { withTimezone: true }),
+  uploadedBy: uuid("uploaded_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  petIdx: index("pet_photos_pet_idx").on(table.petId),
+  householdIdx: index("pet_photos_household_idx").on(table.householdId),
+}));
+
 // --- Activities ---
 
 export const activities = pgTable("activities", {
