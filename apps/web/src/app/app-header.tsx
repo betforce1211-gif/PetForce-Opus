@@ -50,9 +50,6 @@ function HouseholdSwitcher() {
     retry: 2,
     retryDelay: 500,
   });
-  const canCreateQuery = trpc.dashboard.canCreateHousehold.useQuery(undefined, {
-    retry: 1,
-  });
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +67,7 @@ function HouseholdSwitcher() {
 
   if (!current) return null;
 
-  const showDropdown = allHouseholds.length > 1;
+  const showDropdown = allHouseholds.length >= 1;
 
   return (
     <div ref={ref} style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -122,14 +119,12 @@ function HouseholdSwitcher() {
             </button>
           ))}
           <div style={{ borderTop: "1px solid var(--pf-border)", margin: "0.35rem 0.5rem" }} />
-          {canCreateQuery.data?.canCreate && (
-            <button
-              onClick={() => { setOpen(false); router.push("/onboard"); }}
-              style={switcherItem}
-            >
-              <span style={{ color: "var(--pf-primary)", fontWeight: 600, fontSize: "0.85rem" }}>+ Create New Household</span>
-            </button>
-          )}
+          <button
+            onClick={() => { setOpen(false); router.push("/onboard"); }}
+            style={switcherItem}
+          >
+            <span style={{ color: "var(--pf-primary)", fontWeight: 600, fontSize: "0.85rem" }}>+ Create New Household</span>
+          </button>
           <button
             onClick={() => { setOpen(false); router.push("/join"); }}
             style={switcherItem}
