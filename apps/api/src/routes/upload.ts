@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, count as drizzleCount } from "drizzle-orm";
 import { db, pets, members, petPhotos } from "@petforce/db";
 import {
   PET_AVATAR_MAX_SIZE,
@@ -129,12 +129,12 @@ uploadApp.post("/pet-photo", async (c) => {
   }
 
   // --- Check photo limit ---
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
+  const [{ value: photoCount }] = await db
+    .select({ value: drizzleCount() })
     .from(petPhotos)
     .where(eq(petPhotos.petId, petId));
 
-  if (count >= PET_PHOTO_MAX_PER_PET) {
+  if (photoCount >= PET_PHOTO_MAX_PER_PET) {
     return c.json(
       { error: `Maximum ${PET_PHOTO_MAX_PER_PET} photos per pet reached` },
       400
