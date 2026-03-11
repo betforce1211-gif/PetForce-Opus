@@ -71,34 +71,10 @@ jobs:
 
       - name: Use Supabase pooler for IPv4 connectivity
         run: |
-          # GHA runners can't route IPv6, and Supabase direct DB hostnames
-          # (db.xxx.supabase.co) are IPv6-only. Transform to use the Supabase
-          # connection pooler (pooler.supabase.com) which supports IPv4.
-          if [ -n "$DATABASE_POOLER_URL" ]; then
-            echo "Using DATABASE_POOLER_URL override"
-            echo "DATABASE_URL=$DATABASE_POOLER_URL" >> "$GITHUB_ENV"
-          else
-            # Transform: postgresql://postgres:PASS@db.REF.supabase.co:5432/postgres
-            #        To: postgresql://postgres.REF:PASS@aws-0-REGION.pooler.supabase.com:6543/postgres
-            REGION="${SUPABASE_REGION:-us-east-1}"
-            REF=$(echo "$DATABASE_URL" | sed -n 's|.*@db\.\([^.]*\)\.supabase\.co.*|\1|p')
-            PASS=$(echo "$DATABASE_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
-            DBNAME=$(echo "$DATABASE_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
-            if [ -n "$REF" ] && [ -n "$PASS" ]; then
-              POOLER_URL="postgresql://postgres.${REF}:${PASS}@aws-0-${REGION}.pooler.supabase.com:6543/${DBNAME:-postgres}"
-              echo "Transformed DATABASE_URL to use pooler (region: $REGION, ref: ${REF:0:8}...)"
-              echo "DATABASE_URL=$POOLER_URL" >> "$GITHUB_ENV"
-              # Verify pooler resolves to IPv4
-              POOLER_HOST="aws-0-${REGION}.pooler.supabase.com"
-              IPV4=$(dig +short A "$POOLER_HOST" | head -1)
-              echo "Pooler IPv4: ${IPV4:-none}"
-            else
-              echo "::warning::Could not parse DATABASE_URL for pooler transform"
-            fi
-          fi
+          echo "Using DATABASE_POOLER_URL secret for IPv4-only pooler connection"
+          echo "DATABASE_URL=$DATABASE_POOLER_URL" >> "$GITHUB_ENV"
         env:
           DATABASE_POOLER_URL: ${{ secrets.DATABASE_POOLER_URL }}
-          SUPABASE_REGION: ${{ vars.SUPABASE_REGION }}
 
       - name: Start API server
         run: |

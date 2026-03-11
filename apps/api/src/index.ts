@@ -28,7 +28,7 @@ app.use(
 // --- In-memory rate limiter ---
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 100;
+const RATE_LIMIT_MAX = process.env.CI === "true" ? 10_000 : 100;
 
 // Clean up stale entries every 5 minutes
 setInterval(() => {
