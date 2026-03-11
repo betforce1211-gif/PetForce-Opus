@@ -69,8 +69,21 @@ jobs:
       - name: Install Playwright browsers
         run: cd tests && npx playwright install --with-deps chromium
 
-      - name: Disable IPv6 (Supabase resolves to IPv6 which GHA can't route)
-        run: sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+      - name: Force IPv4 for database (GHA runners can't route IPv6)
+        run: |
+          # Extract DB hostname from DATABASE_URL
+          DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
+          echo "DB hostname: $DB_HOST"
+          # Resolve IPv4 address
+          IPV4=$(dig +short A "$DB_HOST" | head -1)
+          IPV6=$(dig +short AAAA "$DB_HOST" | head -1)
+          echo "IPv4: ${IPV4:-none}, IPv6: ${IPV6:-none}"
+          if [ -n "$IPV4" ]; then
+            echo "$IPV4 $DB_HOST" | sudo tee -a /etc/hosts
+            echo "Pinned $DB_HOST to IPv4 ($IPV4) via /etc/hosts"
+          else
+            echo "::warning::No IPv4 address for $DB_HOST — DB connections may fail"
+          fi
 
       - name: Start API server
         run: |
