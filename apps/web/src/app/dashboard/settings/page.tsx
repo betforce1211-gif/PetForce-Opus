@@ -526,6 +526,9 @@ function HouseholdSettingsTab({
         </div>
       </div>
 
+      {/* Data Export */}
+      <DataExportCard householdId={householdId} householdName={household.name} isAdmin={isAdmin} />
+
       {/* Danger Zone */}
       {isAdmin && (
         <div style={{ ...glassCard, borderColor: "rgba(239, 68, 68, 0.3)" }}>
@@ -548,6 +551,98 @@ function HouseholdSettingsTab({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Data Export Card ──
+
+function DataExportCard({
+  householdId,
+  householdName,
+  isAdmin,
+}: {
+  householdId: string;
+  householdName: string;
+  isAdmin: boolean;
+}) {
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+  const trackEvent = useTrackEvent();
+
+  const exportQuery = trpc.export.household.useQuery(
+    { householdId },
+    { enabled: false } // only fetch on demand
+  );
+
+  const handleExport = async () => {
+    setExporting(true);
+    setExported(false);
+    try {
+      const result = await exportQuery.refetch();
+      if (result.data) {
+        const json = JSON.stringify(result.data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const slug = householdName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        a.href = url;
+        a.download = `petforce-${slug}-export-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setExported(true);
+        trackEvent("data.exported", { format: "json" });
+        setTimeout(() => setExported(false), 3000);
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  if (!isAdmin) {
+    return (
+      <div style={glassCard}>
+        <h2 style={sectionTitle}>Data Export</h2>
+        <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: 0 }}>
+          Only owners and admins can export household data.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={glassCard}>
+      <h2 style={sectionTitle}>Data Export</h2>
+      <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.75rem" }}>
+        Download all your household data including pets, health records, medications, feeding schedules, expenses, and activities as a JSON file.
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{
+            ...actionButton,
+            background: exporting
+              ? "linear-gradient(135deg, #6B7280, #9CA3AF)"
+              : "linear-gradient(135deg, #6366F1, #818CF8)",
+            cursor: exporting ? "wait" : "pointer",
+          }}
+        >
+          {exporting ? "Exporting..." : "Export as JSON"}
+        </button>
+        {exported && (
+          <span style={{ fontSize: "0.8rem", color: "var(--pf-success)", fontWeight: 600 }}>
+            Download started!
+          </span>
+        )}
+        {exportQuery.isError && (
+          <span style={{ fontSize: "0.8rem", color: "var(--pf-error)" }}>
+            Export failed. Please try again.
+          </span>
+        )}
+      </div>
     </div>
   );
 }
