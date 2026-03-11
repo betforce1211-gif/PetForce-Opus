@@ -8,6 +8,13 @@
       "when": 1770774568656,
       "tag": "0000_remarkable_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773191166182,
+      "tag": "0001_crazy_wendigo",
+      "breakpoints": true
     }
   ]
 }

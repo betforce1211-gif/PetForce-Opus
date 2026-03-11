@@ -65,3 +65,53 @@ export async function deletePetAvatar(path: string): Promise<void> {
     throw new Error(`Storage delete failed: ${error.message}`);
   }
 }
+
+// --- Pet Photos (Gallery) ---
+
+const PHOTO_BUCKET = "pet-photos";
+
+export async function uploadPetPhoto(
+  householdId: string,
+  petId: string,
+  photoId: string,
+  buffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const ext = extFromMime(mimeType);
+  const path = `${householdId}/${petId}/${photoId}.${ext}`;
+
+  const sb = getSupabase();
+
+  const { error } = await sb.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, buffer, {
+      contentType: mimeType,
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(`Photo upload failed: ${error.message}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+
+  return publicUrl;
+}
+
+export async function deletePetPhotoFile(
+  householdId: string,
+  petId: string,
+  photoId: string,
+  url: string
+): Promise<void> {
+  const urlPath = new URL(url).pathname;
+  const ext = urlPath.split(".").pop() || "jpg";
+  const path = `${householdId}/${petId}/${photoId}.${ext}`;
+
+  const { error } = await getSupabase().storage.from(PHOTO_BUCKET).remove([path]);
+  if (error) {
+    throw new Error(`Photo delete failed: ${error.message}`);
+  }
+}

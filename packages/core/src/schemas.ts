@@ -289,6 +289,14 @@ export const trackEventSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 });
 
+// --- Pet Photos ---
+
+export const updatePetPhotoSchema = z.object({
+  id: z.string().uuid(),
+  caption: z.string().max(500).nullable().optional(),
+  takenAt: z.coerce.date().nullable().optional(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({
