@@ -12,7 +12,15 @@ const app = new Hono();
 app.use(
   "/*",
   cors({
-    origin: process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3000",
+    origin: (origin) => {
+      const allowed = process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3000";
+      // Accept the configured origin plus 127.0.0.1 equivalent
+      const allowedOrigins = [
+        allowed,
+        allowed.replace("localhost", "127.0.0.1"),
+      ];
+      return allowedOrigins.includes(origin) ? origin : allowed;
+    },
     credentials: true,
   })
 );
