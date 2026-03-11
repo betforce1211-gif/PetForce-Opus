@@ -2,6 +2,11 @@ import { Page, APIRequestContext } from "@playwright/test";
 
 const API_BASE = "http://localhost:3001";
 
+// Module-level cache for the last successfully extracted auth token.
+// extractAuthToken() stores it here so getHouseholdId() can reuse it
+// without re-extracting from Clerk JS (which may not be available).
+let _cachedAuthToken: string | null = null;
+
 /**
  * Detects if Clerk redirected to its hosted sign-in page (session expired) and
  * re-authenticates by breaking the redirect loop and signing in fresh.
@@ -124,7 +129,10 @@ export async function extractAuthToken(page: Page): Promise<string> {
         }
         return null;
       });
-      if (token) return token;
+      if (token) {
+        _cachedAuthToken = token;
+        return token;
+      }
     } catch {
       // Clerk not loaded yet
     }
@@ -151,7 +159,9 @@ export async function extractAuthToken(page: Page): Promise<string> {
         if (auth?.startsWith("Bearer ")) {
           resolved = true;
           clearTimeout(timeout);
-          resolve(auth.replace("Bearer ", ""));
+          const t = auth.replace("Bearer ", "");
+          _cachedAuthToken = t;
+          resolve(t);
         }
       }
     });
@@ -243,36 +253,56 @@ export async function getHouseholdId(page: Page): Promise<string> {
     if (id) return id;
   }
 
-  // Fallback: extract Clerk token and query API directly via Node.js fetch
+  // Fallback: query API directly via Node.js fetch with cached or fresh token
   console.log("getHouseholdId: localStorage empty after 10s, trying direct API query");
+  const diag: string[] = [`url=${page.url()}`];
+
+  // Try to get a fresh token from Clerk, fall back to cached token from extractAuthToken
+  let token: string | null = null;
   try {
-    const token = await page.evaluate(async () => {
+    token = await page.evaluate(async () => {
       const clerk = (window as any).Clerk;
       if (clerk?.session) return await clerk.session.getToken();
       return null;
     });
-    if (token) {
+  } catch {
+    // Clerk JS not available
+  }
+  if (!token && _cachedAuthToken) {
+    token = _cachedAuthToken;
+    diag.push("token=cached");
+  } else if (token) {
+    diag.push("token=fresh");
+  } else {
+    diag.push("token=none");
+  }
+
+  if (token) {
+    try {
       const res = await fetch(`${API_BASE}/trpc/household.list`, {
         headers: { authorization: `Bearer ${token}` },
       });
       const body = await res.json();
       const households =
         body.result?.data?.json ?? body.result?.data ?? body.result;
-      if (Array.isArray(households) && households.length > 0) {
-        id = households[0].id;
-        await page.evaluate(
-          (hid) => localStorage.setItem("petforce_household_id", hid),
-          id
-        );
-        console.log("getHouseholdId: set via direct API query:", id);
-        return id;
+      diag.push(`api=${res.status}`);
+      if (Array.isArray(households)) {
+        diag.push(`households=${households.length}`);
+        if (households.length > 0) {
+          id = households[0].id;
+          await page.evaluate(
+            (hid) => localStorage.setItem("petforce_household_id", hid),
+            id
+          );
+          console.log("getHouseholdId: set via direct API query:", id);
+          return id;
+        }
+      } else {
+        diag.push(`body=${JSON.stringify(body).substring(0, 150)}`);
       }
-      console.log("getHouseholdId: API returned", JSON.stringify(households));
-    } else {
-      console.log("getHouseholdId: Clerk token not available");
+    } catch (err: any) {
+      diag.push(`fetchErr=${err.message}`);
     }
-  } catch (err: any) {
-    console.log("getHouseholdId: direct API query failed:", err.message);
   }
 
   // Last resort: reload and wait
@@ -282,7 +312,9 @@ export async function getHouseholdId(page: Page): Promise<string> {
   id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
   if (id) return id;
 
-  throw new Error("No petforce_household_id found in localStorage after retries + API fallback");
+  throw new Error(
+    `No petforce_household_id found. Diag: ${diag.join(", ")}`
+  );
 }
 
 /**
