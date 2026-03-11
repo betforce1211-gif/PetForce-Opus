@@ -71,7 +71,8 @@ jobs:
       - name: Start API server
         run: |
           cd apps/api
-          npx tsx dist/index.js &
+          node dist/index.js > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
           # Wait for API to be ready (up to 30s)
           for i in $(seq 1 30); do
             if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
@@ -80,12 +81,15 @@ jobs:
             fi
             sleep 1
           done
-          curl -f http://localhost:3001/health || exit 1
+          curl -f http://localhost:3001/health || { echo "API failed to start:"; cat /tmp/api.log; exit 1; }
+          # Verify API is reachable on 127.0.0.1 (what browsers resolve localhost to)
+          curl -f http://127.0.0.1:3001/health || { echo "API not reachable on 127.0.0.1"; cat /tmp/api.log; exit 1; }
 
       - name: Start web server
         run: |
           cd apps/web
-          npx next start &
+          npx next start > /tmp/web.log 2>&1 &
+          echo $! > /tmp/web.pid
           # Wait for web to be ready (up to 30s)
           for i in $(seq 1 30); do
             if curl -sf http://localhost:3000 > /dev/null 2>&1; then
@@ -94,7 +98,7 @@ jobs:
             fi
             sleep 1
           done
-          curl -f http://localhost:3000 || exit 1
+          curl -f http://localhost:3000 || { echo "Web failed to start:"; cat /tmp/web.log; exit 1; }
 
       - name: Run E2E tests
         run: cd tests && npx playwright test --config=playwright.config.ts
@@ -106,6 +110,15 @@ jobs:
           name: e2e-test-results
           path: tests/test-results/
           retention-days: 7
+
+      - name: Upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: /tmp/api.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Playwright report
         if: always()

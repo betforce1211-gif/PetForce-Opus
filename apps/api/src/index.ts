@@ -71,4 +71,4 @@ const port = Number(process.env.API_PORT) || 3001;
 
 console.info(`🐾 PetForce API running on http://localhost:${port}`);
 
-serve({ fetch: app.fetch, port });
+serve({ fetch: app.fetch, port, hostname: "0.0.0.0" });
