@@ -182,7 +182,11 @@ CREATE TABLE IF NOT EXISTS "pet_photos" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "activities" ADD COLUMN "completed_by" uuid;--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "activities" ADD COLUMN "completed_by" uuid;
+EXCEPTION
+ WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_household_id_households_id_fk" FOREIGN KEY ("household_id") REFERENCES "public"."households"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION

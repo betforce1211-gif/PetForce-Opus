@@ -56,7 +56,7 @@ const port = env.PORT ?? env.API_PORT ?? 3001;
 
 logger.info({ port }, "PetForce API running");
 
-const server = serve({ fetch: app.fetch, port });
+const server = serve({ fetch: app.fetch, port, hostname: "0.0.0.0" });
 
 // --- Graceful shutdown ---
 async function shutdown(signal: string) {

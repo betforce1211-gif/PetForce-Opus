@@ -14,6 +14,7 @@ export default function OnboardPage() {
   const trackEvent = useTrackEvent();
 
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery();
+  const canCreateQuery = trpc.dashboard.canCreateHousehold.useQuery();
 
   const [mode, setMode] = useState<Mode>("loading");
   const [didRoute, setDidRoute] = useState(false);
@@ -21,9 +22,17 @@ export default function OnboardPage() {
   // ── Scenario routing ──
   useEffect(() => {
     if (didRoute) return;
-    if (householdsQuery.isLoading) return;
+    if (householdsQuery.isLoading || canCreateQuery.isLoading) return;
 
     const hh = householdsQuery.data ?? [];
+    const canCreate = canCreateQuery.data?.canCreate ?? true;
+
+    if (hh.length > 0 && !canCreate) {
+      // Owner who already has a household — redirect to dashboard
+      router.push("/dashboard");
+      setDidRoute(true);
+      return;
+    }
 
     if (hh.length > 0) {
       // Existing user adding another household — go straight to create form
@@ -33,7 +42,7 @@ export default function OnboardPage() {
       setMode("choose");
     }
     setDidRoute(true);
-  }, [householdsQuery.isLoading, householdsQuery.data, didRoute]);
+  }, [householdsQuery.isLoading, householdsQuery.data, canCreateQuery.isLoading, canCreateQuery.data, didRoute, router]);
 
   // ── Create state ──
   const [name, setName] = useState("");
@@ -96,6 +105,8 @@ export default function OnboardPage() {
 
   // Whether to show back button (only if user has no households — came from welcome screen)
   const hasHouseholds = (householdsQuery.data ?? []).length > 0;
+  // Whether user already owns a household (affects heading text and back button)
+  const isOwner = (householdsQuery.data ?? []).some((h: { role: string }) => h.role === "owner");
 
   // ── Loading ──
   if (mode === "loading") {
@@ -167,11 +178,7 @@ export default function OnboardPage() {
     <main style={pageShell}>
       <div style={centeredContainer}>
         <div style={formCard}>
-          {hasHouseholds ? (
-            <button type="button" onClick={() => router.push("/dashboard")} style={backLink}>
-              ← Back to Dashboard
-            </button>
-          ) : (
+          {hasHouseholds ? null : (
             <button type="button" onClick={() => setMode("choose")} style={backLink}>
               ← Back
             </button>
@@ -179,8 +186,8 @@ export default function OnboardPage() {
 
           {mode === "create" ? (
             <>
-              <h1 style={formHeading}>{hasHouseholds ? "Create another household" : "Create your household"}</h1>
-              <p style={formSubtitle}>{hasHouseholds ? "Add a new household to your account." : "Set up your household to start managing your pets."}</p>
+              <h1 style={formHeading}>{isOwner ? "Create another household" : "Create your household"}</h1>
+              <p style={formSubtitle}>{isOwner ? "Add a new household to your account." : "Set up your household to start managing your pets."}</p>
 
               <form onSubmit={handleCreate} style={formStack}>
                 <div style={fieldRow}>

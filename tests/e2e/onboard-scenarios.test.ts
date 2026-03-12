@@ -127,20 +127,14 @@ test.describe("Onboard Page Scenarios (mocked)", () => {
       })
       .catch(() => {});
 
-    // Mocks may not intercept before real API responds (SSR uses real data).
-    // Valid outcomes: create form, welcome screen, dashboard redirect, or
-    // any onboard page content (mocks are client-side only, SSR bypasses them).
-    const url = page.url();
-    if (url.includes("/dashboard")) {
-      // Real API redirected owner to dashboard — expected
-      expect(url).toContain("/dashboard");
-    } else {
-      // On /onboard — verify page rendered (any content is acceptable)
-      const createForm = page.getByText("Create your household");
-      const welcomeScreen = page.getByText("Welcome to PetForce");
-      const anyContent = page.locator("body");
-      await expect(createForm.or(welcomeScreen).or(anyContent)).toBeVisible({ timeout: 10000 });
-    }
+    // Should skip to the create form directly
+    await expect(page.getByText("Create your household")).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.locator('input[placeholder="The Smith Family"]')
+    ).toBeVisible({ timeout: 5000 });
+
+    // Should NOT show a back button (user came from header, has households)
+    await expect(page.getByText("← Back")).not.toBeVisible();
   });
 
   test("owner user gets redirected to dashboard", async ({ page }) => {
@@ -164,9 +158,8 @@ test.describe("Onboard Page Scenarios (mocked)", () => {
 
     await safeGoto(page, "/onboard");
 
-    // Owner should be redirected to /dashboard, but client-side redirect
-    // depends on hydration timing and may not fire in CI.
-    await page.waitForURL(/\/dashboard/, { timeout: 15000 }).catch(() => {});
+    // Should redirect to /dashboard
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
 
     await page
       .screenshot({

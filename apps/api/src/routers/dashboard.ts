@@ -1,4 +1,5 @@
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, count } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router } from "../trpc.js";
 import { db, households, members, pets, activities, invitations, accessRequests } from "@petforce/db";
 import { onboardHouseholdSchema } from "@petforce/core";
@@ -106,13 +107,30 @@ export const dashboardRouter = router({
     };
   }),
 
-  canCreateHousehold: protectedProcedure.query(async () => {
-    return { canCreate: true };
+  canCreateHousehold: protectedProcedure.query(async ({ ctx }) => {
+    const owned = await db
+      .select({ cnt: count() })
+      .from(members)
+      .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
+    return { canCreate: (owned[0]?.cnt ?? 0) === 0 };
   }),
 
   onboard: protectedProcedure
     .input(onboardHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
+      // Enforce one-household-per-owner limit
+      const owned = await db
+        .select({ cnt: count() })
+        .from(members)
+        .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
+      if ((owned[0]?.cnt ?? 0) > 0) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "You have already created a household. You can join other households using a join code.",
+        });
+      }
+
       const [household] = await db
         .insert(households)
         .values({
