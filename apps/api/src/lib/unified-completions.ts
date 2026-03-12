@@ -19,33 +19,60 @@ export interface RawCompletion {
   skipped: boolean;
 }
 
+export interface CompletionCaches {
+  schedules?: { id: string; label: string; householdId: string }[];
+  medications?: { id: string; name: string; petId: string; householdId: string }[];
+}
+
 export async function fetchUnifiedCompletions(
   householdId: string,
   from: string,
-  to: string
+  to: string,
+  caches?: CompletionCaches
 ): Promise<RawCompletion[]> {
   const fromDate = new Date(`${from}T00:00:00Z`);
   const toDate = new Date(`${to}T23:59:59.999Z`);
 
   const results: RawCompletion[] = [];
 
-  // --- Feeding logs ---
-  const fLogs = await db
-    .select()
-    .from(feedingLogs)
-    .where(
-      and(
-        eq(feedingLogs.householdId, householdId),
-        gte(feedingLogs.completedAt, fromDate),
-        lte(feedingLogs.completedAt, toDate)
-      )
-    );
-
-  if (fLogs.length > 0) {
-    const schedules = await db
+  // Fetch all three log types in parallel
+  const [fLogs, mLogs, completedActivities] = await Promise.all([
+    db
       .select()
-      .from(feedingSchedules)
-      .where(eq(feedingSchedules.householdId, householdId));
+      .from(feedingLogs)
+      .where(
+        and(
+          eq(feedingLogs.householdId, householdId),
+          gte(feedingLogs.completedAt, fromDate),
+          lte(feedingLogs.completedAt, toDate)
+        )
+      ),
+    db
+      .select()
+      .from(medicationLogs)
+      .where(
+        and(
+          eq(medicationLogs.householdId, householdId),
+          gte(medicationLogs.loggedDate, from),
+          lte(medicationLogs.loggedDate, to)
+        )
+      ),
+    db
+      .select()
+      .from(activities)
+      .where(
+        and(
+          eq(activities.householdId, householdId),
+          gte(activities.completedAt, fromDate),
+          lte(activities.completedAt, toDate)
+        )
+      ),
+  ]);
+
+  // --- Feeding logs ---
+  if (fLogs.length > 0) {
+    const schedules = caches?.schedules ??
+      await db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, householdId));
     const scheduleMap = new Map(schedules.map((s) => [s.id, s.label]));
 
     for (const log of fLogs) {
@@ -62,22 +89,9 @@ export async function fetchUnifiedCompletions(
   }
 
   // --- Medication logs ---
-  const mLogs = await db
-    .select()
-    .from(medicationLogs)
-    .where(
-      and(
-        eq(medicationLogs.householdId, householdId),
-        gte(medicationLogs.loggedDate, from),
-        lte(medicationLogs.loggedDate, to)
-      )
-    );
-
   if (mLogs.length > 0) {
-    const meds = await db
-      .select()
-      .from(medications)
-      .where(eq(medications.householdId, householdId));
+    const meds = caches?.medications ??
+      await db.select().from(medications).where(eq(medications.householdId, householdId));
     const medMap = new Map(meds.map((m) => [m.id, { name: m.name, petId: m.petId }]));
 
     for (const log of mLogs) {
@@ -95,17 +109,6 @@ export async function fetchUnifiedCompletions(
   }
 
   // --- Activities (completed ones) ---
-  const completedActivities = await db
-    .select()
-    .from(activities)
-    .where(
-      and(
-        eq(activities.householdId, householdId),
-        gte(activities.completedAt, fromDate),
-        lte(activities.completedAt, toDate)
-      )
-    );
-
   for (const act of completedActivities) {
     if (act.completedAt && act.completedBy) {
       results.push({

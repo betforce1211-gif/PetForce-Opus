@@ -33,7 +33,7 @@ export const calendarRouter = router({
       const lastDay = monthEnd.getDate();
       const monthEndStr = `${month}-${String(lastDay).padStart(2, "0")}`;
 
-      const [monthActivities, schedules, logs, householdPets, householdMembers] =
+      const [monthActivities, schedules, logs, householdPets, householdMembers, monthHealthRecords] =
         await Promise.all([
           db
             .select()
@@ -66,6 +66,16 @@ export const calendarRouter = router({
             ),
           db.select().from(pets).where(eq(pets.householdId, householdId)),
           db.select().from(members).where(eq(members.householdId, householdId)),
+          db
+            .select()
+            .from(healthRecords)
+            .where(
+              and(
+                eq(healthRecords.householdId, householdId),
+                gte(healthRecords.date, monthStart),
+                lte(healthRecords.date, monthEnd)
+              )
+            ),
         ]);
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
@@ -125,17 +135,6 @@ export const calendarRouter = router({
       }
 
       // Add health records (vet visits, vaccinations, checkups, procedures)
-      const monthHealthRecords = await db
-        .select()
-        .from(healthRecords)
-        .where(
-          and(
-            eq(healthRecords.householdId, householdId),
-            gte(healthRecords.date, monthStart),
-            lte(healthRecords.date, monthEnd)
-          )
-        );
-
       for (const rec of monthHealthRecords) {
         const dateKey = rec.date.toISOString().split("T")[0];
         const label =

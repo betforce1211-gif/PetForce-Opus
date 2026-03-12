@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -96,18 +96,31 @@ export const financeRouter = router({
       const prevStart = new Date(year, month - 2, 1);
       const prevEnd = new Date(year, month - 1, 1);
 
-      // Fetch pets for name mapping
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, ctx.householdId));
+      // Fetch pets, expenses, and health records in parallel with date filtering
+      const [householdPets, allExpenses, allHealth] = await Promise.all([
+        db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+        db
+          .select()
+          .from(expenses)
+          .where(
+            and(
+              eq(expenses.householdId, ctx.householdId),
+              gte(expenses.date, prevStart),
+              lte(expenses.date, currentEnd)
+            )
+          ),
+        db
+          .select()
+          .from(healthRecords)
+          .where(
+            and(
+              eq(healthRecords.householdId, ctx.householdId),
+              gte(healthRecords.date, prevStart),
+              lte(healthRecords.date, currentEnd)
+            )
+          ),
+      ]);
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
-
-      // Fetch expenses for current + previous month
-      const allExpenses = await db
-        .select()
-        .from(expenses)
-        .where(eq(expenses.householdId, ctx.householdId));
 
       const currentExpenses = allExpenses.filter(
         (e) => new Date(e.date) >= currentStart && new Date(e.date) < currentEnd
@@ -115,12 +128,6 @@ export const financeRouter = router({
       const prevExpenses = allExpenses.filter(
         (e) => new Date(e.date) >= prevStart && new Date(e.date) < prevEnd
       );
-
-      // Fetch health records with cost for current + previous month
-      const allHealth = await db
-        .select()
-        .from(healthRecords)
-        .where(eq(healthRecords.householdId, ctx.householdId));
 
       const currentHealth = allHealth.filter(
         (h) => h.cost != null && h.cost > 0 && new Date(h.date) >= currentStart && new Date(h.date) < currentEnd

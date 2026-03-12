@@ -17,6 +17,8 @@
     "@petforce/db": "workspace:*",
     "@supabase/supabase-js": "^2.95.3",
     "@trpc/server": "^10.45.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.4",
     "drizzle-orm": "^0.33.0",
     "hono": "^4.5.0",
     "superjson": "^2.2.1",
