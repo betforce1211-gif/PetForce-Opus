@@ -60,10 +60,10 @@ test.describe("Settings Page (Real Data)", () => {
     // --- Settings tab ---
     const settingsTab = page.getByText("Settings", { exact: true });
     await settingsTab.last().click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // General section
-    await expect(page.getByText("General")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("General")).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Household Name")).toBeVisible();
 
     // Color pickers

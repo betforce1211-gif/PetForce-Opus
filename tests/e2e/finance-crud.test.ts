@@ -57,7 +57,7 @@ test.describe("Finance CRUD & Summary", () => {
         petId: testPetId,
         category: "food",
         description: `E2E Kibble ${Date.now()}`,
-        amount: "45.99",
+        amount: 45.99,
         date: today,
         notes: "Premium kibble",
       }
@@ -75,7 +75,7 @@ test.describe("Finance CRUD & Summary", () => {
       {
         householdId,
         id: expense.id,
-        amount: "55.99",
+        amount: 55.99,
         notes: "Price went up",
       }
     );
@@ -150,7 +150,7 @@ test.describe("Finance CRUD & Summary", () => {
           petId: testPetId,
           category,
           description: `E2E ${category} test`,
-          amount: "19.99",
+          amount: 19.99,
           date: today,
         }
       );

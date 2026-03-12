@@ -48,7 +48,7 @@ test.describe("Pet Update & Delete", () => {
       id: pet.id,
       name: "Updated Pet Name",
       breed: "Labrador",
-      weight: "30",
+      weight: 30,
     });
     expect(updated.name).toBe("Updated Pet Name");
     expect(updated.breed).toBe("Labrador");

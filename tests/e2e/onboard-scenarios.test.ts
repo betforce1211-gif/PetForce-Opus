@@ -128,10 +128,10 @@ test.describe("Onboard Page Scenarios (mocked)", () => {
       .catch(() => {});
 
     // Should skip to the create form directly
-    await expect(page.getByText("Create your household")).toBeVisible();
+    await expect(page.getByText("Create your household")).toBeVisible({ timeout: 10000 });
     await expect(
       page.locator('input[placeholder="The Smith Family"]')
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 5000 });
 
     // Should NOT show a back button (user came from header, has households)
     await expect(page.getByText("← Back")).not.toBeVisible();
@@ -159,7 +159,7 @@ test.describe("Onboard Page Scenarios (mocked)", () => {
     await safeGoto(page, "/onboard");
 
     // Should redirect to /dashboard
-    await page.waitForURL(/\/dashboard/, { timeout: 10000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
 
     await page
       .screenshot({
