@@ -60,10 +60,10 @@ test.describe("Settings Page (Real Data)", () => {
     // --- Settings tab ---
     const settingsTab = page.getByText("Settings", { exact: true });
     await settingsTab.last().click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // General section
-    await expect(page.getByText("General")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("General")).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Household Name")).toBeVisible();
 
     // Color pickers
@@ -71,7 +71,7 @@ test.describe("Settings Page (Real Data)", () => {
     await expect(page.getByText("Secondary Color")).toBeVisible();
 
     // Join Code section
-    await expect(page.getByText("Join Code")).toBeVisible();
+    await expect(page.getByText("Join Code").first()).toBeVisible();
     const codeOrNotSet = page
       .locator("text=/[A-HJ-NP-Z]{3}-\\d{4}/")
       .or(page.getByText("Not set"));

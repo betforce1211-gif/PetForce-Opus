@@ -4,6 +4,12 @@
 
 set -euo pipefail
 
+# Skip in CI — env vars come from GitHub Actions secrets
+if [ "${CI:-}" = "true" ]; then
+  echo "CI detected, skipping env symlink setup"
+  exit 0
+fi
+
 CONFIG_DIR="$HOME/.config/petforce"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 

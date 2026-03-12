@@ -35,7 +35,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.clerk.com https://*.supabase.co",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.supabase.co",
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"} https://*.clerk.accounts.dev https://*.clerk.com https://*.supabase.co`,
               "frame-src 'self' https://*.clerk.accounts.dev",
             ].join("; "),
           },

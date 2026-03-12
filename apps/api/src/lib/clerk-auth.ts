@@ -19,7 +19,8 @@ export async function verifyClerkToken(
         : { secretKey: env.CLERK_SECRET_KEY! }),
     });
     return payload.sub;
-  } catch {
+  } catch (err) {
+    console.error("verifyClerkToken failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

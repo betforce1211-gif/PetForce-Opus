@@ -1,5 +1,7 @@
 import { Page } from "@playwright/test";
 
+const isCI = !!process.env.CI;
+
 /**
  * Signs in via the Clerk UI using Clerk's Test Mode.
  *
@@ -27,17 +29,17 @@ export async function clerkTestSignIn(
 
   // Navigate to sign-in
   await page.goto("/sign-in");
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForLoadState("networkidle");
 
   // Step 1: Enter email
   const emailInput = page.locator('input[name="identifier"]');
-  await emailInput.waitFor({ state: "visible", timeout: 10_000 });
+  await emailInput.waitFor({ state: "visible", timeout: 15_000 });
   await emailInput.fill(email);
   await page.click('button:has-text("Continue")');
 
   // Step 2: Enter password
   const passwordInput = page.locator('input[type="password"]');
-  await passwordInput.waitFor({ state: "visible", timeout: 10_000 });
+  await passwordInput.waitFor({ state: "visible", timeout: 15_000 });
   await passwordInput.fill(password);
   await page.click('button:has-text("Continue")');
 
@@ -56,22 +58,26 @@ export async function clerkTestSignIn(
 
   if (otpVisible || page.url().includes("factor")) {
     console.log("OTP verification detected — entering test code", testCode);
-    await otpInput.waitFor({ state: "visible", timeout: 5000 });
+    await otpInput.waitFor({ state: "visible", timeout: 10_000 });
     await otpInput.click();
     await otpInput.pressSequentially(testCode, { delay: 150 });
-    await page.waitForTimeout(1500);
 
-    // OTP input usually auto-submits; click Continue as fallback
+    // Wait for OTP auto-submit or for navigation away from factor page
+    // The OTP code usually auto-submits; give it time before trying Continue
+    await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 10_000 }).catch(() => {});
+
+    // If still on factor page, click Continue (wait for it to be enabled)
     if (page.url().includes("factor")) {
-      const continueBtn = page.locator('button:has-text("Continue")');
+      const continueBtn = page.locator('button:has-text("Continue"):not([disabled])');
+      await continueBtn.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
       if (await continueBtn.isVisible().catch(() => false)) {
         await continueBtn.click();
       }
     }
   }
 
-  // Wait for redirect to dashboard or onboard (longer timeout for CI)
+  // Wait for redirect to dashboard or onboard
   console.log("Waiting for redirect, current URL:", page.url());
-  await page.waitForURL(/\/(dashboard|onboard)/, { timeout: 30_000 });
+  await page.waitForURL(/\/(dashboard|onboard)/, { timeout: isCI ? 30_000 : 15_000 });
   await page.waitForLoadState("domcontentloaded");
 }

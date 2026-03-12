@@ -62,7 +62,7 @@ test.describe("Health Advanced Operations", () => {
         vetOrClinic: "Dr. E2E Vet",
         reason: "Annual checkup",
         notes: "All good",
-        cost: "150.00",
+        cost: 150.00,
       }
     );
 
@@ -79,7 +79,7 @@ test.describe("Health Advanced Operations", () => {
         householdId,
         id: record.id,
         reason: "Updated reason",
-        cost: "200.00",
+        cost: 200.00,
       }
     );
 

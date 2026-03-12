@@ -119,10 +119,10 @@ test.describe("Reporting System", () => {
 
     expect(result).toBeDefined();
     expect(typeof result.totalCompleted).toBe("number");
-    expect(typeof result.skipped).toBe("number");
+    expect(typeof result.totalSkipped).toBe("number");
     expect(typeof result.completionRate).toBe("number");
     expect(result.completionRate).toBeGreaterThanOrEqual(0);
-    expect(result.completionRate).toBeLessThanOrEqual(100);
+    expect(result.completionRate).toBeLessThanOrEqual(1);
     expect(Array.isArray(result.contributions)).toBe(true);
   });
 });
