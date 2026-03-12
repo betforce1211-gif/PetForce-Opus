@@ -22,11 +22,12 @@ export const financeRouter = router({
       const rows = await db
         .select()
         .from(expenses)
-        .where(eq(expenses.householdId, ctx.householdId));
+        .where(
+          input.petId
+            ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
+            : eq(expenses.householdId, ctx.householdId)
+        );
 
-      if (input.petId) {
-        return rows.filter((r) => r.petId === input.petId);
-      }
       return rows;
     }),
 

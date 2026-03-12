@@ -366,26 +366,28 @@ export const calendarRouter = router({
       }
 
       // Add upcoming pet holidays (next 7 days)
+      const holidayMap = new Map(
+        PET_HOLIDAYS.map((h) => [`${h.month}-${h.day}`, h])
+      );
       for (let d = 0; d <= 7; d++) {
         const futureDate = new Date(now.getTime() + d * 86400000);
         const fMonth = futureDate.getMonth() + 1;
         const fDay = futureDate.getDate();
-        const dateStr = `${futureDate.getFullYear()}-${String(fMonth).padStart(2, "0")}-${String(fDay).padStart(2, "0")}`;
-        for (const holiday of PET_HOLIDAYS) {
-          if (holiday.month === fMonth && holiday.day === fDay) {
-            events.push({
-              id: `holiday-${holiday.month}-${holiday.day}`,
-              kind: "holiday",
-              title: holiday.name,
-              petId: "",
-              petName: "",
-              memberId: null,
-              memberName: null,
-              type: "holiday",
-              scheduledAt: `${dateStr}T00:00:00`,
-              completedAt: null,
-            });
-          }
+        const holiday = holidayMap.get(`${fMonth}-${fDay}`);
+        if (holiday) {
+          const dateStr = `${futureDate.getFullYear()}-${String(fMonth).padStart(2, "0")}-${String(fDay).padStart(2, "0")}`;
+          events.push({
+            id: `holiday-${holiday.month}-${holiday.day}`,
+            kind: "holiday",
+            title: holiday.name,
+            petId: "",
+            petName: "",
+            memberId: null,
+            memberName: null,
+            type: "holiday",
+            scheduledAt: `${dateStr}T00:00:00`,
+            completedAt: null,
+          });
         }
       }
 
