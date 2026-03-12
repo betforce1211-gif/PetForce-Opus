@@ -10,6 +10,7 @@ import {
 } from "@petforce/core";
 import { verifyClerkToken } from "../lib/clerk-auth.js";
 import { uploadPetAvatar, uploadPetPhoto } from "../lib/supabase-storage.js";
+import { validateFileMagicBytes } from "../lib/validate-file-type.js";
 
 const uploadApp = new Hono();
 
@@ -63,9 +64,18 @@ uploadApp.post("/pet-avatar", async (c) => {
     return c.json({ error: "You are not a member of this pet's household" }, 403);
   }
 
-  // --- Upload to Supabase Storage ---
+  // --- Validate file magic bytes ---
   const buffer = Buffer.from(await file.arrayBuffer());
-  const avatarUrl = await uploadPetAvatar(pet.householdId, petId, buffer, file.type);
+  const detectedMime = await validateFileMagicBytes(buffer, PET_AVATAR_ALLOWED_TYPES);
+  if (!detectedMime) {
+    return c.json(
+      { error: `File content does not match an allowed image type. Allowed: ${PET_AVATAR_ALLOWED_TYPES.join(", ")}` },
+      400
+    );
+  }
+
+  // --- Upload to Supabase Storage ---
+  const avatarUrl = await uploadPetAvatar(pet.householdId, petId, buffer, detectedMime);
 
   // --- Update pet record ---
   await db
@@ -157,7 +167,16 @@ uploadApp.post("/pet-photo", async (c) => {
   // --- Upload to Supabase Storage ---
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadPetPhoto(pet.householdId, petId, photo.id, buffer, file.type);
+    const detectedMime = await validateFileMagicBytes(buffer, PET_PHOTO_ALLOWED_TYPES);
+    if (!detectedMime) {
+      // Clean up the DB record since we're rejecting the file
+      await db.delete(petPhotos).where(eq(petPhotos.id, photo.id));
+      return c.json(
+        { error: `File content does not match an allowed image type. Allowed: ${PET_PHOTO_ALLOWED_TYPES.join(", ")}` },
+        400
+      );
+    }
+    const url = await uploadPetPhoto(pet.householdId, petId, photo.id, buffer, detectedMime);
 
     // Update record with real URL
     const [updated] = await db
