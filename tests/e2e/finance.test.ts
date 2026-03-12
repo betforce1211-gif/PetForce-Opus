@@ -118,8 +118,8 @@ test.describe("Finance Module", () => {
     // Select category (second select)
     await page.locator("select").nth(1).selectOption("food");
 
-    // Click Kibble suggestion chip
-    await page.getByText("Kibble").click();
+    // Click Kibble suggestion chip (use first() — text may appear in expense list too)
+    await page.getByText("Kibble").first().click();
 
     // Fill amount
     await page.locator('input[placeholder="0.00"]').fill("29.99");

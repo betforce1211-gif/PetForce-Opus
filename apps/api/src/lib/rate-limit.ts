@@ -63,7 +63,10 @@ function createRedisLimiter(): RateLimiterFn {
 }
 
 function createInMemoryLimiter(): RateLimiterFn {
-  const limits = { auth: 20, upload: 30, standard: 100 };
+  const isCI = process.env.CI === "true";
+  const limits = isCI
+    ? { auth: 10_000, upload: 10_000, standard: 10_000 }
+    : { auth: 20, upload: 30, standard: 100 };
   const windowMs = 15 * 60 * 1000;
   const store = new Map<string, { count: number; resetAt: number }>();
 
