@@ -340,22 +340,24 @@ export const healthRouter = router({
   summary: householdProcedure.query(async ({ ctx }) => {
     const now = new Date();
 
-    // Active medications count
-    const allMeds = await db
-      .select()
-      .from(medications)
-      .where(
-        and(
-          eq(medications.householdId, ctx.householdId),
-          eq(medications.isActive, true)
-        )
-      );
-
-    // Overdue vaccinations: type=vaccination AND nextDueDate < now
-    const allRecords = await db
-      .select()
-      .from(healthRecords)
-      .where(eq(healthRecords.householdId, ctx.householdId));
+    // Fetch medications, health records, and pets in parallel
+    const [allMeds, allRecords, householdPets] = await Promise.all([
+      db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.householdId, ctx.householdId),
+            eq(medications.isActive, true)
+          )
+        ),
+      db
+        .select()
+        .from(healthRecords)
+        .where(eq(healthRecords.householdId, ctx.householdId)),
+      db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+    ]);
+    const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
 
     const overdueVaccinations = allRecords.filter(
       (r) =>
@@ -380,11 +382,6 @@ export const healthRouter = router({
     let nextAppointment: HealthSummary["nextAppointment"] = null;
     if (futureAppointments.length > 0) {
       const appt = futureAppointments[0];
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, ctx.householdId));
-      const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       nextAppointment = {
         petName: petMap.get(appt.petId) ?? "Unknown",
         date: appt.date.toISOString(),
