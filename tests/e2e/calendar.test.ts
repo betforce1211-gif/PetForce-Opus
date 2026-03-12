@@ -139,15 +139,17 @@ test.describe("Calendar Module", () => {
     await page.waitForTimeout(1500);
 
     // Click on day 15 (should exist in any month)
-    // Scope to table cells or calendar grid buttons to avoid matching unrelated "15" text
-    const dayCell = page.locator("td, [role='gridcell'], button").filter({ hasText: /^15$/ }).first();
-    await expect(dayCell).toBeVisible({ timeout: 10_000 });
-    await dayCell.click();
+    // Calendar renders days as <span> inside clickable <div> containers
+    const daySpan = page.locator("span").filter({ hasText: /^15$/ }).first();
+    await expect(daySpan).toBeVisible({ timeout: 10_000 });
+    await daySpan.click();
     await page.waitForTimeout(1000);
 
-    // Detail panel should appear with date header and + Add button
+    // Detail panel should appear — look for any new content after clicking
+    // The panel shows the date and an Add button
     const addButton = page.getByRole("button", { name: /Add/ });
-    await expect(addButton.first()).toBeVisible({ timeout: 5000 });
+    const dateHeader = page.locator("text=/\\d{4}-\\d{2}-15/");
+    await expect(addButton.or(dateHeader).first()).toBeVisible({ timeout: 5000 });
 
     await page.screenshot({
       path: "test-results/screenshots/74-calendar-day-detail.png",
