@@ -79,7 +79,7 @@ jobs:
           DATABASE_POOLER_URL: ${{ secrets.DATABASE_POOLER_URL }}
 
       - name: Run database migrations
-        run: cd packages/db && npx tsx src/migrate.ts
+        run: pnpm --filter=@petforce/db db:migrate
         env:
           NODE_OPTIONS: "--dns-result-order=ipv4first"
 
