@@ -71,6 +71,8 @@ jobs:
 
       - name: Use Supabase pooler for IPv4 connectivity
         run: |
+          # GHA runners can't route IPv6, and Supabase direct DB hostnames
+          # (db.xxx.supabase.co) are IPv6-only. Use the pooler URL which supports IPv4.
           echo "Using DATABASE_POOLER_URL secret for IPv4-only pooler connection"
           echo "DATABASE_URL=$DATABASE_POOLER_URL" >> "$GITHUB_ENV"
         env:
