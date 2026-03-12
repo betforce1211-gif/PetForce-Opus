@@ -89,6 +89,7 @@ export const petPhotos = pgTable("pet_photos", {
 }, (table) => ({
   petIdx: index("pet_photos_pet_idx").on(table.petId),
   householdIdx: index("pet_photos_household_idx").on(table.householdId),
+  uploadedByIdx: index("pet_photos_uploaded_by_idx").on(table.uploadedBy),
 }));
 
 // --- Activities ---
@@ -118,6 +119,8 @@ export const activities = pgTable("activities", {
 }, (table) => ({
   householdIdx: index("activities_household_idx").on(table.householdId),
   petIdx: index("activities_pet_idx").on(table.petId),
+  householdScheduledIdx: index("activities_household_scheduled_idx").on(table.householdId, table.scheduledAt),
+  householdCompletedIdx: index("activities_household_completed_idx").on(table.householdId, table.completedAt),
 }));
 
 // --- Invitations ---
@@ -142,6 +145,7 @@ export const invitations = pgTable("invitations", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 }, (table) => ({
   householdIdx: index("invitations_household_idx").on(table.householdId),
+  householdStatusIdx: index("invitations_household_status_idx").on(table.householdId, table.status),
 }));
 
 // --- Feeding Schedules ---
@@ -164,6 +168,7 @@ export const feedingSchedules = pgTable("feeding_schedules", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("feeding_schedules_household_idx").on(table.householdId),
+  householdActiveIdx: index("feeding_schedules_household_active_idx").on(table.householdId, table.isActive),
 }));
 
 // --- Feeding Logs ---
@@ -243,6 +248,7 @@ export const healthRecords = pgTable("health_records", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("health_records_household_idx").on(table.householdId),
+  householdDateIdx: index("health_records_household_date_idx").on(table.householdId, table.date),
 }));
 
 // --- Medications ---
@@ -267,6 +273,7 @@ export const medications = pgTable("medications", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("medications_household_idx").on(table.householdId),
+  householdActiveIdx: index("medications_household_active_idx").on(table.householdId, table.isActive),
 }));
 
 // --- Medication Logs ---
@@ -348,6 +355,7 @@ export const expenses = pgTable("expenses", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("expenses_household_idx").on(table.householdId),
+  householdDateIdx: index("expenses_household_date_idx").on(table.householdId, table.date),
 }));
 
 // --- Pet Notes ---
@@ -362,7 +370,10 @@ export const petNotes = pgTable("pet_notes", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("pet_notes_household_idx").on(table.householdId),
+  petIdx: index("pet_notes_pet_idx").on(table.petId),
+}));
 
 // --- Access Requests ---
 
@@ -383,7 +394,9 @@ export const accessRequests = pgTable("access_requests", {
     onDelete: "set null",
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdStatusIdx: index("access_requests_household_status_idx").on(table.householdId, table.status),
+}));
 
 // --- Member Game Stats (Gamification) ---
 
@@ -406,7 +419,9 @@ export const memberGameStats = pgTable("member_game_stats", {
     .default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("member_game_stats_household_idx").on(table.householdId),
+}));
 
 // --- Household Game Stats (Gamification) ---
 
@@ -449,7 +464,9 @@ export const petGameStats = pgTable("pet_game_stats", {
     .default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("pet_game_stats_household_idx").on(table.householdId),
+}));
 
 // --- Activity Log (Audit Trail) ---
 
@@ -472,6 +489,10 @@ export const activityLog = pgTable("activity_log", {
     table.householdId,
     table.createdAt
   ),
+  performedByCreatedIdx: index("activity_log_performed_by_created_idx").on(
+    table.performedBy,
+    table.createdAt
+  ),
 }));
 
 // --- Analytics Events ---
@@ -485,4 +506,7 @@ export const analyticsEvents = pgTable("analytics_events", {
   eventName: text("event_name").notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  userCreatedIdx: index("analytics_events_user_created_idx").on(table.userId, table.createdAt),
+  householdCreatedIdx: index("analytics_events_household_created_idx").on(table.householdId, table.createdAt),
+}));
