@@ -5,6 +5,7 @@ import { householdProcedure, protectedProcedure, router } from "../trpc.js";
 import { db, invitations, members, households } from "@petforce/db";
 import { createInvitationSchema } from "@petforce/core";
 import { generateInviteToken } from "../utils/join-code.js";
+import { logger } from "../lib/logger.js";
 
 export const invitationRouter = router({
   create: householdProcedure
@@ -32,7 +33,7 @@ export const invitationRouter = router({
         })
         .returning();
 
-      console.info("[AUDIT]", JSON.stringify({ action: "invitation.create", userId: ctx.userId, householdId: ctx.householdId, invitationId: invitation.id, role: input.role, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "invitation.create", userId: ctx.userId, householdId: ctx.householdId, invitationId: invitation.id, role: input.role }, "invitation created");
       return invitation;
     }),
 
@@ -79,7 +80,7 @@ export const invitationRouter = router({
         });
       }
 
-      console.info("[AUDIT]", JSON.stringify({ action: "invitation.revoke", userId: ctx.userId, householdId: ctx.householdId, invitationId: input.invitationId, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "invitation.revoke", userId: ctx.userId, householdId: ctx.householdId, invitationId: input.invitationId }, "invitation revoked");
       return invitation;
     }),
 
@@ -176,7 +177,7 @@ export const invitationRouter = router({
         .set({ status: "accepted" })
         .where(eq(invitations.id, invitation.id));
 
-      console.info("[AUDIT]", JSON.stringify({ action: "invitation.accept", userId: ctx.userId, householdId: invitation.householdId, invitationId: invitation.id, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "invitation.accept", userId: ctx.userId, householdId: invitation.householdId, invitationId: invitation.id }, "invitation accepted");
       return member;
     }),
 
@@ -201,7 +202,7 @@ export const invitationRouter = router({
         });
       }
 
-      console.info("[AUDIT]", JSON.stringify({ action: "invitation.decline", token: input.token, invitationId: invitation.id, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "invitation.decline", invitationId: invitation.id }, "invitation declined");
       return { success: true };
     }),
 });

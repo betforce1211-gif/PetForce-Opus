@@ -77,25 +77,80 @@ export const exportRouter = router({
       memberRows.map((m) => [m.id, m.displayName])
     );
 
+    // Build lookup maps for O(1) grouping
+    const schedulesByPet = new Map<string, typeof feedingScheduleRows>();
+    for (const fs of feedingScheduleRows) {
+      const arr = schedulesByPet.get(fs.petId) ?? [];
+      arr.push(fs);
+      schedulesByPet.set(fs.petId, arr);
+    }
+
+    const logsBySchedule = new Map<string, typeof feedingLogRows>();
+    for (const fl of feedingLogRows) {
+      const arr = logsBySchedule.get(fl.feedingScheduleId) ?? [];
+      arr.push(fl);
+      logsBySchedule.set(fl.feedingScheduleId, arr);
+    }
+
+    const healthByPet = new Map<string, typeof healthRecordRows>();
+    for (const hr of healthRecordRows) {
+      const arr = healthByPet.get(hr.petId) ?? [];
+      arr.push(hr);
+      healthByPet.set(hr.petId, arr);
+    }
+
+    const medsByPet = new Map<string, typeof medicationRows>();
+    for (const med of medicationRows) {
+      const arr = medsByPet.get(med.petId) ?? [];
+      arr.push(med);
+      medsByPet.set(med.petId, arr);
+    }
+
+    const medLogsByMed = new Map<string, typeof medicationLogRows>();
+    for (const ml of medicationLogRows) {
+      const arr = medLogsByMed.get(ml.medicationId) ?? [];
+      arr.push(ml);
+      medLogsByMed.set(ml.medicationId, arr);
+    }
+
+    const activitiesByPet = new Map<string, typeof activityRows>();
+    for (const a of activityRows) {
+      const arr = activitiesByPet.get(a.petId) ?? [];
+      arr.push(a);
+      activitiesByPet.set(a.petId, arr);
+    }
+
+    const expensesByPet = new Map<string, typeof expenseRows>();
+    for (const e of expenseRows) {
+      if (!e.petId) continue;
+      const arr = expensesByPet.get(e.petId) ?? [];
+      arr.push(e);
+      expensesByPet.set(e.petId, arr);
+    }
+
+    const notesByPet = new Map<string, typeof noteRows>();
+    for (const n of noteRows) {
+      if (!n.petId) continue;
+      const arr = notesByPet.get(n.petId) ?? [];
+      arr.push(n);
+      notesByPet.set(n.petId, arr);
+    }
+
     // Group pet-related data by petId
     const petData = petRows.map((pet) => ({
       ...pet,
-      feedingSchedules: feedingScheduleRows
-        .filter((fs) => fs.petId === pet.id)
-        .map((fs) => ({
-          ...fs,
-          logs: feedingLogRows.filter((fl) => fl.feedingScheduleId === fs.id),
-        })),
-      healthRecords: healthRecordRows.filter((hr) => hr.petId === pet.id),
-      medications: medicationRows
-        .filter((med) => med.petId === pet.id)
-        .map((med) => ({
-          ...med,
-          logs: medicationLogRows.filter((ml) => ml.medicationId === med.id),
-        })),
-      activities: activityRows.filter((a) => a.petId === pet.id),
-      expenses: expenseRows.filter((e) => e.petId === pet.id),
-      notes: noteRows.filter((n) => n.petId === pet.id),
+      feedingSchedules: (schedulesByPet.get(pet.id) ?? []).map((fs) => ({
+        ...fs,
+        logs: logsBySchedule.get(fs.id) ?? [],
+      })),
+      healthRecords: healthByPet.get(pet.id) ?? [],
+      medications: (medsByPet.get(pet.id) ?? []).map((med) => ({
+        ...med,
+        logs: medLogsByMed.get(med.id) ?? [],
+      })),
+      activities: activitiesByPet.get(pet.id) ?? [],
+      expenses: expensesByPet.get(pet.id) ?? [],
+      notes: notesByPet.get(pet.id) ?? [],
       gamification: petGameRows.find((g) => g.petId === pet.id) ?? null,
     }));
 
