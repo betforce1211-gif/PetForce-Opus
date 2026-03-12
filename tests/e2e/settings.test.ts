@@ -71,7 +71,7 @@ test.describe("Settings Page (Real Data)", () => {
     await expect(page.getByText("Secondary Color")).toBeVisible();
 
     // Join Code section
-    await expect(page.getByText("Join Code")).toBeVisible();
+    await expect(page.getByText("Join Code").first()).toBeVisible();
     const codeOrNotSet = page
       .locator("text=/[A-HJ-NP-Z]{3}-\\d{4}/")
       .or(page.getByText("Not set"));
