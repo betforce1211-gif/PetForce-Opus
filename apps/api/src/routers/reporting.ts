@@ -25,12 +25,18 @@ export const reportingRouter = router({
   completionLog: householdProcedure
     .input(reportingCompletionLogSchema)
     .query(async ({ ctx, input }) => {
-      // Fetch completions and lookup data in parallel
-      const [raw, householdPets, householdMembers] = await Promise.all([
-        fetchUnifiedCompletions(ctx.householdId, input.from, input.to),
+      // Fetch lookup data in parallel, then pass caches to fetchUnifiedCompletions
+      const [householdPets, householdMembers, schedules, meds] = await Promise.all([
         db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
         db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
       ]);
+
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
+        schedules,
+        medications: meds,
+      });
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       const memberMap = new Map(
@@ -77,16 +83,17 @@ export const reportingRouter = router({
   contributions: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const raw = await fetchUnifiedCompletions(
-        ctx.householdId,
-        input.from,
-        input.to
-      );
+      const [householdMembers, schedules, meds] = await Promise.all([
+        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
+      ]);
 
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, ctx.householdId));
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
+        schedules,
+        medications: meds,
+      });
+
       const memberMap = new Map(
         householdMembers.map((m) => [m.id, m.displayName])
       );
@@ -151,11 +158,15 @@ export const reportingRouter = router({
   trends: householdProcedure
     .input(reportingTrendsSchema)
     .query(async ({ ctx, input }) => {
-      const raw = await fetchUnifiedCompletions(
-        ctx.householdId,
-        input.from,
-        input.to
-      );
+      const [schedules, meds] = await Promise.all([
+        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
+      ]);
+
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
+        schedules,
+        medications: meds,
+      });
 
       const granularity = input.granularity ?? "daily";
 
@@ -198,16 +209,17 @@ export const reportingRouter = router({
   summary: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const raw = await fetchUnifiedCompletions(
-        ctx.householdId,
-        input.from,
-        input.to
-      );
+      const [householdMembers, schedules, meds] = await Promise.all([
+        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
+      ]);
 
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, ctx.householdId));
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
+        schedules,
+        medications: meds,
+      });
+
       const memberMap = new Map(
         householdMembers.map((m) => [m.id, m.displayName])
       );

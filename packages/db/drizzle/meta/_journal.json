@@ -15,6 +15,13 @@
       "when": 1773191166182,
       "tag": "0001_crazy_wendigo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773274832422,
+      "tag": "0002_secret_synch",
+      "breakpoints": true
     }
   ]
 }

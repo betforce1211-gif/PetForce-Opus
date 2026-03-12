@@ -12,8 +12,8 @@ COPY packages/core/package.json packages/core/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/config/package.json packages/config/package.json
 
-# Install all deps (frozen lockfile for reproducibility)
-RUN pnpm install --frozen-lockfile
+# Install all deps (frozen lockfile for reproducibility, skip postinstall which needs host files)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ── Stage 2: Build ──
 FROM node:20-slim AS builder
@@ -48,7 +48,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/core/package.json packages/core/package.json
 COPY packages/db/package.json packages/db/package.json
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built output
 COPY --from=builder /app/apps/api/dist ./apps/api/dist

@@ -8,6 +8,8 @@ import {
   petGameStats,
   pets,
   households,
+  feedingSchedules,
+  medications,
 } from "@petforce/db";
 import {
   GAMIFICATION_LEVELS,
@@ -207,12 +209,19 @@ export const gamificationRouter = router({
 
   recalculate: householdProcedure.mutation(async ({ ctx }) => {
     const today = new Date().toISOString().split("T")[0];
-    const raw = await fetchUnifiedCompletions(ctx.householdId, "2000-01-01", today);
 
-    const [householdMembers, petRows] = await Promise.all([
+    // Pre-fetch lookup data in parallel
+    const [householdMembers, petRows, schedules, meds] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+      db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+      db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
     ]);
+
+    const raw = await fetchUnifiedCompletions(ctx.householdId, "2000-01-01", today, {
+      schedules,
+      medications: meds,
+    });
 
     // --- Accumulators ---
     const memberData = new Map<string, AccumulatorData>();
