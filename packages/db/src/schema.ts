@@ -2,6 +2,7 @@ import {
   pgTable,
   text,
   timestamp,
+  date,
   jsonb,
   real,
   uuid,
@@ -188,7 +189,7 @@ export const feedingLogs = pgTable("feeding_logs", {
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
-  feedingDate: text("feeding_date").notNull(), // "YYYY-MM-DD" format
+  feedingDate: date("feeding_date", { mode: "string" }).notNull(),
   notes: text("notes"),
   skipped: boolean("skipped").notNull().default(false),
 }, (table) => ({
@@ -210,7 +211,7 @@ export const feedingSnoozes = pgTable("feeding_snoozes", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozeDate: date("snooze_date", { mode: "string" }).notNull(),
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
   snoozedBy: uuid("snoozed_by")
     .notNull()
@@ -286,7 +287,7 @@ export const medicationLogs = pgTable("medication_logs", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  loggedDate: text("logged_date").notNull(), // "YYYY-MM-DD"
+  loggedDate: date("logged_date", { mode: "string" }).notNull(),
   loggedBy: uuid("logged_by")
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
@@ -310,7 +311,7 @@ export const medicationSnoozes = pgTable("medication_snoozes", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozeDate: date("snooze_date", { mode: "string" }).notNull(),
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
   snoozedBy: uuid("snoozed_by")
     .notNull()
@@ -412,7 +413,7 @@ export const memberGameStats = pgTable("member_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
@@ -434,7 +435,7 @@ export const householdGameStats = pgTable("household_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
@@ -457,7 +458,7 @@ export const petGameStats = pgTable("pet_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
