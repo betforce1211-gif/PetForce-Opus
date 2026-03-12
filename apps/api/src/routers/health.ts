@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lt, gt, asc, inArray } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -33,11 +33,12 @@ export const healthRouter = router({
       const rows = await db
         .select()
         .from(healthRecords)
-        .where(eq(healthRecords.householdId, ctx.householdId));
+        .where(
+          input.type
+            ? and(eq(healthRecords.householdId, ctx.householdId), eq(healthRecords.type, input.type))
+            : eq(healthRecords.householdId, ctx.householdId)
+        );
 
-      if (input.type) {
-        return rows.filter((r) => r.type === input.type);
-      }
       return rows;
     }),
 
@@ -112,11 +113,12 @@ export const healthRouter = router({
       const rows = await db
         .select()
         .from(medications)
-        .where(eq(medications.householdId, ctx.householdId));
+        .where(
+          input.activeOnly
+            ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
+            : eq(medications.householdId, ctx.householdId)
+        );
 
-      if (input.activeOnly) {
-        return rows.filter((m) => m.isActive);
-      }
       return rows;
     }),
 
@@ -340,8 +342,8 @@ export const healthRouter = router({
   summary: householdProcedure.query(async ({ ctx }) => {
     const now = new Date();
 
-    // Fetch medications, health records, and pets in parallel
-    const [allMeds, allRecords, householdPets] = await Promise.all([
+    // Fetch only the data we need with targeted queries
+    const [allMeds, overdueVaccinations, nextAppointmentRows] = await Promise.all([
       db
         .select()
         .from(medications)
@@ -354,36 +356,41 @@ export const healthRouter = router({
       db
         .select()
         .from(healthRecords)
-        .where(eq(healthRecords.householdId, ctx.householdId)),
-      db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+        .where(
+          and(
+            eq(healthRecords.householdId, ctx.householdId),
+            eq(healthRecords.type, "vaccination"),
+            lt(healthRecords.nextDueDate, now)
+          )
+        ),
+      db
+        .select({
+          petId: healthRecords.petId,
+          date: healthRecords.date,
+          reason: healthRecords.reason,
+        })
+        .from(healthRecords)
+        .where(
+          and(
+            eq(healthRecords.householdId, ctx.householdId),
+            inArray(healthRecords.type, ["vet_visit", "checkup", "procedure"]),
+            gt(healthRecords.date, now)
+          )
+        )
+        .orderBy(asc(healthRecords.date))
+        .limit(1),
     ]);
-    const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
-
-    const overdueVaccinations = allRecords.filter(
-      (r) =>
-        r.type === "vaccination" &&
-        r.nextDueDate &&
-        new Date(r.nextDueDate) < now
-    );
-
-    // Next future appointment (vet_visit, checkup, or procedure with date > now)
-    const futureAppointments = allRecords
-      .filter(
-        (r) =>
-          (r.type === "vet_visit" ||
-            r.type === "checkup" ||
-            r.type === "procedure") &&
-          new Date(r.date) > now
-      )
-      .sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
 
     let nextAppointment: HealthSummary["nextAppointment"] = null;
-    if (futureAppointments.length > 0) {
-      const appt = futureAppointments[0];
+    if (nextAppointmentRows.length > 0) {
+      const appt = nextAppointmentRows[0];
+      // Fetch pet name only if we have an appointment
+      const [pet] = await db
+        .select({ name: pets.name })
+        .from(pets)
+        .where(eq(pets.id, appt.petId));
       nextAppointment = {
-        petName: petMap.get(appt.petId) ?? "Unknown",
+        petName: pet?.name ?? "Unknown",
         date: appt.date.toISOString(),
         reason: appt.reason,
       };

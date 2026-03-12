@@ -136,6 +136,9 @@ export const exportRouter = router({
       notesByPet.set(n.petId, arr);
     }
 
+    // Build O(1) lookup for pet game stats
+    const petGameMap = new Map(petGameRows.map((g) => [g.petId, g]));
+
     // Group pet-related data by petId
     const petData = petRows.map((pet) => ({
       ...pet,
@@ -151,7 +154,7 @@ export const exportRouter = router({
       activities: activitiesByPet.get(pet.id) ?? [],
       expenses: expensesByPet.get(pet.id) ?? [],
       notes: notesByPet.get(pet.id) ?? [],
-      gamification: petGameRows.find((g) => g.petId === pet.id) ?? null,
+      gamification: petGameMap.get(pet.id) ?? null,
     }));
 
     // Household-level notes (no pet attached)
