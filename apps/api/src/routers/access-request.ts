@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { householdProcedure, protectedProcedure, router } from "../trpc.js";
 import { db, accessRequests, members, households } from "@petforce/db";
 import { createAccessRequestSchema } from "@petforce/core";
+import { logger } from "../lib/logger.js";
 
 export const accessRequestRouter = router({
   create: protectedProcedure
@@ -136,7 +137,7 @@ export const accessRequestRouter = router({
         .set({ status: "approved", reviewedBy: ctx.membership.id })
         .where(eq(accessRequests.id, input.requestId));
 
-      console.info("[AUDIT]", JSON.stringify({ action: "accessRequest.approve", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, approvedUserId: request.userId, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "accessRequest.approve", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, approvedUserId: request.userId }, "access request approved");
       return member;
     }),
 
@@ -169,7 +170,7 @@ export const accessRequestRouter = router({
         });
       }
 
-      console.info("[AUDIT]", JSON.stringify({ action: "accessRequest.deny", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, deniedUserId: request.userId, timestamp: new Date().toISOString() }));
+      logger.info({ audit: true, action: "accessRequest.deny", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, deniedUserId: request.userId }, "access request denied");
       return { success: true };
     }),
 });
