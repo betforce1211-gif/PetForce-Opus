@@ -70,7 +70,7 @@ module.exports = {
       },
     },
     {
-      // Drizzle schema files legitimately use sql`` for CHECK constraints and defaults
+      // Schema files legitimately use sql`` for Drizzle check constraints and defaults
       files: ["**/schema.ts"],
       rules: {
         "no-restricted-syntax": [
@@ -86,10 +86,11 @@ module.exports = {
             selector: "MemberExpression[object.object.name='process'][object.property.name='env']",
             message:
               "AGENT FIX: Do not read process.env directly in application code. " +
-              "Import from the validated config module instead. " +
-              "See docs/dev/conventions.md for environment variable patterns.",
+              "Environment variables are loaded via dotenv-cli in package.json scripts. " +
+              "If you need a config value, accept it as a function parameter or import from a config module. " +
+              "See docs/dev/conventions.md.",
           },
-          // sql`` template literals are allowed in schema files for CHECK constraints
+          // sql`` is allowed in schema files for check constraints and defaults
         ],
       },
     },
