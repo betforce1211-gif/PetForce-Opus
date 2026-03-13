@@ -491,9 +491,9 @@ describe("createNoteSchema", () => {
     ).toThrow();
   });
 
-  it("rejects content over 5000 chars", () => {
+  it("rejects content over 51200 chars", () => {
     expect(() =>
-      createNoteSchema.parse({ title: "Title", content: "a".repeat(5001) })
+      createNoteSchema.parse({ title: "Title", content: "a".repeat(51_201) })
     ).toThrow();
   });
 });
