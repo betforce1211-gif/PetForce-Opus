@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc.js";
+import { protectedProcedure, householdProcedure, router, requireAdmin, requireOwner } from "../trpc.js";
 import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
 import { generateJoinCode } from "../utils/join-code.js";
@@ -77,12 +77,7 @@ export const householdRouter = router({
   update: householdProcedure
     .input(updateHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can update household settings",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const { theme, ...rest } = input;
 
@@ -117,24 +112,14 @@ export const householdRouter = router({
     }),
 
   delete: householdProcedure.mutation(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners can delete a household",
-      });
-    }
+    requireOwner(ctx.membership);
 
     await db.delete(households).where(eq(households.id, ctx.householdId));
     return { success: true };
   }),
 
   regenerateJoinCode: householdProcedure.mutation(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners can regenerate the join code",
-      });
-    }
+    requireOwner(ctx.membership);
 
     const [household] = await db
       .update(households)
