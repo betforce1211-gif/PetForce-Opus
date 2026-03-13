@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../trpc.js";
-import { db, pets, members, petPhotos } from "@petforce/db";
+import { protectedProcedure, router, verifyMembership } from "../trpc.js";
+import { db, pets, petPhotos } from "@petforce/db";
 import { updatePetPhotoSchema } from "@petforce/core";
 import { deletePetPhotoFile } from "../lib/supabase-storage.js";
 
@@ -10,25 +10,10 @@ export const petPhotoRouter = router({
   listByPet: protectedProcedure
     .input(z.object({ petId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      // Verify access
       const [pet] = await db.select().from(pets).where(eq(pets.id, input.petId));
       if (!pet) return [];
 
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, pet.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
+      await verifyMembership(pet.householdId, ctx.userId);
 
       return db
         .select()
@@ -50,21 +35,7 @@ export const petPhotoRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Photo not found" });
       }
 
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, photo.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
+      await verifyMembership(photo.householdId, ctx.userId);
 
       const [updated] = await db
         .update(petPhotos)
@@ -85,21 +56,7 @@ export const petPhotoRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Photo not found" });
       }
 
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, photo.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
+      await verifyMembership(photo.householdId, ctx.userId);
 
       // Delete from storage
       try {

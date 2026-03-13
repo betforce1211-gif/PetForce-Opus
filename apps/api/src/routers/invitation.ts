@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc.js";
+import { householdProcedure, protectedProcedure, router, requireAdmin } from "../trpc.js";
 import { db, invitations, members, households } from "@petforce/db";
 import { createInvitationSchema } from "@petforce/core";
 import { generateInviteToken } from "../utils/join-code.js";
@@ -11,12 +11,7 @@ export const invitationRouter = router({
   create: householdProcedure
     .input(createInvitationSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can create invitations",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
@@ -38,12 +33,7 @@ export const invitationRouter = router({
     }),
 
   listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners and admins can view invitations",
-      });
-    }
+    requireAdmin(ctx.membership);
 
     return db
       .select()
@@ -54,12 +44,7 @@ export const invitationRouter = router({
   revoke: householdProcedure
     .input(z.object({ invitationId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can revoke invitations",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [invitation] = await db
         .update(invitations)
