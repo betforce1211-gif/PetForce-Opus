@@ -55,10 +55,14 @@ app.use("/*", async (c, next) => {
   );
 });
 
+// In production, NEXT_PUBLIC_WEB_URL is required by the env schema — no
+// silent fallback to localhost. In development it defaults to localhost:3000.
+const corsOrigin = env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000";
+
 app.use(
   "/*",
   cors({
-    origin: env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000",
+    origin: corsOrigin,
     credentials: true,
   })
 );

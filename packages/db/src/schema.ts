@@ -10,7 +10,9 @@ import {
   integer,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // --- Households ---
 
@@ -68,6 +70,7 @@ export const pets = pgTable("pets", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("pets_household_idx").on(table.householdId),
+  medicalNotesLength: check("pets_medical_notes_length", sql`length(${table.medicalNotes}) <= 10240`),
 }));
 
 // --- Pet Photos ---
@@ -374,6 +377,7 @@ export const petNotes = pgTable("pet_notes", {
 }, (table) => ({
   householdIdx: index("pet_notes_household_idx").on(table.householdId),
   petIdx: index("pet_notes_pet_idx").on(table.petId),
+  contentLength: check("pet_notes_content_length", sql`length(${table.content}) <= 51200`),
 }));
 
 // --- Access Requests ---
@@ -494,6 +498,7 @@ export const activityLog = pgTable("activity_log", {
     table.performedBy,
     table.createdAt
   ),
+  metadataLength: check("activity_log_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
 }));
 
 // --- Analytics Events ---
@@ -510,4 +515,5 @@ export const analyticsEvents = pgTable("analytics_events", {
 }, (table) => ({
   userCreatedIdx: index("analytics_events_user_created_idx").on(table.userId, table.createdAt),
   householdCreatedIdx: index("analytics_events_household_created_idx").on(table.householdId, table.createdAt),
+  metadataLength: check("analytics_events_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
 }));

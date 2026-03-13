@@ -92,10 +92,9 @@ export const dashboardRouter = router({
         ),
     ]);
 
-    // Only expose pending counts to owners/admins
-    const callerMember = householdMembers.find((m) => m.userId === ctx.userId);
+    // Only expose pending counts to owners/admins (use membership from context)
     const isAdmin =
-      callerMember && (callerMember.role === "owner" || callerMember.role === "admin");
+      ctx.membership.role === "owner" || ctx.membership.role === "admin";
 
     return {
       household,
