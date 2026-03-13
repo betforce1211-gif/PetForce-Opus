@@ -79,6 +79,8 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 - **Theming:** Each Household has `primaryColor`, `secondaryColor`, and `avatar`
 - **Database:** All schema changes go through `packages/db/`, use `drizzle-kit` for migrations
 - **API:** All endpoints are tRPC procedures in `apps/api/src/routers/`
+- **PRs:** Always include `Closes #<issue>` in the PR description when working on a tracked issue. This auto-closes the issue on merge.
+- **Docs with PRs:** New features and enhancements must include documentation updates (API docs, user guide, or dev docs as appropriate). Note what was updated in the PR's Documentation section.
 
 ## Deep-Dive Docs
 
