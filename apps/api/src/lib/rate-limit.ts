@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import type { Context as HonoContext } from "hono";
+import { env } from "./env.js";
 
 function getClientIp(c: HonoContext): string {
   return (
@@ -29,8 +30,8 @@ type RateLimiterFn = (identifier: string, category: "auth" | "upload" | "standar
 
 function createRedisLimiter(): RateLimiterFn {
   const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    url: env.UPSTASH_REDIS_REST_URL!,
+    token: env.UPSTASH_REDIS_REST_TOKEN!,
   });
 
   const limiters = {
@@ -101,7 +102,7 @@ function createInMemoryLimiter(): RateLimiterFn {
 }
 
 const rateLimiter: RateLimiterFn =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN
     ? createRedisLimiter()
     : createInMemoryLimiter();
 

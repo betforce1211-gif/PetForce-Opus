@@ -1,22 +1,20 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { dbEnvSchema, validateEnv } from "@petforce/core";
 import * as schema from "./schema.js";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is required");
-}
+const dbEnv = validateEnv(dbEnvSchema);
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const client = postgres(connectionString, {
-  max: parseInt(process.env.DATABASE_POOL_SIZE || (isProduction ? "20" : "5")),
+const client = postgres(dbEnv.DATABASE_URL, {
+  max: dbEnv.DATABASE_POOL_SIZE ?? (isProduction ? 20 : 5),
   idle_timeout: 20,
   connect_timeout: 10,
   max_lifetime: 60 * 30,
   connection: {
     application_name: "petforce-api",
-    statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || "30000"),
+    statement_timeout: dbEnv.DB_STATEMENT_TIMEOUT ?? 30000,
   },
   onnotice: () => {},
 });
