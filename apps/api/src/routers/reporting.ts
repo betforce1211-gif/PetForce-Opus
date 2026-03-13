@@ -1,4 +1,5 @@
-import { eq, and, gte, lte, desc, asc, sql, isNotNull } from "drizzle-orm";
+/* eslint-disable no-restricted-syntax -- reporting requires sql for GROUP BY, count(*) FILTER, date_trunc */
+import { eq, and, gte, lte, desc, sql, isNotNull } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -422,11 +423,6 @@ export const reportingRouter = router({
       const { fromDate, toDate } = buildDateBounds(input.from, input.to);
       const granularity = input.granularity ?? "daily";
 
-      // SQL expression for the date bucket
-      const dateBucket =
-        granularity === "daily"
-          ? sql<string>`to_char(bucket_date, 'YYYY-MM-DD')`
-          : sql<string>`to_char(bucket_date, 'IYYY-"W"IW')`;
 
       // Build a UNION ALL of all three sources with a common shape,
       // then group by the date bucket.
