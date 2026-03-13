@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { householdProcedure, protectedProcedure, router } from "../trpc.js";
 import { db, invitations, members, households } from "@petforce/db";
-import { createInvitationSchema } from "@petforce/core";
+import { createInvitationSchema, paginationInput } from "@petforce/core";
 import { generateInviteToken } from "../utils/join-code.js";
 import { logger } from "../lib/logger.js";
 
@@ -37,19 +37,24 @@ export const invitationRouter = router({
       return invitation;
     }),
 
-  listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners and admins can view invitations",
-      });
-    }
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can view invitations",
+        });
+      }
 
-    return db
-      .select()
-      .from(invitations)
-      .where(eq(invitations.householdId, ctx.householdId));
-  }),
+      return db
+        .select()
+        .from(invitations)
+        .where(eq(invitations.householdId, ctx.householdId))
+        .orderBy(desc(invitations.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
 
   revoke: householdProcedure
     .input(z.object({ invitationId: z.string().uuid() }))
