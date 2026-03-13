@@ -125,15 +125,31 @@ export const gamificationRouter = router({
   recalculate: householdProcedure.mutation(async ({ ctx }) => {
     const today = new Date().toISOString().split("T")[0];
 
-    // Pre-fetch lookup data in parallel
-    const [householdMembers, petRows, schedules, meds] = await Promise.all([
+    // Pre-fetch lookup data and existing stats in parallel
+    const [householdMembers, petRows, schedules, meds, existingMemberStats] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
       db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
       db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
+      db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
     ]);
 
-    const raw = await fetchUnifiedCompletions(ctx.householdId, "2000-01-01", today, {
+    // Use lastActiveDate to bound the fetch instead of scanning from 2000-01-01.
+    // 90-day buffer ensures streak continuity across recalculations.
+    let startDate = "2000-01-01";
+    if (existingMemberStats.length > 0) {
+      const dates = existingMemberStats
+        .map((s) => s.lastActiveDate)
+        .filter(Boolean) as string[];
+      if (dates.length > 0) {
+        const earliest = dates.sort()[0];
+        const d = new Date(earliest);
+        d.setDate(d.getDate() - 90);
+        startDate = d.toISOString().split("T")[0];
+      }
+    }
+
+    const raw = await fetchUnifiedCompletions(ctx.householdId, startDate, today, {
       schedules,
       medications: meds,
     });

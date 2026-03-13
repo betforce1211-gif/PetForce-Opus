@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -25,18 +25,15 @@ export const reportingRouter = router({
   completionLog: householdProcedure
     .input(reportingCompletionLogSchema)
     .query(async ({ ctx, input }) => {
-      // Fetch lookup data in parallel, then pass caches to fetchUnifiedCompletions
-      const [householdPets, householdMembers, schedules, meds] = await Promise.all([
-        db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
-        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
-        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
-        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
-      ]);
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to);
 
-      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
-        schedules,
-        medications: meds,
-      });
+      // Fetch only referenced pets and members
+      const petIds = [...new Set(raw.map((r) => r.petId).filter(Boolean))];
+      const memberIds = [...new Set(raw.map((r) => r.completedById))];
+      const [householdPets, householdMembers] = await Promise.all([
+        petIds.length > 0 ? db.select().from(pets).where(inArray(pets.id, petIds)) : Promise.resolve([]),
+        memberIds.length > 0 ? db.select().from(members).where(inArray(members.id, memberIds)) : Promise.resolve([]),
+      ]);
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       const memberMap = new Map(
@@ -83,16 +80,13 @@ export const reportingRouter = router({
   contributions: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const [householdMembers, schedules, meds] = await Promise.all([
-        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
-        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
-        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
-      ]);
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to);
 
-      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
-        schedules,
-        medications: meds,
-      });
+      // Fetch only referenced members
+      const memberIds = [...new Set(raw.map((r) => r.completedById))];
+      const householdMembers = memberIds.length > 0
+        ? await db.select().from(members).where(inArray(members.id, memberIds))
+        : [];
 
       const memberMap = new Map(
         householdMembers.map((m) => [m.id, m.displayName])
@@ -158,15 +152,7 @@ export const reportingRouter = router({
   trends: householdProcedure
     .input(reportingTrendsSchema)
     .query(async ({ ctx, input }) => {
-      const [schedules, meds] = await Promise.all([
-        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
-        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
-      ]);
-
-      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
-        schedules,
-        medications: meds,
-      });
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to);
 
       const granularity = input.granularity ?? "daily";
 
@@ -209,16 +195,13 @@ export const reportingRouter = router({
   summary: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const [householdMembers, schedules, meds] = await Promise.all([
-        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
-        db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
-        db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
-      ]);
+      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to);
 
-      const raw = await fetchUnifiedCompletions(ctx.householdId, input.from, input.to, {
-        schedules,
-        medications: meds,
-      });
+      // Fetch only referenced members
+      const memberIds = [...new Set(raw.map((r) => r.completedById))];
+      const householdMembers = memberIds.length > 0
+        ? await db.select().from(members).where(inArray(members.id, memberIds))
+        : [];
 
       const memberMap = new Map(
         householdMembers.map((m) => [m.id, m.displayName])
