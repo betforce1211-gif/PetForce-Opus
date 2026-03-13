@@ -29,6 +29,13 @@
       "when": 1773357327550,
       "tag": "0003_ordinary_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773440000000,
+      "tag": "0004_add_text_length_constraints",
+      "breakpoints": true
     }
   ]
 }
