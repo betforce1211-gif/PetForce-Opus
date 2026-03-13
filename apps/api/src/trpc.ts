@@ -8,6 +8,9 @@ export interface Context {
   userId: string | null;
 }
 
+/** The membership record shape returned by householdProcedure context */
+export type MembershipRecord = typeof members.$inferSelect;
+
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
@@ -49,3 +52,56 @@ export const householdProcedure = protectedProcedure
       },
     });
   });
+
+// ── Role-check helpers ──────────────────────────────────────────────
+// Use these inside householdProcedure handlers where ctx.membership is available.
+
+/** Throw FORBIDDEN unless the caller is an owner or admin. */
+export function requireAdmin(membership: MembershipRecord): void {
+  if (membership.role !== "owner" && membership.role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only owners and admins can perform this action",
+    });
+  }
+}
+
+/** Throw FORBIDDEN unless the caller is an owner. */
+export function requireOwner(membership: MembershipRecord): void {
+  if (membership.role !== "owner") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only owners can perform this action",
+    });
+  }
+}
+
+// ── Entity-level membership verification ────────────────────────────
+// For procedures that look up an entity by ID (not by householdId), we need to
+// verify membership against the entity's household. This avoids duplicating the
+// members query across every router.
+
+/**
+ * Verify a user's membership in a given household. Returns the membership record.
+ * Throws FORBIDDEN if not a member.
+ */
+export async function verifyMembership(
+  householdId: string,
+  userId: string
+): Promise<MembershipRecord> {
+  const [membership] = await db
+    .select()
+    .from(members)
+    .where(
+      and(eq(members.householdId, householdId), eq(members.userId, userId))
+    );
+
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not a member of this household",
+    });
+  }
+
+  return membership;
+}

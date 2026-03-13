@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, router } from "../trpc.js";
+import { householdProcedure, router, requireAdmin } from "../trpc.js";
 import { db, members } from "@petforce/db";
 import { paginationInput } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
@@ -28,12 +28,7 @@ export const memberRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can invite members",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [existing] = await db
         .select()
@@ -83,12 +78,7 @@ export const memberRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can update roles",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [member] = await db
         .update(members)
@@ -117,12 +107,7 @@ export const memberRouter = router({
   remove: householdProcedure
     .input(z.object({ memberId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can remove members",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       // Prevent removing the last owner
       const [target] = await db

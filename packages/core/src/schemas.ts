@@ -68,7 +68,7 @@ export const createPetSchema = z.object({
   adoptionDate: z.coerce.date().nullable().optional(),
   microchipNumber: z.string().max(50).nullable().optional(),
   rabiesTagNumber: z.string().max(50).nullable().optional(),
-  medicalNotes: z.string().max(5000).nullable().optional(),
+  medicalNotes: z.string().max(10_240).nullable().optional(),
 });
 
 export const updatePetSchema = createPetSchema.partial();
@@ -248,14 +248,14 @@ export const financeSummaryInputSchema = z.object({
 export const createNoteSchema = z.object({
   petId: z.string().uuid().nullable().optional(),
   title: z.string().min(1).max(100),
-  content: z.string().min(1).max(5000),
+  content: z.string().min(1).max(51_200),
 });
 
 export const updateNoteSchema = z.object({
   id: z.string().uuid(),
   petId: z.string().uuid().nullable().optional(),
   title: z.string().min(1).max(100).optional(),
-  content: z.string().min(1).max(5000).optional(),
+  content: z.string().min(1).max(51_200).optional(),
 });
 
 // --- Reporting ---
@@ -283,10 +283,19 @@ export const reportingTrendsSchema = z.object({
 
 // --- Analytics ---
 
+// Max serialized size for JSONB metadata fields (10 KB)
+const MAX_METADATA_JSON_LENGTH = 10_240;
+
 export const trackEventSchema = z.object({
   eventName: z.string().min(1).max(100),
   householdId: z.string().uuid().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z
+    .record(z.unknown())
+    .refine(
+      (val) => JSON.stringify(val).length <= MAX_METADATA_JSON_LENGTH,
+      { message: `Metadata must be under ${MAX_METADATA_JSON_LENGTH} characters when serialized` },
+    )
+    .optional(),
 });
 
 // --- Pet Photos ---

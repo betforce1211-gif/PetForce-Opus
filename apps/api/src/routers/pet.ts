@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc.js";
-import { db, pets, members } from "@petforce/db";
+import { protectedProcedure, householdProcedure, router, verifyMembership, requireAdmin } from "../trpc.js";
+import { db, pets } from "@petforce/db";
 import { createPetSchema, updatePetSchema, paginationInput } from "@petforce/core";
 
 export const petRouter = router({
@@ -27,22 +27,7 @@ export const petRouter = router({
         .where(eq(pets.id, input.id));
       if (!pet) return null;
 
-      // Verify membership in pet's household
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, pet.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
+      await verifyMembership(pet.householdId, ctx.userId);
 
       return pet;
     }),
@@ -62,27 +47,12 @@ export const petRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
-      // Look up pet and verify membership
       const [pet] = await db.select().from(pets).where(eq(pets.id, id));
       if (!pet) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Pet not found" });
       }
 
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, pet.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
+      await verifyMembership(pet.householdId, ctx.userId);
 
       const [updated] = await db
         .update(pets)
@@ -95,33 +65,13 @@ export const petRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      // Look up pet and verify membership + role
       const [pet] = await db.select().from(pets).where(eq(pets.id, input.id));
       if (!pet) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Pet not found" });
       }
 
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, pet.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this pet's household",
-        });
-      }
-      if (membership.role !== "owner" && membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can delete pets",
-        });
-      }
+      const membership = await verifyMembership(pet.householdId, ctx.userId);
+      requireAdmin(membership);
 
       await db.delete(pets).where(eq(pets.id, input.id));
       return { success: true };

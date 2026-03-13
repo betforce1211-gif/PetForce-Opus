@@ -1,40 +1,9 @@
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc.js";
-import { db, activities, members, pets } from "@petforce/db";
+import { protectedProcedure, householdProcedure, router, verifyMembership } from "../trpc.js";
+import { db, activities, pets } from "@petforce/db";
 import { createActivitySchema, updateActivitySchema, paginationInput } from "@petforce/core";
-
-/** Helper: verify user is a member of the activity's household, return membership */
-async function verifyActivityMembership(activityId: string, userId: string) {
-  const [activity] = await db
-    .select()
-    .from(activities)
-    .where(eq(activities.id, activityId));
-
-  if (!activity) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Activity not found" });
-  }
-
-  const [membership] = await db
-    .select()
-    .from(members)
-    .where(
-      and(
-        eq(members.householdId, activity.householdId),
-        eq(members.userId, userId)
-      )
-    );
-
-  if (!membership) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You are not a member of this activity's household",
-    });
-  }
-
-  return { activity, membership };
-}
 
 export const activityRouter = router({
   listByHousehold: householdProcedure
@@ -49,32 +18,15 @@ export const activityRouter = router({
         .offset(input.offset);
     }),
 
-  listByPet: protectedProcedure
-    .input(z.object({ petId: z.string().uuid(), householdId: z.string().uuid() }))
+  listByPet: householdProcedure
+    .input(z.object({ petId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      // Verify membership in the household
-      const [membership] = await db
-        .select()
-        .from(members)
-        .where(
-          and(
-            eq(members.householdId, input.householdId),
-            eq(members.userId, ctx.userId)
-          )
-        );
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this household",
-        });
-      }
-
       // Verify the pet belongs to the claimed household
       const [pet] = await db
         .select()
         .from(pets)
         .where(eq(pets.id, input.petId));
-      if (!pet || pet.householdId !== input.householdId) {
+      if (!pet || pet.householdId !== ctx.householdId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Pet does not belong to this household",
@@ -87,7 +39,7 @@ export const activityRouter = router({
         .where(
           and(
             eq(activities.petId, input.petId),
-            eq(activities.householdId, input.householdId)
+            eq(activities.householdId, ctx.householdId)
           )
         );
     }),
@@ -110,7 +62,16 @@ export const activityRouter = router({
     .input(z.object({ id: z.string().uuid() }).merge(updateActivitySchema))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const { activity: existing } = await verifyActivityMembership(id, ctx.userId);
+
+      const [existing] = await db
+        .select()
+        .from(activities)
+        .where(eq(activities.id, id));
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Activity not found" });
+      }
+
+      await verifyMembership(existing.householdId, ctx.userId);
 
       // If petId is being changed, verify the new pet belongs to the same household
       if (data.petId && data.petId !== existing.petId) {
@@ -137,7 +98,15 @@ export const activityRouter = router({
   complete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const { membership } = await verifyActivityMembership(input.id, ctx.userId);
+      const [existing] = await db
+        .select()
+        .from(activities)
+        .where(eq(activities.id, input.id));
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Activity not found" });
+      }
+
+      const membership = await verifyMembership(existing.householdId, ctx.userId);
 
       const [activity] = await db
         .update(activities)
@@ -153,7 +122,15 @@ export const activityRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      await verifyActivityMembership(input.id, ctx.userId);
+      const [existing] = await db
+        .select()
+        .from(activities)
+        .where(eq(activities.id, input.id));
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Activity not found" });
+      }
+
+      await verifyMembership(existing.householdId, ctx.userId);
 
       await db.delete(activities).where(eq(activities.id, input.id));
       return { success: true };

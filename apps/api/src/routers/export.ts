@@ -1,4 +1,4 @@
-import { router, householdProcedure } from "../trpc.js";
+import { router, householdProcedure, requireAdmin } from "../trpc.js";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import {
@@ -25,14 +25,8 @@ export const exportRouter = router({
    * Restricted to owners and admins.
    */
   household: householdProcedure.query(async ({ ctx }) => {
-    const { membership, householdId } = ctx;
-
-    if (membership.role !== "owner" && membership.role !== "admin") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners and admins can export household data",
-      });
-    }
+    const { householdId } = ctx;
+    requireAdmin(ctx.membership);
 
     // Fetch all data in parallel
     const [

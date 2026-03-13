@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc.js";
+import { householdProcedure, protectedProcedure, router, requireAdmin } from "../trpc.js";
 import { db, accessRequests, members, households } from "@petforce/db";
 import { createAccessRequestSchema, paginationInput } from "@petforce/core";
 import { logger } from "../lib/logger.js";
@@ -76,12 +76,7 @@ export const accessRequestRouter = router({
   listByHousehold: householdProcedure
     .input(paginationInput)
     .query(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can view access requests",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       return db
         .select()
@@ -100,12 +95,7 @@ export const accessRequestRouter = router({
   approve: householdProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can approve requests",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [request] = await db
         .select()
@@ -149,12 +139,7 @@ export const accessRequestRouter = router({
   deny: householdProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can deny requests",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [request] = await db
         .update(accessRequests)
