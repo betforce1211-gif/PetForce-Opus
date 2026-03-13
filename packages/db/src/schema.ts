@@ -70,6 +70,7 @@ export const pets = pgTable("pets", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdIdx: index("pets_household_idx").on(table.householdId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
   medicalNotesLength: check("pets_medical_notes_length", sql`length(${table.medicalNotes}) <= 10240`),
 }));
 
@@ -150,6 +151,7 @@ export const invitations = pgTable("invitations", {
 }, (table) => ({
   householdIdx: index("invitations_household_idx").on(table.householdId),
   householdStatusIdx: index("invitations_household_status_idx").on(table.householdId, table.status),
+  invitedByIdx: index("invitations_invited_by_idx").on(table.invitedBy),
 }));
 
 // --- Feeding Schedules ---
@@ -202,6 +204,7 @@ export const feedingLogs = pgTable("feeding_logs", {
     table.feedingDate,
     table.completedBy
   ),
+  completedByIdx: index("feeding_logs_completed_by_idx").on(table.completedBy),
 }));
 
 // --- Feeding Snoozes ---
@@ -302,6 +305,7 @@ export const medicationLogs = pgTable("medication_logs", {
     table.loggedDate,
     table.loggedBy
   ),
+  loggedByIdx: index("medication_logs_logged_by_idx").on(table.loggedBy),
 }));
 
 // --- Medication Snoozes ---
@@ -377,6 +381,7 @@ export const petNotes = pgTable("pet_notes", {
 }, (table) => ({
   householdIdx: index("pet_notes_household_idx").on(table.householdId),
   petIdx: index("pet_notes_pet_idx").on(table.petId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
   contentLength: check("pet_notes_content_length", sql`length(${table.content}) <= 51200`),
 }));
 
@@ -498,6 +503,8 @@ export const activityLog = pgTable("activity_log", {
     table.performedBy,
     table.createdAt
   ),
+  subjectIdx: index("activity_log_subject_id_idx").on(table.subjectId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
   metadataLength: check("activity_log_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
 }));
 
@@ -515,5 +522,6 @@ export const analyticsEvents = pgTable("analytics_events", {
 }, (table) => ({
   userCreatedIdx: index("analytics_events_user_created_idx").on(table.userId, table.createdAt),
   householdCreatedIdx: index("analytics_events_household_created_idx").on(table.householdId, table.createdAt),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
   metadataLength: check("analytics_events_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
 }));

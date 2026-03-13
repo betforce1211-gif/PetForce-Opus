@@ -1,17 +1,22 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router, verifyMembership, requireAdmin } from "../trpc.js";
 import { db, pets } from "@petforce/db";
-import { createPetSchema, updatePetSchema } from "@petforce/core";
+import { createPetSchema, updatePetSchema, paginationInput } from "@petforce/core";
 
 export const petRouter = router({
-  listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    return db
-      .select()
-      .from(pets)
-      .where(eq(pets.householdId, ctx.householdId));
-  }),
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      return db
+        .select()
+        .from(pets)
+        .where(eq(pets.householdId, ctx.householdId))
+        .orderBy(desc(pets.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
