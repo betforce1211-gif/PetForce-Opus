@@ -1,6 +1,6 @@
 import { router, householdProcedure, requireAdmin } from "../trpc.js";
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import {
   db,
   households,
@@ -28,7 +28,10 @@ export const exportRouter = router({
     const { householdId } = ctx;
     requireAdmin(ctx.membership);
 
-    // Fetch all data in parallel
+    // Safety cap for log/time-series tables to prevent OOM on large households
+    const ROW_LIMIT = 10_000;
+
+    // Fetch all data in parallel (reference tables unbounded, log tables capped)
     const [
       householdRows,
       memberRows,
@@ -48,14 +51,14 @@ export const exportRouter = router({
       db.select().from(households).where(eq(households.id, householdId)),
       db.select().from(members).where(eq(members.householdId, householdId)),
       db.select().from(pets).where(eq(pets.householdId, householdId)),
-      db.select().from(activities).where(eq(activities.householdId, householdId)),
+      db.select().from(activities).where(eq(activities.householdId, householdId)).orderBy(desc(activities.createdAt)).limit(ROW_LIMIT),
       db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, householdId)),
-      db.select().from(feedingLogs).where(eq(feedingLogs.householdId, householdId)),
-      db.select().from(healthRecords).where(eq(healthRecords.householdId, householdId)),
+      db.select().from(feedingLogs).where(eq(feedingLogs.householdId, householdId)).orderBy(desc(feedingLogs.completedAt)).limit(ROW_LIMIT),
+      db.select().from(healthRecords).where(eq(healthRecords.householdId, householdId)).orderBy(desc(healthRecords.createdAt)).limit(ROW_LIMIT),
       db.select().from(medications).where(eq(medications.householdId, householdId)),
-      db.select().from(medicationLogs).where(eq(medicationLogs.householdId, householdId)),
-      db.select().from(expenses).where(eq(expenses.householdId, householdId)),
-      db.select().from(petNotes).where(eq(petNotes.householdId, householdId)),
+      db.select().from(medicationLogs).where(eq(medicationLogs.householdId, householdId)).orderBy(desc(medicationLogs.createdAt)).limit(ROW_LIMIT),
+      db.select().from(expenses).where(eq(expenses.householdId, householdId)).orderBy(desc(expenses.createdAt)).limit(ROW_LIMIT),
+      db.select().from(petNotes).where(eq(petNotes.householdId, householdId)).orderBy(desc(petNotes.createdAt)).limit(ROW_LIMIT),
       db.select().from(memberGameStats).where(eq(memberGameStats.householdId, householdId)),
       db.select().from(householdGameStats).where(eq(householdGameStats.householdId, householdId)),
       db.select().from(petGameStats).where(eq(petGameStats.householdId, householdId)),
@@ -154,9 +157,18 @@ export const exportRouter = router({
     // Household-level notes (no pet attached)
     const householdNotes = noteRows.filter((n) => !n.petId);
 
+    const truncated =
+      activityRows.length >= ROW_LIMIT ||
+      feedingLogRows.length >= ROW_LIMIT ||
+      healthRecordRows.length >= ROW_LIMIT ||
+      medicationLogRows.length >= ROW_LIMIT ||
+      expenseRows.length >= ROW_LIMIT ||
+      noteRows.length >= ROW_LIMIT;
+
     return {
       exportedAt: new Date().toISOString(),
       version: "1.0",
+      truncated,
       household: {
         name: household.name,
         theme: household.theme,

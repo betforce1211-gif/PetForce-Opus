@@ -305,6 +305,7 @@ export const medicationLogs = pgTable("medication_logs", {
     table.loggedDate,
     table.loggedBy
   ),
+  householdIdx: index("medication_logs_household_idx").on(table.householdId),
   loggedByIdx: index("medication_logs_logged_by_idx").on(table.loggedBy),
 }));
 

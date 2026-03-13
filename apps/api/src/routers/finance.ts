@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lt, gt, isNotNull, desc } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -101,8 +101,8 @@ export const financeRouter = router({
       const prevStart = new Date(year, month - 2, 1);
       const prevEnd = new Date(year, month - 1, 1);
 
-      // Fetch pets, expenses, and health records in parallel with date filtering
-      const [householdPets, allExpenses, allHealth] = await Promise.all([
+      // Fetch pets and split expenses/health into targeted current/prev queries
+      const [householdPets, currentExpenses, prevExpenses, currentHealth, prevHealth] = await Promise.all([
         db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
         db
           .select()
@@ -110,8 +110,30 @@ export const financeRouter = router({
           .where(
             and(
               eq(expenses.householdId, ctx.householdId),
+              gte(expenses.date, currentStart),
+              lt(expenses.date, currentEnd)
+            )
+          ),
+        db
+          .select()
+          .from(expenses)
+          .where(
+            and(
+              eq(expenses.householdId, ctx.householdId),
               gte(expenses.date, prevStart),
-              lte(expenses.date, currentEnd)
+              lt(expenses.date, prevEnd)
+            )
+          ),
+        db
+          .select()
+          .from(healthRecords)
+          .where(
+            and(
+              eq(healthRecords.householdId, ctx.householdId),
+              gte(healthRecords.date, currentStart),
+              lt(healthRecords.date, currentEnd),
+              isNotNull(healthRecords.cost),
+              gt(healthRecords.cost, 0)
             )
           ),
         db
@@ -121,25 +143,13 @@ export const financeRouter = router({
             and(
               eq(healthRecords.householdId, ctx.householdId),
               gte(healthRecords.date, prevStart),
-              lte(healthRecords.date, currentEnd)
+              lt(healthRecords.date, prevEnd),
+              isNotNull(healthRecords.cost),
+              gt(healthRecords.cost, 0)
             )
           ),
       ]);
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
-
-      const currentExpenses = allExpenses.filter(
-        (e) => new Date(e.date) >= currentStart && new Date(e.date) < currentEnd
-      );
-      const prevExpenses = allExpenses.filter(
-        (e) => new Date(e.date) >= prevStart && new Date(e.date) < prevEnd
-      );
-
-      const currentHealth = allHealth.filter(
-        (h) => h.cost != null && h.cost > 0 && new Date(h.date) >= currentStart && new Date(h.date) < currentEnd
-      );
-      const prevHealth = allHealth.filter(
-        (h) => h.cost != null && h.cost > 0 && new Date(h.date) >= prevStart && new Date(h.date) < prevEnd
-      );
 
       // Compute totals
       const expenseTotal = currentExpenses.reduce((sum, e) => sum + e.amount, 0);

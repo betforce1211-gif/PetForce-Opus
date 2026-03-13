@@ -1,4 +1,4 @@
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import {
   db,
   feedingLogs,
@@ -71,8 +71,9 @@ export async function fetchUnifiedCompletions(
 
   // --- Feeding logs ---
   if (fLogs.length > 0) {
+    const scheduleIds = [...new Set(fLogs.map((l) => l.feedingScheduleId))];
     const schedules = caches?.schedules ??
-      await db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, householdId));
+      await db.select().from(feedingSchedules).where(inArray(feedingSchedules.id, scheduleIds));
     const scheduleMap = new Map(schedules.map((s) => [s.id, s.label]));
 
     for (const log of fLogs) {
@@ -90,8 +91,9 @@ export async function fetchUnifiedCompletions(
 
   // --- Medication logs ---
   if (mLogs.length > 0) {
+    const medicationIds = [...new Set(mLogs.map((l) => l.medicationId))];
     const meds = caches?.medications ??
-      await db.select().from(medications).where(eq(medications.householdId, householdId));
+      await db.select().from(medications).where(inArray(medications.id, medicationIds));
     const medMap = new Map(meds.map((m) => [m.id, { name: m.name, petId: m.petId }]));
 
     for (const log of mLogs) {
