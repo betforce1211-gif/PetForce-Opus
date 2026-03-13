@@ -70,6 +70,30 @@ module.exports = {
       },
     },
     {
+      // Drizzle schema files legitimately use sql`` for CHECK constraints and defaults
+      files: ["**/schema.ts"],
+      rules: {
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "CallExpression[callee.object.name='console'][callee.property.name='log']",
+            message:
+              "AGENT FIX: Do not use console.log in production code. " +
+              "For API routers, use structured logging or remove this debug statement. " +
+              "See docs/dev/conventions.md for logging patterns.",
+          },
+          {
+            selector: "MemberExpression[object.object.name='process'][object.property.name='env']",
+            message:
+              "AGENT FIX: Do not read process.env directly in application code. " +
+              "Import from the validated config module instead. " +
+              "See docs/dev/conventions.md for environment variable patterns.",
+          },
+          // sql`` template literals are allowed in schema files for CHECK constraints
+        ],
+      },
+    },
+    {
       // Infrastructure/config files that legitimately need process.env
       files: [
         "**/client.ts",
