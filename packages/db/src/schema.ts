@@ -147,6 +147,7 @@ export const invitations = pgTable("invitations", {
 }, (table) => ({
   householdIdx: index("invitations_household_idx").on(table.householdId),
   householdStatusIdx: index("invitations_household_status_idx").on(table.householdId, table.status),
+  invitedByIdx: index("invitations_invited_by_idx").on(table.invitedBy),
 }));
 
 // --- Feeding Schedules ---
@@ -199,6 +200,7 @@ export const feedingLogs = pgTable("feeding_logs", {
     table.feedingDate,
     table.completedBy
   ),
+  completedByIdx: index("feeding_logs_completed_by_idx").on(table.completedBy),
 }));
 
 // --- Feeding Snoozes ---
@@ -299,6 +301,7 @@ export const medicationLogs = pgTable("medication_logs", {
     table.loggedDate,
     table.loggedBy
   ),
+  loggedByIdx: index("medication_logs_logged_by_idx").on(table.loggedBy),
 }));
 
 // --- Medication Snoozes ---
@@ -494,6 +497,7 @@ export const activityLog = pgTable("activity_log", {
     table.performedBy,
     table.createdAt
   ),
+  subjectIdx: index("activity_log_subject_id_idx").on(table.subjectId),
 }));
 
 // --- Analytics Events ---
