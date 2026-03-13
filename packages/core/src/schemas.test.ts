@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   createHouseholdSchema,
-  updateHouseholdSchema,
   householdThemeSchema,
   createPetSchema,
   updatePetSchema,
@@ -9,19 +8,15 @@ import {
   createInvitationSchema,
   createAccessRequestSchema,
   createFeedingScheduleSchema,
-  updateFeedingScheduleSchema,
   logFeedingSchema,
   snoozeFeedingSchema,
   calendarMonthInputSchema,
   createHealthRecordSchema,
   createMedicationSchema,
   createExpenseSchema,
-  updateExpenseSchema,
   financeSummaryInputSchema,
   createNoteSchema,
-  updateNoteSchema,
   reportDateRangeSchema,
-  reportingCompletionLogSchema,
   reportingTrendsSchema,
   trackEventSchema,
   onboardHouseholdSchema,
@@ -491,9 +486,9 @@ describe("createNoteSchema", () => {
     ).toThrow();
   });
 
-  it("rejects content over 5000 chars", () => {
+  it("rejects content over 51200 chars", () => {
     expect(() =>
-      createNoteSchema.parse({ title: "Title", content: "a".repeat(5001) })
+      createNoteSchema.parse({ title: "Title", content: "a".repeat(51_201) })
     ).toThrow();
   });
 });

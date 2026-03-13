@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, lt, gt, asc, inArray } from "drizzle-orm";
+import { eq, and, lt, gt, asc, desc, inArray } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -14,6 +14,7 @@ import {
   updateHealthRecordSchema,
   createMedicationSchema,
   updateMedicationSchema,
+  paginationInput,
 } from "@petforce/core";
 import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
@@ -27,7 +28,7 @@ export const healthRouter = router({
         type: z
           .enum(["vet_visit", "vaccination", "checkup", "procedure"])
           .optional(),
-      })
+      }).merge(paginationInput)
     )
     .query(async ({ ctx, input }) => {
       const rows = await db
@@ -37,7 +38,10 @@ export const healthRouter = router({
           input.type
             ? and(eq(healthRecords.householdId, ctx.householdId), eq(healthRecords.type, input.type))
             : eq(healthRecords.householdId, ctx.householdId)
-        );
+        )
+        .orderBy(desc(healthRecords.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
 
       return rows;
     }),
@@ -108,7 +112,7 @@ export const healthRouter = router({
   // ── Medications ──
 
   listMedications: householdProcedure
-    .input(z.object({ activeOnly: z.boolean().optional() }))
+    .input(z.object({ activeOnly: z.boolean().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
       const rows = await db
         .select()
@@ -117,7 +121,10 @@ export const healthRouter = router({
           input.activeOnly
             ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
             : eq(medications.householdId, ctx.householdId)
-        );
+        )
+        .orderBy(desc(medications.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
 
       return rows;
     }),

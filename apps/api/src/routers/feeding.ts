@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { householdProcedure, router } from "../trpc.js";
 import {
@@ -14,6 +14,7 @@ import {
   updateFeedingScheduleSchema,
   logFeedingSchema,
   snoozeFeedingSchema,
+  paginationInput,
 } from "@petforce/core";
 import type {
   HouseholdFeedingStatus,
@@ -23,17 +24,22 @@ import type {
 import { logActivity } from "../lib/audit.js";
 
 export const feedingRouter = router({
-  listSchedules: householdProcedure.query(async ({ ctx }) => {
-    return db
-      .select()
-      .from(feedingSchedules)
-      .where(
-        and(
-          eq(feedingSchedules.householdId, ctx.householdId),
-          eq(feedingSchedules.isActive, true)
+  listSchedules: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      return db
+        .select()
+        .from(feedingSchedules)
+        .where(
+          and(
+            eq(feedingSchedules.householdId, ctx.householdId),
+            eq(feedingSchedules.isActive, true)
+          )
         )
-      );
-  }),
+        .orderBy(desc(feedingSchedules.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
 
   createSchedule: householdProcedure
     .input(createFeedingScheduleSchema)

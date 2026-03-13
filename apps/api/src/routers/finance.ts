@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, gte, lt, gt, isNotNull } from "drizzle-orm";
+import { eq, and, gte, lt, gt, isNotNull, desc } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -12,12 +12,13 @@ import {
   updateExpenseSchema,
   financeSummaryInputSchema,
   HEALTH_RECORD_TYPE_LABELS,
+  paginationInput,
 } from "@petforce/core";
 import type { FinanceSummary, FinanceSummaryItem } from "@petforce/core";
 
 export const financeRouter = router({
   listExpenses: householdProcedure
-    .input(z.object({ petId: z.string().uuid().optional() }))
+    .input(z.object({ petId: z.string().uuid().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
       const rows = await db
         .select()
@@ -26,7 +27,10 @@ export const financeRouter = router({
           input.petId
             ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
             : eq(expenses.householdId, ctx.householdId)
-        );
+        )
+        .orderBy(desc(expenses.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
 
       return rows;
     }),
