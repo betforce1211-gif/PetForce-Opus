@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { env } from "./env.js";
 
 const BUCKET = "pet-avatars";
 
@@ -6,12 +7,9 @@ let _supabase: SupabaseClient | null = null;
 
 function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-      throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set for pet avatar uploads");
-    }
-    _supabase = createClient(url, key);
+    // env.SUPABASE_URL and env.SUPABASE_SERVICE_ROLE_KEY are guaranteed to
+    // be present — they are validated at startup by the env schema.
+    _supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   }
   return _supabase;
 }
