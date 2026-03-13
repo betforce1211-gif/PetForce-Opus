@@ -70,7 +70,7 @@ module.exports = {
       },
     },
     {
-      // Schema files legitimately use sql`` for Drizzle check constraints
+      // Schema files legitimately use sql`` for Drizzle check constraints and defaults
       files: ["**/schema.ts"],
       rules: {
         "no-restricted-syntax": [
@@ -90,7 +90,7 @@ module.exports = {
               "If you need a config value, accept it as a function parameter or import from a config module. " +
               "See docs/dev/conventions.md.",
           },
-          // sql`` is allowed in schema files for Drizzle check constraints
+          // sql`` is allowed in schema files for check constraints and defaults
         ],
       },
     },
