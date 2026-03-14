@@ -30,6 +30,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build core package
+        run: pnpm build --filter=@petforce/core
+
       # Run database migrations before deploying new code
       - name: Run database migrations
         run: pnpm --filter=@petforce/db db:migrate
