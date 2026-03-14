@@ -61,7 +61,7 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
   });
 
   const pets = dashboardQuery.data?.pets ?? [];
-  const schedules = schedulesQuery.data ?? [];
+  const schedules = schedulesQuery.data?.items ?? [];
 
   // Auto-select first pet if only one
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");

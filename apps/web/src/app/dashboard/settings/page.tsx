@@ -193,11 +193,11 @@ function MembersTab({
       </div>
 
       {/* Pending Access Requests */}
-      {isAdmin && accessRequestsQuery.data && accessRequestsQuery.data.length > 0 && (
+      {isAdmin && accessRequestsQuery.data?.items && accessRequestsQuery.data.items.length > 0 && (
         <div style={glassCard}>
           <h2 style={sectionTitle}>Pending Requests</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {accessRequestsQuery.data.map((req) => (
+            {accessRequestsQuery.data.items.map((req) => (
               <div key={req.id} style={memberRow}>
                 <div style={{ ...initialsCircle, background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }}>
                   {req.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
@@ -265,8 +265,8 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
     );
   }
 
-  const pendingInvites = (invitesQuery.data ?? []).filter((i) => i.status === "pending");
-  const pastInvites = (invitesQuery.data ?? []).filter((i) => i.status !== "pending");
+  const pendingInvites = (invitesQuery.data?.items ?? []).filter((i) => i.status === "pending");
+  const pastInvites = (invitesQuery.data?.items ?? []).filter((i) => i.status !== "pending");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

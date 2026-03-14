@@ -37,8 +37,8 @@ test.describe("Finance CRUD & Summary", () => {
     const pets = await trpcQuery(request, authToken, "pet.listByHousehold", {
       householdId,
     });
-    if (Array.isArray(pets) && pets.length > 0) {
-      testPetId = pets[0].id;
+    if (pets.items && pets.items.length > 0) {
+      testPetId = pets.items[0].id;
     }
   });
 
@@ -95,7 +95,7 @@ test.describe("Finance CRUD & Summary", () => {
       "finance.listExpenses",
       { householdId }
     );
-    const found = expenses.find((e: { id: string }) => e.id === expense.id);
+    const found = expenses.items.find((e: { id: string }) => e.id === expense.id);
     expect(found).toBeUndefined();
   });
 
@@ -109,8 +109,8 @@ test.describe("Finance CRUD & Summary", () => {
       { householdId, petId: testPetId }
     );
 
-    expect(Array.isArray(expenses)).toBe(true);
-    for (const e of expenses) {
+    expect(Array.isArray(expenses.items)).toBe(true);
+    for (const e of expenses.items) {
       expect(e.petId).toBe(testPetId);
     }
   });

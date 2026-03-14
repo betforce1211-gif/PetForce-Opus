@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { householdProcedure, router } from "../trpc.js";
 import {
@@ -27,18 +27,21 @@ export const feedingRouter = router({
   listSchedules: householdProcedure
     .input(paginationInput)
     .query(async ({ ctx, input }) => {
-      return db
-        .select()
-        .from(feedingSchedules)
-        .where(
-          and(
-            eq(feedingSchedules.householdId, ctx.householdId),
-            eq(feedingSchedules.isActive, true)
-          )
-        )
-        .orderBy(desc(feedingSchedules.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
+      const where = and(
+        eq(feedingSchedules.householdId, ctx.householdId),
+        eq(feedingSchedules.isActive, true)
+      );
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(feedingSchedules)
+          .where(where)
+          .orderBy(desc(feedingSchedules.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(feedingSchedules).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createSchedule: householdProcedure

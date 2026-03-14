@@ -42,11 +42,11 @@ test.describe("Member Router", () => {
       { householdId }
     );
 
-    expect(Array.isArray(members)).toBe(true);
-    expect(members.length).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(members.items)).toBe(true);
+    expect(members.items.length).toBeGreaterThanOrEqual(1);
 
     // Every member should have required fields
-    for (const m of members) {
+    for (const m of members.items) {
       expect(m.id).toBeDefined();
       expect(m.householdId).toBe(householdId);
       expect(m.userId).toBeDefined();

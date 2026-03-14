@@ -71,12 +71,12 @@ test.describe("Notes CRUD", () => {
       householdId,
     });
 
-    if (!Array.isArray(pets) || pets.length === 0) {
+    if (!pets.items || pets.items.length === 0) {
       test.skip();
       return;
     }
 
-    const petId = pets[0].id;
+    const petId = pets.items[0].id;
     const note = await trpcMutation(request, authToken, "notes.create", {
       householdId,
       petId,
@@ -94,9 +94,9 @@ test.describe("Notes CRUD", () => {
       householdId,
     });
 
-    expect(Array.isArray(notes)).toBe(true);
+    expect(Array.isArray(notes.items)).toBe(true);
     // Should contain at least the notes we just created
-    const ourNotes = notes.filter((n: { title: string }) =>
+    const ourNotes = notes.items.filter((n: { title: string }) =>
       n.title.includes("E2E Note") || n.title.includes("Pet Note")
     );
     expect(ourNotes.length).toBeGreaterThanOrEqual(1);
@@ -108,8 +108,8 @@ test.describe("Notes CRUD", () => {
       petId: null,
     });
 
-    expect(Array.isArray(notes)).toBe(true);
-    for (const note of notes) {
+    expect(Array.isArray(notes.items)).toBe(true);
+    for (const note of notes.items) {
       expect(note.petId).toBeNull();
     }
   });
@@ -162,7 +162,7 @@ test.describe("Notes CRUD", () => {
     const notes = await trpcQuery(request, authToken, "notes.list", {
       householdId,
     });
-    const found = notes.find((n: { id: string }) => n.id === note.id);
+    const found = notes.items.find((n: { id: string }) => n.id === note.id);
     expect(found).toBeUndefined();
   });
 });

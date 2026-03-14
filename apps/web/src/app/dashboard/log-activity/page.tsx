@@ -69,7 +69,7 @@ export default function LogActivityPage() {
     return <p style={{ padding: "2rem", color: "var(--pf-text-muted)" }}>No household selected.</p>;
   }
 
-  const pets = petsQuery.data ?? [];
+  const pets = petsQuery.data?.items ?? [];
 
   return (
     <main style={{ maxWidth: 480, margin: "0 auto", padding: "3rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>

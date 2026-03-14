@@ -39,8 +39,8 @@ test.describe("Feeding Advanced Operations", () => {
     const pets = await trpcQuery(request, authToken, "pet.listByHousehold", {
       householdId,
     });
-    if (Array.isArray(pets) && pets.length > 0) {
-      testPetId = pets[0].id;
+    if (pets.items && pets.items.length > 0) {
+      testPetId = pets.items[0].id;
     }
   });
 
@@ -221,7 +221,7 @@ test.describe("Feeding Advanced Operations", () => {
       "feeding.listSchedules",
       { householdId }
     );
-    const found = schedules.find((s: { id: string }) => s.id === scheduleId);
+    const found = schedules.items.find((s: { id: string }) => s.id === scheduleId);
     expect(found).toBeUndefined();
 
     scheduleId = ""; // Prevent afterAll from trying to delete again

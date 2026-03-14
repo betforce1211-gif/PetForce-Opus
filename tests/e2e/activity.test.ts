@@ -41,8 +41,8 @@ test.describe("Activity CRUD", () => {
     const pets = await trpcQuery(request, authToken, "pet.listByHousehold", {
       householdId,
     });
-    if (Array.isArray(pets) && pets.length > 0) {
-      testPetId = pets[0].id;
+    if (pets.items && pets.items.length > 0) {
+      testPetId = pets.items[0].id;
     }
   });
 
@@ -94,7 +94,7 @@ test.describe("Activity CRUD", () => {
       { householdId }
     );
 
-    expect(Array.isArray(activities)).toBe(true);
+    expect(Array.isArray(activities.items)).toBe(true);
   });
 
   test("lists activities by pet", async ({ request }) => {
@@ -107,8 +107,8 @@ test.describe("Activity CRUD", () => {
       { householdId, petId: testPetId }
     );
 
-    expect(Array.isArray(activities)).toBe(true);
-    for (const a of activities) {
+    expect(Array.isArray(activities.items)).toBe(true);
+    for (const a of activities.items) {
       expect(a.petId).toBe(testPetId);
     }
   });
@@ -199,7 +199,7 @@ test.describe("Activity CRUD", () => {
       "activity.listByHousehold",
       { householdId }
     );
-    const found = activities.find((a: { id: string }) => a.id === activity.id);
+    const found = activities.items.find((a: { id: string }) => a.id === activity.id);
     expect(found).toBeUndefined();
   });
 });

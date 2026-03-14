@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { householdProcedure, protectedProcedure, router, requireAdmin } from "../trpc.js";
 import { db, accessRequests, members, households } from "@petforce/db";
@@ -78,18 +78,21 @@ export const accessRequestRouter = router({
     .query(async ({ ctx, input }) => {
       requireAdmin(ctx.membership);
 
-      return db
-        .select()
-        .from(accessRequests)
-        .where(
-          and(
-            eq(accessRequests.householdId, ctx.householdId),
-            eq(accessRequests.status, "pending")
-          )
-        )
-        .orderBy(desc(accessRequests.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
+      const where = and(
+        eq(accessRequests.householdId, ctx.householdId),
+        eq(accessRequests.status, "pending")
+      );
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(accessRequests)
+          .where(where)
+          .orderBy(desc(accessRequests.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(accessRequests).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   approve: householdProcedure

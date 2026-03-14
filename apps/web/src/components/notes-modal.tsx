@@ -48,7 +48,7 @@ export function NotesModal({ householdId, onClose }: NotesModalProps) {
   });
 
   const pets = dashboardQuery.data?.pets ?? [];
-  const allNotes = notesQuery.data ?? [];
+  const allNotes = notesQuery.data?.items ?? [];
   const petMap = new Map(pets.map((p) => [p.id, p.name]));
 
   // Client-side filter
