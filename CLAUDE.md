@@ -80,7 +80,13 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 - **Database:** All schema changes go through `packages/db/`, use `drizzle-kit` for migrations
 - **API:** All endpoints are tRPC procedures in `apps/api/src/routers/`
 - **PRs:** Always include `Closes #<issue>` in the PR description when working on a tracked issue. This auto-closes the issue on merge.
+- **PR size:** Keep PRs under 400 lines of diff when possible. Larger changes should be split into stacked PRs.
+- **PR template:** Fill out all sections — type of change, breaking changes, docs, screenshots (for UI changes), and test plan.
+- **Breaking changes:** If a PR changes API contracts, DB schema, or shared types in `@petforce/core`, list affected packages and agents in the "Breaking changes" section.
+- **Screenshots:** UI changes must include before/after screenshots or a recording in the PR.
 - **Docs with PRs:** New features and enhancements must include documentation updates (API docs, user guide, or dev docs as appropriate). Note what was updated in the PR's Documentation section.
+- **Branch protection:** `main` requires passing `lint-and-build` and `unit-tests` CI checks, 1 approving review, and stale reviews are dismissed on new pushes.
+- **Code owners:** `.github/CODEOWNERS` auto-requests reviewers based on changed paths.
 
 ## Deep-Dive Docs
 
