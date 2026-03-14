@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# pr-time-estimate — Estimate how long a human would take to write, review,
+# and document each merged PR. Demonstrates the time savings from Claude Code.
+#
+# Usage:
+#   ./infra/scripts/pr-time-estimate [--csv] [--limit N] [--backfill]
+#
+# Requires: gh (GitHub CLI), jq
+
+set -euo pipefail
+
+LIMIT=50
+FORMAT="table"
+BACKFILL=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --csv)      FORMAT="csv"; shift ;;
+    --limit)    LIMIT="$2"; shift 2 ;;
+    --backfill) BACKFILL=true; shift ;;
+    *)          echo "Usage: $0 [--csv] [--limit N] [--backfill]"; exit 1 ;;
+  esac
+done
+
+# ─── Fetch all merged PRs ───────────────────────────────────────────────────
+PR_DATA=$(gh pr list --state merged --limit "$LIMIT" \
+  --json number,title,additions,deletions,changedFiles,createdAt,mergedAt,files,body,labels)
+
+PR_COUNT=$(echo "$PR_DATA" | jq 'length')
+
+if [[ "$PR_COUNT" -eq 0 ]]; then
+  echo "No merged PRs found."
+  exit 0
+fi
+
+# ─── Classification and estimation logic (via jq) ───────────────────────────
+#
+# Work-type classification (by title + file paths):
+#   test     → test files or "test" in title
+#   infra    → CI/CD, Docker, scripts, config
+#   docs     → documentation files
+#   migration→ SQL migrations, schema-heavy
+#   bugfix   → "fix" in title
+#   refactor → "refactor", "extract", "cleanup" in title
+#   feature  → everything else
+#
+# Human time estimates (hours):
+#
+# WRITING — the core creative work
+#   Lines changed = additions + deletions (both require thought)
+#   Base rates (lines/hour for a skilled dev):
+#     feature:   25 LOC/hr  (design + implement + debug)
+#     bugfix:    30 LOC/hr  (investigate + fix + verify)
+#     refactor:  40 LOC/hr  (mechanical but needs care)
+#     test:      40 LOC/hr  (repetitive but needs domain knowledge)
+#     infra:     20 LOC/hr  (research-heavy, unfamiliar tools)
+#     migration: 50 LOC/hr  (often generated, but needs planning)
+#     docs:      50 LOC/hr  (writing prose)
+#
+#   Context switching penalty: +0.25hr per file changed (reading, understanding)
+#   Minimum: 0.5hr (even a 1-line fix needs investigation)
+#
+# REVIEW — reading, understanding, testing locally
+#   ~300 LOC/hr for careful review
+#   +0.15hr per file for context switching
+#   Minimum: 0.25hr
+#
+# DOCUMENTATION — PR description, inline comments, doc files
+#   Base: 0.5hr for writing a good PR description
+#   +0.1hr per 100 LOC for inline documentation
+#   If docs/ files touched: +1.0hr
+#   If PR body > 500 chars: already done, +0.25hr for the description effort
+
+RESULTS=$(echo "$PR_DATA" | jq -r '
+  def classify:
+    .title as $t | .files as $f |
+    # Check file paths for test/infra/docs patterns
+    ($f | map(.path) | map(select(test("test|spec|\\.test\\."))) | length) as $test_files |
+    ($f | map(.path) | map(select(test("infra/|docker|Dockerfile|\\.github/|config";"i"))) | length) as $infra_files |
+    ($f | map(.path) | map(select(test("docs/"))) | length) as $doc_files |
+    ($f | map(.path) | map(select(test("drizzle/|migration"))) | length) as $migration_files |
+    ($f | length) as $total_files |
+    if ($t | test("test";"i")) or ($test_files > ($total_files / 2)) then "test"
+    elif ($t | test("fix|lint";"i")) then "bugfix"
+    elif ($infra_files > ($total_files / 2)) then "infra"
+    elif ($doc_files > ($total_files / 2)) then "docs"
+    elif ($migration_files > ($total_files / 2)) then "migration"
+    elif ($t | test("refactor|extract|cleanup|move";"i")) then "refactor"
+    else "feature"
+    end;
+
+  def loc_per_hour:
+    if . == "feature" then 25
+    elif . == "bugfix" then 30
+    elif . == "refactor" then 40
+    elif . == "test" then 40
+    elif . == "infra" then 20
+    elif . == "migration" then 50
+    elif . == "docs" then 50
+    else 30
+    end;
+
+  def round2: . * 100 | floor / 100;
+
+  def estimate:
+    classify as $type |
+    (.additions + .deletions) as $loc |
+    (.changedFiles) as $files |
+    (.body | length) as $body_len |
+    (.files | map(.path) | map(select(test("docs/"))) | length) as $has_docs |
+    ($type | loc_per_hour) as $rate |
+
+    # Writing time
+    (($loc / $rate) + ($files * 0.25)) as $write_raw |
+    (if $write_raw < 0.5 then 0.5 else $write_raw end) as $write_hrs |
+
+    # Review time
+    (($loc / 300) + ($files * 0.15)) as $review_raw |
+    (if $review_raw < 0.25 then 0.25 else $review_raw end) as $review_hrs |
+
+    # Documentation time
+    (0.5 + ($loc / 1000 * 0.1) +
+      (if $has_docs > 0 then 1.0 else 0 end) +
+      (if $body_len > 500 then 0.25 else 0 end)
+    ) as $doc_hrs |
+
+    ($write_hrs + $review_hrs + $doc_hrs) as $total_hrs |
+
+    {
+      number: .number,
+      title: (.title | if length > 55 then .[:52] + "..." else . end),
+      type: $type,
+      loc: $loc,
+      files: $files,
+      write_hrs: ($write_hrs | round2),
+      review_hrs: ($review_hrs | round2),
+      doc_hrs: ($doc_hrs | round2),
+      total_hrs: ($total_hrs | round2)
+    };
+
+  [.[] | estimate]
+')
+
+# ─── Compute totals ─────────────────────────────────────────────────────────
+TOTALS=$(echo "$RESULTS" | jq '
+  def round2: . * 100 | floor / 100;
+  {
+    total_write: ([.[].write_hrs] | add | round2),
+    total_review: ([.[].review_hrs] | add | round2),
+    total_doc: ([.[].doc_hrs] | add | round2),
+    total_hrs: ([.[].total_hrs] | add | round2),
+    total_loc: ([.[].loc] | add),
+    pr_count: length
+  }')
+
+# ─── Output ──────────────────────────────────────────────────────────────────
+if [[ "$FORMAT" == "csv" ]]; then
+  echo "PR,Title,Type,LOC,Files,Write (hrs),Review (hrs),Docs (hrs),Total (hrs)"
+  echo "$RESULTS" | jq -r '.[] | [.number, .title, .type, .loc, .files, .write_hrs, .review_hrs, .doc_hrs, .total_hrs] | @csv'
+  echo ""
+  echo "# Totals"
+  echo "$TOTALS" | jq -r '"PRs: \(.pr_count), LOC: \(.total_loc), Write: \(.total_write)hrs, Review: \(.total_review)hrs, Docs: \(.total_doc)hrs, TOTAL: \(.total_hrs)hrs"'
+else
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+  echo "║                          PetForce — Human Time Estimate per PR                                        ║"
+  echo "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
+  echo ""
+  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
+    "PR" "Title" "Type" "LOC" "Files" "Write" "Review" "Docs" "Total"
+  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
+    "─────" "───────────────────────────────────────────────────────" "──────────" "─────" "─────" "────────" "────────" "───────" "────────"
+
+  echo "$RESULTS" | jq -r '.[] | "  #\(.number | tostring | if length < 3 then . + "  " elif length < 4 then . + " " else . end)  \(.title + "                                                       " | .[:55])  \(.type + "          " | .[:10])  \(.loc | tostring | ("     " + .)[-5:])  \(.files | tostring | ("     " + .)[-5:])  \(.write_hrs | tostring + "h" | ("        " + .)[-8:])  \(.review_hrs | tostring + "h" | ("        " + .)[-8:])  \(.doc_hrs | tostring + "h" | ("       " + .)[-7:])  \(.total_hrs | tostring + "h" | ("        " + .)[-8:])"'
+
+  echo ""
+  echo "  ─────────────────────────────────────────────────────────────────────────────────────────────────────"
+
+  TOTAL_WRITE=$(echo "$TOTALS" | jq '.total_write')
+  TOTAL_REVIEW=$(echo "$TOTALS" | jq '.total_review')
+  TOTAL_DOC=$(echo "$TOTALS" | jq '.total_doc')
+  TOTAL_HRS=$(echo "$TOTALS" | jq '.total_hrs')
+  TOTAL_LOC=$(echo "$TOTALS" | jq '.total_loc')
+  PR_CNT=$(echo "$TOTALS" | jq '.pr_count')
+
+  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
+    "" "TOTALS ($PR_CNT PRs)" "" "$TOTAL_LOC" "" "${TOTAL_WRITE}h" "${TOTAL_REVIEW}h" "${TOTAL_DOC}h" "${TOTAL_HRS}h"
+
+  echo ""
+  echo "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
+  echo "║  ROI Summary                                                                                          ║"
+  echo "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
+  echo ""
+
+  # Compute business days: total_hrs / 8
+  WORK_DAYS=$(echo "$TOTAL_HRS" | awk '{printf "%.1f", $1 / 8}')
+  WORK_WEEKS=$(echo "$TOTAL_HRS" | awk '{printf "%.1f", $1 / 40}')
+
+  # Assume $75/hr average developer cost
+  COST_75=$(echo "$TOTAL_HRS" | awk '{printf "$%\047.0f", $1 * 75}')
+  COST_150=$(echo "$TOTAL_HRS" | awk '{printf "$%\047.0f", $1 * 150}')
+
+  echo "  Estimated human effort:  ${TOTAL_HRS} hours  (~${WORK_DAYS} work days / ~${WORK_WEEKS} work weeks)"
+  echo ""
+  echo "  Cost at \$75/hr:   ${COST_75}"
+  echo "  Cost at \$150/hr:  ${COST_150}"
+  echo ""
+  echo "  All ${PR_CNT} PRs were generated by Claude Code agents."
+  echo "  Total lines of code: ${TOTAL_LOC}"
+  echo ""
+  echo "╚══════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  echo ""
+fi
+
+# ─── Backfill: stamp comments on existing PRs ─────────────────────────────
+if [[ "$BACKFILL" == "true" ]]; then
+  echo "Backfilling time estimates on ${PR_CNT} merged PRs..."
+  echo ""
+
+  echo "$RESULTS" | jq -c '.[]' | while read -r row; do
+    PR_NUM=$(echo "$row" | jq -r '.number')
+    TYPE=$(echo "$row" | jq -r '.type')
+    LOC=$(echo "$row" | jq -r '.loc')
+    FILES=$(echo "$row" | jq -r '.files')
+    WRITE=$(echo "$row" | jq -r '.write_hrs')
+    REVIEW=$(echo "$row" | jq -r '.review_hrs')
+    DOC=$(echo "$row" | jq -r '.doc_hrs')
+    TOTAL=$(echo "$row" | jq -r '.total_hrs')
+
+    # Get additions/deletions for this PR
+    PR_STATS=$(echo "$PR_DATA" | jq -r --argjson n "$PR_NUM" '.[] | select(.number == $n) | "\(.additions) \(.deletions)"')
+    ADDS=$(echo "$PR_STATS" | awk '{print $1}')
+    DELS=$(echo "$PR_STATS" | awk '{print $2}')
+
+    # Check if already stamped
+    EXISTING=$(gh api "repos/{owner}/{repo}/issues/${PR_NUM}/comments" --jq '.[].body' 2>/dev/null | grep -c "pr-time-estimate:" || true)
+    if [[ "$EXISTING" -gt 0 ]]; then
+      echo "  #${PR_NUM} — already stamped, skipping"
+      continue
+    fi
+
+    # Get the rate for the type
+    RATE=$(echo "$TYPE" | awk '{
+      if ($1 == "feature") print 25
+      else if ($1 == "bugfix") print 30
+      else if ($1 == "refactor") print 40
+      else if ($1 == "test") print 40
+      else if ($1 == "infra") print 20
+      else if ($1 == "migration") print 50
+      else if ($1 == "docs") print 50
+      else print 30
+    }')
+
+    HAS_DOCS=$(echo "$PR_DATA" | jq -r --argjson n "$PR_NUM" '[.[] | select(.number == $n) | .files[].path | select(test("docs/"))] | length')
+    DOCS_NOTE=""
+    if [[ "$HAS_DOCS" -gt 0 ]]; then
+      DOCS_NOTE=" + 1hr for docs/ changes"
+    fi
+
+    BODY="## ⏱️ Human Time Estimate
+
+| Metric | Value |
+|--------|-------|
+| **Type** | ${TYPE} |
+| **Lines changed** | ${LOC} (${ADDS}+ / ${DELS}−) |
+| **Files changed** | ${FILES} |
+| **Writing** | ${WRITE} hrs |
+| **Code review** | ${REVIEW} hrs |
+| **Documentation** | ${DOC} hrs |
+| **Total** | **${TOTAL} hrs** |
+
+<details>
+<summary>How is this calculated?</summary>
+
+Estimates how long a human developer would take to produce this PR from scratch:
+- **Writing** — LOC ÷ type-adjusted rate (${TYPE}: ${RATE} LOC/hr) + context-switch penalty per file
+- **Review** — LOC ÷ 300 LOC/hr + per-file overhead
+- **Documentation** — base 0.5hr + scaling for PR size${DOCS_NOTE}
+
+</details>
+
+<!-- pr-time-estimate: {\"type\":\"${TYPE}\",\"loc\":${LOC},\"files\":${FILES},\"write\":${WRITE},\"review\":${REVIEW},\"docs\":${DOC},\"total\":${TOTAL}} -->"
+
+    gh pr comment "$PR_NUM" --body "$BODY"
+    echo "  #${PR_NUM} — stamped (${TOTAL} hrs)"
+
+    # Brief pause to avoid rate limiting
+    sleep 0.5
+  done
+
+  echo ""
+  echo "Backfill complete."
+fi

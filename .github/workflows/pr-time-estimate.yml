@@ -1,0 +1,108 @@
+name: PR Time Estimate
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  stamp-estimate:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Estimate human time and comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const changedFiles = pr.changed_files;
+            const loc = additions + deletions;
+            const title = pr.title.toLowerCase();
+
+            // Fetch file list for classification
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            const paths = files.data.map(f => f.filename);
+
+            // Classify work type
+            const testFiles = paths.filter(p => /test|spec|\.test\./.test(p)).length;
+            const infraFiles = paths.filter(p => /infra\/|docker|Dockerfile|\.github\/|config/i.test(p)).length;
+            const docFiles = paths.filter(p => /docs\//.test(p)).length;
+            const migrationFiles = paths.filter(p => /drizzle\/|migration/.test(p)).length;
+            const total = paths.length || 1;
+
+            let type;
+            if (/test/i.test(title) || testFiles > total / 2) type = 'test';
+            else if (/fix|lint/i.test(title)) type = 'bugfix';
+            else if (infraFiles > total / 2) type = 'infra';
+            else if (docFiles > total / 2) type = 'docs';
+            else if (migrationFiles > total / 2) type = 'migration';
+            else if (/refactor|extract|cleanup|move/i.test(title)) type = 'refactor';
+            else type = 'feature';
+
+            // LOC/hour rates by type
+            const rates = {
+              feature: 25, bugfix: 30, refactor: 40,
+              test: 40, infra: 20, migration: 50, docs: 50,
+            };
+            const rate = rates[type];
+
+            // Writing time
+            const writeRaw = (loc / rate) + (changedFiles * 0.25);
+            const writeHrs = Math.max(writeRaw, 0.5);
+
+            // Review time
+            const reviewRaw = (loc / 300) + (changedFiles * 0.15);
+            const reviewHrs = Math.max(reviewRaw, 0.25);
+
+            // Documentation time
+            const hasDocs = docFiles > 0 ? 1.0 : 0;
+            const longBody = (pr.body || '').length > 500 ? 0.25 : 0;
+            const docHrs = 0.5 + (loc / 1000 * 0.1) + hasDocs + longBody;
+
+            const totalHrs = writeHrs + reviewHrs + docHrs;
+
+            const r2 = n => Math.floor(n * 100) / 100;
+
+            const body = [
+              `## ⏱️ Human Time Estimate`,
+              ``,
+              `| Metric | Value |`,
+              `|--------|-------|`,
+              `| **Type** | ${type} |`,
+              `| **Lines changed** | ${loc.toLocaleString()} (${additions}+ / ${deletions}−) |`,
+              `| **Files changed** | ${changedFiles} |`,
+              `| **Writing** | ${r2(writeHrs)} hrs |`,
+              `| **Code review** | ${r2(reviewHrs)} hrs |`,
+              `| **Documentation** | ${r2(docHrs)} hrs |`,
+              `| **Total** | **${r2(totalHrs)} hrs** |`,
+              ``,
+              `<details>`,
+              `<summary>How is this calculated?</summary>`,
+              ``,
+              `Estimates how long a human developer would take to produce this PR from scratch:`,
+              `- **Writing** — LOC ÷ type-adjusted rate (${type}: ${rate} LOC/hr) + context-switch penalty per file`,
+              `- **Review** — LOC ÷ 300 LOC/hr + per-file overhead`,
+              `- **Documentation** — base 0.5hr + scaling for PR size${hasDocs ? ' + 1hr for docs/ changes' : ''}`,
+              ``,
+              `</details>`,
+              ``,
+              `<!-- pr-time-estimate: {"type":"${type}","loc":${loc},"files":${changedFiles},"write":${r2(writeHrs)},"review":${r2(reviewHrs)},"docs":${r2(docHrs)},"total":${r2(totalHrs)}} -->`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body,
+            });
+
+            core.summary.addRaw(`PR #${pr.number}: ${r2(totalHrs)} hrs estimated human time`);
+            await core.summary.write();
