@@ -1,0 +1,34 @@
+# PetForce CODEOWNERS
+# PRs touching these paths will auto-request reviews from the relevant owners.
+# Adjust GitHub usernames/teams as needed.
+
+# Backend — tRPC routers, API middleware
+apps/api/                    @betforce1211-gif
+
+# Web Frontend — Next.js pages, layouts
+apps/web/                    @betforce1211-gif
+
+# Mobile — Expo screens, native navigation
+apps/mobile/                 @betforce1211-gif
+
+# Design System — Tamagui components, theming
+packages/ui/                 @betforce1211-gif
+
+# Core/Shared — Types, Zod schemas, business logic
+packages/core/               @betforce1211-gif
+
+# Database — Drizzle schema, migrations
+packages/db/                 @betforce1211-gif
+
+# Documentation
+docs/                        @betforce1211-gif
+
+# Tests — E2E, integration, fixtures
+tests/                       @betforce1211-gif
+
+# Infrastructure — CI/CD, Docker, scripts
+infra/                       @betforce1211-gif
+.github/                     @betforce1211-gif
+
+# Config
+packages/config/             @betforce1211-gif
