@@ -107,7 +107,7 @@ function VetVisitsTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const records = (recordsQuery.data ?? []).filter(
+  const records = (recordsQuery.data?.items ?? []).filter(
     (r) => r.type === "vet_visit" || r.type === "checkup" || r.type === "procedure"
   );
 
@@ -314,7 +314,7 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const records = (recordsQuery.data ?? []).filter((r) => r.type === "vaccination");
+  const records = (recordsQuery.data?.items ?? []).filter((r) => r.type === "vaccination");
 
   // Determine species for suggestions
   const selectedPet = pets.find((p) => p.id === effectivePetId);
@@ -529,7 +529,7 @@ function MedicationsTab({ householdId }: { householdId: string }) {
 
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
-  const meds = medsQuery.data ?? [];
+  const meds = medsQuery.data?.items ?? [];
 
   function resetForm() {
     setName("");

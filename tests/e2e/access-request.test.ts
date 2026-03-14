@@ -42,7 +42,7 @@ test.describe("Access Request Admin + Error Paths", () => {
       { householdId }
     );
 
-    expect(Array.isArray(result)).toBe(true);
+    expect(Array.isArray(result.items)).toBe(true);
   });
 
   test("approve with nonexistent ID returns NOT_FOUND", async ({

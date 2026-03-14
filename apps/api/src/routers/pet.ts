@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router, verifyMembership, requireAdmin } from "../trpc.js";
 import { db, pets } from "@petforce/db";
@@ -9,13 +9,18 @@ export const petRouter = router({
   listByHousehold: householdProcedure
     .input(paginationInput)
     .query(async ({ ctx, input }) => {
-      return db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, ctx.householdId))
-        .orderBy(desc(pets.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
+      const where = eq(pets.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(pets)
+          .where(where)
+          .orderBy(desc(pets.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(pets).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   getById: protectedProcedure

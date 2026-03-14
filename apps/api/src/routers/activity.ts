@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router, verifyMembership } from "../trpc.js";
 import { db, activities, pets } from "@petforce/db";
@@ -9,17 +9,22 @@ export const activityRouter = router({
   listByHousehold: householdProcedure
     .input(paginationInput)
     .query(async ({ ctx, input }) => {
-      return db
-        .select()
-        .from(activities)
-        .where(eq(activities.householdId, ctx.householdId))
-        .orderBy(desc(activities.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
+      const where = eq(activities.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(activities)
+          .where(where)
+          .orderBy(desc(activities.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(activities).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   listByPet: householdProcedure
-    .input(z.object({ petId: z.string().uuid() }))
+    .input(z.object({ petId: z.string().uuid() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
       // Verify the pet belongs to the claimed household
       const [pet] = await db
@@ -33,15 +38,21 @@ export const activityRouter = router({
         });
       }
 
-      return db
-        .select()
-        .from(activities)
-        .where(
-          and(
-            eq(activities.petId, input.petId),
-            eq(activities.householdId, ctx.householdId)
-          )
-        );
+      const where = and(
+        eq(activities.petId, input.petId),
+        eq(activities.householdId, ctx.householdId)
+      );
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(activities)
+          .where(where)
+          .orderBy(desc(activities.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(activities).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   create: householdProcedure

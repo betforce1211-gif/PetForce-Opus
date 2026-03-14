@@ -77,7 +77,7 @@ test.describe("Pet Update & Delete", () => {
     const pets = await trpcQuery(request, authToken, "pet.listByHousehold", {
       householdId,
     });
-    const found = pets.find((p: { id: string }) => p.id === pet.id);
+    const found = pets.items.find((p: { id: string }) => p.id === pet.id);
     expect(found).toBeUndefined();
   });
 

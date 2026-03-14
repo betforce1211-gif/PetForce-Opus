@@ -100,8 +100,8 @@ test.describe("Invitation Lifecycle (Admin)", () => {
       { householdId }
     );
 
-    expect(Array.isArray(invites)).toBe(true);
-    const found = invites.find(
+    expect(Array.isArray(invites.items)).toBe(true);
+    const found = invites.items.find(
       (i: { id: string }) => i.id === created.id
     );
     expect(found).toBeDefined();
@@ -220,8 +220,8 @@ test.describe("Invitation Lifecycle (Admin)", () => {
           "invitation.listByHousehold",
           { householdId }
         );
-        if (Array.isArray(invites)) {
-          const thisInvite = invites.find(
+        if (invites.items && Array.isArray(invites.items)) {
+          const thisInvite = invites.items.find(
             (i: { token: string }) => i.token === tokenMatch[1]
           );
           if (thisInvite) {

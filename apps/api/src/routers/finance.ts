@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, gte, lt, gt, isNotNull, desc } from "drizzle-orm";
+import { eq, and, gte, lt, gt, isNotNull, desc, count as drizzleCount } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -20,19 +20,20 @@ export const financeRouter = router({
   listExpenses: householdProcedure
     .input(z.object({ petId: z.string().uuid().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(expenses)
-        .where(
-          input.petId
-            ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
-            : eq(expenses.householdId, ctx.householdId)
-        )
-        .orderBy(desc(expenses.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      return rows;
+      const where = input.petId
+        ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
+        : eq(expenses.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(expenses)
+          .where(where)
+          .orderBy(desc(expenses.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(expenses).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createExpense: householdProcedure

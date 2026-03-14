@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, lt, gt, asc, desc, inArray } from "drizzle-orm";
+import { eq, and, lt, gt, asc, desc, inArray, count as drizzleCount } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -31,19 +31,20 @@ export const healthRouter = router({
       }).merge(paginationInput)
     )
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(healthRecords)
-        .where(
-          input.type
-            ? and(eq(healthRecords.householdId, ctx.householdId), eq(healthRecords.type, input.type))
-            : eq(healthRecords.householdId, ctx.householdId)
-        )
-        .orderBy(desc(healthRecords.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      return rows;
+      const where = input.type
+        ? and(eq(healthRecords.householdId, ctx.householdId), eq(healthRecords.type, input.type))
+        : eq(healthRecords.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(healthRecords)
+          .where(where)
+          .orderBy(desc(healthRecords.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(healthRecords).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createRecord: householdProcedure
@@ -114,19 +115,20 @@ export const healthRouter = router({
   listMedications: householdProcedure
     .input(z.object({ activeOnly: z.boolean().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(medications)
-        .where(
-          input.activeOnly
-            ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
-            : eq(medications.householdId, ctx.householdId)
-        )
-        .orderBy(desc(medications.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      return rows;
+      const where = input.activeOnly
+        ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
+        : eq(medications.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(medications)
+          .where(where)
+          .orderBy(desc(medications.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(medications).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createMedication: householdProcedure

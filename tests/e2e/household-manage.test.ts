@@ -112,11 +112,11 @@ test.describe("Household Management", () => {
       { householdId }
     );
 
-    expect(Array.isArray(members)).toBe(true);
-    expect(members.length).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(members.items)).toBe(true);
+    expect(members.items.length).toBeGreaterThanOrEqual(1);
 
     // Current user should be in the list as owner
-    const owner = members.find(
+    const owner = members.items.find(
       (m: { role: string }) => m.role === "owner"
     );
     expect(owner).toBeDefined();

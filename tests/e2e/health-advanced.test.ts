@@ -37,8 +37,8 @@ test.describe("Health Advanced Operations", () => {
     const pets = await trpcQuery(request, authToken, "pet.listByHousehold", {
       householdId,
     });
-    if (Array.isArray(pets) && pets.length > 0) {
-      testPetId = pets[0].id;
+    if (pets.items && pets.items.length > 0) {
+      testPetId = pets.items[0].id;
     }
   });
 
@@ -98,7 +98,7 @@ test.describe("Health Advanced Operations", () => {
       "health.listRecords",
       { householdId }
     );
-    const found = records.find((r: { id: string }) => r.id === record.id);
+    const found = records.items.find((r: { id: string }) => r.id === record.id);
     expect(found).toBeUndefined();
   });
 
@@ -110,8 +110,8 @@ test.describe("Health Advanced Operations", () => {
       { householdId, type: "vaccination" }
     );
 
-    expect(Array.isArray(records)).toBe(true);
-    for (const r of records) {
+    expect(Array.isArray(records.items)).toBe(true);
+    for (const r of records.items) {
       expect(r.type).toBe("vaccination");
     }
   });
@@ -184,7 +184,7 @@ test.describe("Health Advanced Operations", () => {
       { householdId, activeOnly: true }
     );
 
-    expect(Array.isArray(meds)).toBe(true);
+    expect(Array.isArray(meds.items)).toBe(true);
   });
 
   // --- Medication Daily Status ---

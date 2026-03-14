@@ -215,7 +215,7 @@ function ExpensesTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const allExpenses = expensesQuery.data ?? [];
+  const allExpenses = expensesQuery.data?.items ?? [];
 
   // Description suggestion chips
   const suggestions = EXPENSE_DESCRIPTION_SUGGESTIONS[category] ?? [];
