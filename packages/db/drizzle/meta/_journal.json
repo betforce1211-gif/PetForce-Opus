@@ -57,6 +57,13 @@
       "when": 1773797000000,
       "tag": "0007_add-full-text-search",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773808800000,
+      "tag": "0008_reporting-composite-indexes",
+      "breakpoints": true
     }
   ]
 }
