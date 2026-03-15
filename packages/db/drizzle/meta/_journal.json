@@ -8,6 +8,48 @@
       "when": 1770774568656,
       "tag": "0000_remarkable_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773191166182,
+      "tag": "0001_crazy_wendigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773274832422,
+      "tag": "0002_secret_synch",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773357327550,
+      "tag": "0003_ordinary_wildside",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773440000000,
+      "tag": "0004_add_text_length_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773463189252,
+      "tag": "0005_add-missing-fk-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773796800000,
+      "tag": "0006_add-full-text-search",
+      "breakpoints": true
     }
   ]
 }

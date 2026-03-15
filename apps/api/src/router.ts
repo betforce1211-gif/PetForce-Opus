@@ -14,6 +14,7 @@ import { notesRouter } from "./routers/notes";
 import { reportingRouter } from "./routers/reporting";
 import { analyticsRouter } from "./routers/analytics";
 import { gamificationRouter } from "./routers/gamification";
+import { searchRouter } from "./routers/search";
 
 export const appRouter = router({
   household: householdRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   reporting: reportingRouter,
   analytics: analyticsRouter,
   gamification: gamificationRouter,
+  search: searchRouter,
 });
 
 export type AppRouter = typeof appRouter;
