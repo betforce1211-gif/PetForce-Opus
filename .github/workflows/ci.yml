@@ -36,6 +36,24 @@ jobs:
       - run: pnpm --filter=@petforce/core test
       - run: cd tests && npx vitest run --passWithNoTests
 
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies (critical/high fail the build)
+        run: pnpm audit --prod --audit-level=high
+
+      - name: Audit all dependencies (moderate as warnings)
+        if: always()
+        run: pnpm audit --audit-level=moderate || echo "::warning::Moderate vulnerabilities found — review pnpm audit output above"
+
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 45
