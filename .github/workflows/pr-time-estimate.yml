@@ -31,6 +31,22 @@ jobs:
             });
             const paths = files.data.map(f => f.filename);
 
+            // Fetch commits to measure AI agent time
+            const commits = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 250,
+            });
+            let agentMinutes = null;
+            if (commits.data.length > 0) {
+              const firstCommit = new Date(commits.data[0].commit.committer.date);
+              const lastCommit = new Date(commits.data[commits.data.length - 1].commit.committer.date);
+              // Use time from first commit to PR creation (includes final push + PR authoring)
+              const prCreated = new Date(pr.created_at);
+              agentMinutes = Math.max(1, Math.round((prCreated - firstCommit) / 60000));
+            }
+
             // Classify work type
             const testFiles = paths.filter(p => /test|spec|\.test\./.test(p)).length;
             const infraFiles = paths.filter(p => /infra\/|docker|Dockerfile|\.github\/|config/i.test(p)).length;
@@ -71,6 +87,22 @@ jobs:
 
             const r2 = n => Math.floor(n * 100) / 100;
 
+            // Format agent time
+            let agentTimeStr = 'N/A';
+            let agentHrs = null;
+            let speedup = null;
+            if (agentMinutes !== null) {
+              if (agentMinutes < 60) {
+                agentTimeStr = `${agentMinutes} min`;
+              } else {
+                const h = Math.floor(agentMinutes / 60);
+                const m = agentMinutes % 60;
+                agentTimeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+              }
+              agentHrs = r2(agentMinutes / 60);
+              speedup = agentHrs > 0 ? `${r2(totalHrs / agentHrs)}x` : '∞';
+            }
+
             const body = [
               `## ⏱️ Human Time Estimate`,
               ``,
@@ -82,7 +114,9 @@ jobs:
               `| **Writing** | ${r2(writeHrs)} hrs |`,
               `| **Code review** | ${r2(reviewHrs)} hrs |`,
               `| **Documentation** | ${r2(docHrs)} hrs |`,
-              `| **Total** | **${r2(totalHrs)} hrs** |`,
+              `| **Human total** | **${r2(totalHrs)} hrs** |`,
+              `| **AI agent time** | **${agentTimeStr}** |`,
+              ...(speedup ? [`| **Speedup** | **${speedup} faster** |`] : []),
               ``,
               `<details>`,
               `<summary>How is this calculated?</summary>`,
@@ -92,9 +126,12 @@ jobs:
               `- **Review** — LOC ÷ 300 LOC/hr + per-file overhead`,
               `- **Documentation** — base 0.5hr + scaling for PR size${hasDocs ? ' + 1hr for docs/ changes' : ''}`,
               ``,
+              `**AI agent time** is measured from the first commit on the branch to PR creation.`,
+              `**Speedup** = Human total ÷ AI agent time.`,
+              ``,
               `</details>`,
               ``,
-              `<!-- pr-time-estimate: {"type":"${type}","loc":${loc},"files":${changedFiles},"write":${r2(writeHrs)},"review":${r2(reviewHrs)},"docs":${r2(docHrs)},"total":${r2(totalHrs)}} -->`,
+              `<!-- pr-time-estimate: {"type":"${type}","loc":${loc},"files":${changedFiles},"write":${r2(writeHrs)},"review":${r2(reviewHrs)},"docs":${r2(docHrs)},"total":${r2(totalHrs)},"agent_minutes":${agentMinutes || 'null'},"agent_hrs":${agentHrs || 'null'},"speedup":"${speedup || 'N/A'}"} -->`,
             ].join('\n');
 
             await github.rest.issues.createComment({

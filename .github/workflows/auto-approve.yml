@@ -8,6 +8,7 @@ on:
 
 permissions:
   pull-requests: write
+  contents: read
 
 jobs:
   auto-approve:
@@ -43,14 +44,14 @@ jobs:
             core.setOutput('title', pr.title);
             core.info(`Found PR #${pr.number}: ${pr.title}`);
 
-      - name: Approve PR
+      - name: Review and approve PR
         if: steps.pr.outputs.number
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = ${{ steps.pr.outputs.number }};
 
-            // Check if already approved by github-actions bot
+            // Check if already reviewed by github-actions bot
             const { data: reviews } = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -66,12 +67,164 @@ jobs:
               return;
             }
 
+            // ─── Fetch PR details and files for review ───────────────────
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              per_page: 100,
+            });
+
+            const paths = files.map(f => f.filename);
+            const loc = pr.additions + pr.deletions;
+            const title = pr.title.toLowerCase();
+
+            // ─── Review checks ───────────────────────────────────────────
+            const notes = [];
+            const warnings = [];
+
+            // 1. PR size check
+            if (loc > 400) {
+              warnings.push(`**Large PR** — ${loc} lines changed (guideline is <400). Consider splitting into stacked PRs next time.`);
+            } else if (loc > 250) {
+              notes.push(`PR is ${loc} lines — getting close to the 400-line guideline.`);
+            }
+
+            // 2. Missing tests for feature/bugfix PRs
+            const isTestPR = /test/i.test(title) || paths.filter(p => /test|spec|\.test\./.test(p)).length > paths.length / 2;
+            const isDocsPR = paths.filter(p => /docs\//.test(p)).length > paths.length / 2;
+            const isInfraPR = paths.filter(p => /infra\/|\.github\/|docker/i.test(p)).length > paths.length / 2;
+            const hasTests = paths.some(p => /test|spec|\.test\./.test(p));
+
+            if (!isTestPR && !isDocsPR && !isInfraPR && !hasTests && loc > 50) {
+              warnings.push('**No test files changed.** Consider adding tests for this change.');
+            }
+
+            // 3. Missing docs for feature PRs
+            const isFeature = !isTestPR && !isDocsPR && !isInfraPR && !/fix|lint|refactor/i.test(title);
+            const hasDocs = paths.some(p => /docs\//.test(p));
+            if (isFeature && !hasDocs && loc > 100) {
+              notes.push('Feature PR with no docs/ changes — make sure documentation is updated if needed.');
+            }
+
+            // 4. Check for debug/console statements in diff
+            const debugPatterns = [];
+            for (const file of files) {
+              if (!file.patch) continue;
+              const addedLines = file.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++'));
+
+              for (const line of addedLines) {
+                if (/console\.(log|debug|warn|error)\(/.test(line) && !/\/\//.test(line.split('console')[0])) {
+                  // Skip test files and config — console is fine there
+                  if (!/test|spec|\.test\.|config|setup/.test(file.filename)) {
+                    debugPatterns.push(`\`${file.filename}\`: \`${line.trim().substring(0, 80)}\``);
+                  }
+                }
+              }
+            }
+            if (debugPatterns.length > 0) {
+              warnings.push(`**Console statements found** in production code:\n${debugPatterns.slice(0, 5).map(d => `  - ${d}`).join('\n')}${debugPatterns.length > 5 ? `\n  - ...and ${debugPatterns.length - 5} more` : ''}`);
+            }
+
+            // 5. Check for TODO/FIXME/HACK in added lines
+            const todos = [];
+            for (const file of files) {
+              if (!file.patch) continue;
+              const addedLines = file.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++'));
+              for (const line of addedLines) {
+                if (/\b(TODO|FIXME|HACK|XXX)\b/.test(line)) {
+                  todos.push(`\`${file.filename}\`: \`${line.trim().substring(0, 80)}\``);
+                }
+              }
+            }
+            if (todos.length > 0) {
+              notes.push(`**TODOs added** (make sure these are tracked):\n${todos.slice(0, 5).map(t => `  - ${t}`).join('\n')}${todos.length > 5 ? `\n  - ...and ${todos.length - 5} more` : ''}`);
+            }
+
+            // 6. Large single-file changes
+            const bigFiles = files.filter(f => (f.additions + f.deletions) > 300);
+            if (bigFiles.length > 0) {
+              notes.push(`**Large file changes** (>300 lines each):\n${bigFiles.map(f => `  - \`${f.filename}\` — ${f.additions}+ / ${f.deletions}−`).join('\n')}`);
+            }
+
+            // 7. New dependencies check
+            const pkgFiles = files.filter(f => f.filename.endsWith('package.json'));
+            if (pkgFiles.length > 0) {
+              const newDeps = [];
+              for (const pf of pkgFiles) {
+                if (!pf.patch) continue;
+                const addedLines = pf.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++'));
+                for (const line of addedLines) {
+                  // Match lines that look like dependency entries: "name": "version"
+                  const match = line.match(/"([^"]+)":\s*"[\^~]?[\d]/);
+                  if (match) newDeps.push(match[1]);
+                }
+              }
+              if (newDeps.length > 0) {
+                notes.push(`**New dependencies added:** ${newDeps.map(d => `\`${d}\``).join(', ')}`);
+              }
+            }
+
+            // 8. PR description quality
+            const bodyLen = (pr.body || '').length;
+            if (bodyLen < 50) {
+              warnings.push('**Thin PR description.** A good description helps future debugging — consider adding context.');
+            }
+
+            // 9. Closes #issue check
+            const closesIssue = /closes?\s+#\d+/i.test(pr.body || '');
+            if (!closesIssue && isFeature) {
+              notes.push('No `Closes #issue` reference found — link an issue if this PR addresses one.');
+            }
+
+            // 10. Schema/migration changes without docs
+            const hasMigrations = paths.some(p => /drizzle\/|migration/.test(p));
+            const hasSchemaChanges = paths.some(p => /schema\.ts|schema\//.test(p));
+            if ((hasMigrations || hasSchemaChanges) && !hasDocs) {
+              warnings.push('**Schema/migration changes detected** without docs update — make sure API docs reflect any model changes.');
+            }
+
+            // ─── Build review body ───────────────────────────────────────
+            const sections = ['## 🔍 Review Notes\n'];
+
+            if (warnings.length === 0 && notes.length === 0) {
+              sections.push('Everything looks good! Clean PR.\n');
+            }
+
+            if (warnings.length > 0) {
+              sections.push('### Warnings\n');
+              for (const w of warnings) {
+                sections.push(`- ⚠️ ${w}\n`);
+              }
+            }
+
+            if (notes.length > 0) {
+              sections.push('### Notes\n');
+              for (const n of notes) {
+                sections.push(`- 📝 ${n}\n`);
+              }
+            }
+
+            // Summary stats
+            sections.push(`\n---\n`);
+            sections.push(`**Files:** ${paths.length} | **Lines:** +${pr.additions} / -${pr.deletions} | **Checks:** ${warnings.length} warning(s), ${notes.length} note(s)\n`);
+
+            const reviewBody = sections.join('\n');
+
+            // ─── Submit review ───────────────────────────────────────────
+            // Always approve (CI passed), but include review notes
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
               event: 'APPROVE',
-              body: '✅ All CI checks passed — auto-approved by PetForce review bot.',
+              body: `${reviewBody}\n✅ All CI checks passed — auto-approved by PetForce review bot.`,
             });
 
-            core.info(`Approved PR #${prNumber}`);
+            core.info(`Approved PR #${prNumber} with ${warnings.length} warnings and ${notes.length} notes`);

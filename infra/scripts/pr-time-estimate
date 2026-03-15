@@ -24,7 +24,7 @@ done
 
 # ─── Fetch all merged PRs ───────────────────────────────────────────────────
 PR_DATA=$(gh pr list --state merged --limit "$LIMIT" \
-  --json number,title,additions,deletions,changedFiles,createdAt,mergedAt,files,body,labels)
+  --json number,title,additions,deletions,changedFiles,createdAt,mergedAt,files,body,labels,commits)
 
 PR_COUNT=$(echo "$PR_DATA" | jq 'length')
 
@@ -126,6 +126,16 @@ RESULTS=$(echo "$PR_DATA" | jq -r '
 
     ($write_hrs + $review_hrs + $doc_hrs) as $total_hrs |
 
+    # AI agent time: first commit to PR creation
+    (.commits | if length > 0 then .[0].committedDate else null end) as $first_commit |
+    .createdAt as $pr_created |
+    (if $first_commit != null and $pr_created != null then
+      (($pr_created | fromdateiso8601) - ($first_commit | fromdateiso8601)) / 60 |
+      if . < 1 then 1 else . | round end
+    else null end) as $agent_minutes |
+    (if $agent_minutes != null then ($agent_minutes / 60 | round2) else null end) as $agent_hrs |
+    (if $agent_hrs != null and $agent_hrs > 0 then ($total_hrs / $agent_hrs | round2) else null end) as $speedup |
+
     {
       number: .number,
       title: (.title | if length > 55 then .[:52] + "..." else . end),
@@ -135,7 +145,10 @@ RESULTS=$(echo "$PR_DATA" | jq -r '
       write_hrs: ($write_hrs | round2),
       review_hrs: ($review_hrs | round2),
       doc_hrs: ($doc_hrs | round2),
-      total_hrs: ($total_hrs | round2)
+      total_hrs: ($total_hrs | round2),
+      agent_minutes: $agent_minutes,
+      agent_hrs: $agent_hrs,
+      speedup: $speedup
     };
 
   [.[] | estimate]
@@ -150,28 +163,36 @@ TOTALS=$(echo "$RESULTS" | jq '
     total_doc: ([.[].doc_hrs] | add | round2),
     total_hrs: ([.[].total_hrs] | add | round2),
     total_loc: ([.[].loc] | add),
+    total_agent_minutes: ([.[].agent_minutes // 0] | add),
+    total_agent_hrs: ([.[].agent_hrs // 0] | add | round2),
     pr_count: length
   }')
 
 # ─── Output ──────────────────────────────────────────────────────────────────
 if [[ "$FORMAT" == "csv" ]]; then
-  echo "PR,Title,Type,LOC,Files,Write (hrs),Review (hrs),Docs (hrs),Total (hrs)"
-  echo "$RESULTS" | jq -r '.[] | [.number, .title, .type, .loc, .files, .write_hrs, .review_hrs, .doc_hrs, .total_hrs] | @csv'
+  echo "PR,Title,Type,LOC,Files,Write (hrs),Review (hrs),Docs (hrs),Human Total (hrs),AI Agent (min),AI Agent (hrs),Speedup"
+  echo "$RESULTS" | jq -r '.[] | [.number, .title, .type, .loc, .files, .write_hrs, .review_hrs, .doc_hrs, .total_hrs, .agent_minutes, .agent_hrs, .speedup] | @csv'
   echo ""
   echo "# Totals"
-  echo "$TOTALS" | jq -r '"PRs: \(.pr_count), LOC: \(.total_loc), Write: \(.total_write)hrs, Review: \(.total_review)hrs, Docs: \(.total_doc)hrs, TOTAL: \(.total_hrs)hrs"'
+  echo "$TOTALS" | jq -r '"PRs: \(.pr_count), LOC: \(.total_loc), Human: \(.total_hrs)hrs, AI: \(.total_agent_hrs)hrs, Overall speedup: \(if .total_agent_hrs > 0 then ((.total_hrs / .total_agent_hrs * 100 | floor) / 100) else "N/A" end)x"'
 else
   echo ""
   echo "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
   echo "║                          PetForce — Human Time Estimate per PR                                        ║"
   echo "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
   echo ""
-  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
-    "PR" "Title" "Type" "LOC" "Files" "Write" "Review" "Docs" "Total"
-  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
-    "─────" "───────────────────────────────────────────────────────" "──────────" "─────" "─────" "────────" "────────" "───────" "────────"
+  printf "  %-5s  %-45s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s  %8s  %8s\n" \
+    "PR" "Title" "Type" "LOC" "Files" "Write" "Review" "Docs" "Human" "AI" "Speedup"
+  printf "  %-5s  %-45s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s  %8s  %8s\n" \
+    "─────" "─────────────────────────────────────────────" "──────────" "─────" "─────" "────────" "────────" "───────" "────────" "────────" "────────"
 
-  echo "$RESULTS" | jq -r '.[] | "  #\(.number | tostring | if length < 3 then . + "  " elif length < 4 then . + " " else . end)  \(.title + "                                                       " | .[:55])  \(.type + "          " | .[:10])  \(.loc | tostring | ("     " + .)[-5:])  \(.files | tostring | ("     " + .)[-5:])  \(.write_hrs | tostring + "h" | ("        " + .)[-8:])  \(.review_hrs | tostring + "h" | ("        " + .)[-8:])  \(.doc_hrs | tostring + "h" | ("       " + .)[-7:])  \(.total_hrs | tostring + "h" | ("        " + .)[-8:])"'
+  echo "$RESULTS" | jq -r '.[] |
+    (if .agent_minutes == null then "N/A"
+     elif .agent_minutes < 60 then "\(.agent_minutes)m"
+     else "\(.agent_minutes / 60 | floor)h \(.agent_minutes % 60)m"
+     end) as $ai_str |
+    (if .speedup == null then "N/A" else "\(.speedup)x" end) as $spd_str |
+    "  #\(.number | tostring | if length < 3 then . + "  " elif length < 4 then . + " " else . end)  \(.title + "                                             " | .[:45])  \(.type + "          " | .[:10])  \(.loc | tostring | ("     " + .)[-5:])  \(.files | tostring | ("     " + .)[-5:])  \(.write_hrs | tostring + "h" | ("        " + .)[-8:])  \(.review_hrs | tostring + "h" | ("        " + .)[-8:])  \(.doc_hrs | tostring + "h" | ("       " + .)[-7:])  \(.total_hrs | tostring + "h" | ("        " + .)[-8:])  \($ai_str | ("        " + .)[-8:])  \($spd_str | ("        " + .)[-8:])"'
 
   echo ""
   echo "  ─────────────────────────────────────────────────────────────────────────────────────────────────────"
@@ -181,10 +202,21 @@ else
   TOTAL_DOC=$(echo "$TOTALS" | jq '.total_doc')
   TOTAL_HRS=$(echo "$TOTALS" | jq '.total_hrs')
   TOTAL_LOC=$(echo "$TOTALS" | jq '.total_loc')
+  TOTAL_AGENT_HRS=$(echo "$TOTALS" | jq '.total_agent_hrs')
+  TOTAL_AGENT_MIN=$(echo "$TOTALS" | jq '.total_agent_minutes')
   PR_CNT=$(echo "$TOTALS" | jq '.pr_count')
 
-  printf "  %-5s  %-55s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s\n" \
-    "" "TOTALS ($PR_CNT PRs)" "" "$TOTAL_LOC" "" "${TOTAL_WRITE}h" "${TOTAL_REVIEW}h" "${TOTAL_DOC}h" "${TOTAL_HRS}h"
+  # Format total agent time
+  if [[ "$TOTAL_AGENT_MIN" -gt 0 ]]; then
+    AGENT_TOTAL_STR="${TOTAL_AGENT_HRS}h"
+    OVERALL_SPEEDUP=$(echo "$TOTAL_HRS $TOTAL_AGENT_HRS" | awk '{printf "%.1fx", $1 / $2}')
+  else
+    AGENT_TOTAL_STR="N/A"
+    OVERALL_SPEEDUP="N/A"
+  fi
+
+  printf "  %-5s  %-45s  %-10s  %5s  %5s  %8s  %8s  %7s  %8s  %8s  %8s\n" \
+    "" "TOTALS ($PR_CNT PRs)" "" "$TOTAL_LOC" "" "${TOTAL_WRITE}h" "${TOTAL_REVIEW}h" "${TOTAL_DOC}h" "${TOTAL_HRS}h" "$AGENT_TOTAL_STR" "$OVERALL_SPEEDUP"
 
   echo ""
   echo "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
@@ -201,9 +233,12 @@ else
   COST_150=$(echo "$TOTAL_HRS" | awk '{printf "$%\047.0f", $1 * 150}')
 
   echo "  Estimated human effort:  ${TOTAL_HRS} hours  (~${WORK_DAYS} work days / ~${WORK_WEEKS} work weeks)"
+  echo "  Actual AI agent time:   ${TOTAL_AGENT_HRS} hours"
+  echo "  Time saved:             $(echo "$TOTAL_HRS $TOTAL_AGENT_HRS" | awk '{printf "%.1f", $1 - $2}') hours"
+  echo "  Overall speedup:        ${OVERALL_SPEEDUP}"
   echo ""
-  echo "  Cost at \$75/hr:   ${COST_75}"
-  echo "  Cost at \$150/hr:  ${COST_150}"
+  echo "  Cost at \$75/hr (human):   ${COST_75}"
+  echo "  Cost at \$150/hr (human):  ${COST_150}"
   echo ""
   echo "  All ${PR_CNT} PRs were generated by Claude Code agents."
   echo "  Total lines of code: ${TOTAL_LOC}"
@@ -226,6 +261,9 @@ if [[ "$BACKFILL" == "true" ]]; then
     REVIEW=$(echo "$row" | jq -r '.review_hrs')
     DOC=$(echo "$row" | jq -r '.doc_hrs')
     TOTAL=$(echo "$row" | jq -r '.total_hrs')
+    AGENT_MIN=$(echo "$row" | jq -r '.agent_minutes // "null"')
+    AGENT_HRS=$(echo "$row" | jq -r '.agent_hrs // "null"')
+    SPEEDUP=$(echo "$row" | jq -r '.speedup // "null"')
 
     # Get additions/deletions for this PR
     PR_STATS=$(echo "$PR_DATA" | jq -r --argjson n "$PR_NUM" '.[] | select(.number == $n) | "\(.additions) \(.deletions)"')
@@ -257,6 +295,29 @@ if [[ "$BACKFILL" == "true" ]]; then
       DOCS_NOTE=" + 1hr for docs/ changes"
     fi
 
+    # Format agent time for display
+    if [[ "$AGENT_MIN" != "null" ]]; then
+      if [[ "$AGENT_MIN" -lt 60 ]]; then
+        AGENT_DISPLAY="${AGENT_MIN} min"
+      else
+        AGENT_H=$((AGENT_MIN / 60))
+        AGENT_M=$((AGENT_MIN % 60))
+        if [[ "$AGENT_M" -gt 0 ]]; then
+          AGENT_DISPLAY="${AGENT_H}h ${AGENT_M}m"
+        else
+          AGENT_DISPLAY="${AGENT_H}h"
+        fi
+      fi
+      SPEEDUP_LINE="| **Speedup** | **${SPEEDUP}x faster** |"
+      AGENT_NOTE="
+**AI agent time** is measured from the first commit on the branch to PR creation.
+**Speedup** = Human total ÷ AI agent time."
+    else
+      AGENT_DISPLAY="N/A"
+      SPEEDUP_LINE=""
+      AGENT_NOTE=""
+    fi
+
     BODY="## ⏱️ Human Time Estimate
 
 | Metric | Value |
@@ -267,7 +328,9 @@ if [[ "$BACKFILL" == "true" ]]; then
 | **Writing** | ${WRITE} hrs |
 | **Code review** | ${REVIEW} hrs |
 | **Documentation** | ${DOC} hrs |
-| **Total** | **${TOTAL} hrs** |
+| **Human total** | **${TOTAL} hrs** |
+| **AI agent time** | **${AGENT_DISPLAY}** |
+${SPEEDUP_LINE}
 
 <details>
 <summary>How is this calculated?</summary>
@@ -276,10 +339,11 @@ Estimates how long a human developer would take to produce this PR from scratch:
 - **Writing** — LOC ÷ type-adjusted rate (${TYPE}: ${RATE} LOC/hr) + context-switch penalty per file
 - **Review** — LOC ÷ 300 LOC/hr + per-file overhead
 - **Documentation** — base 0.5hr + scaling for PR size${DOCS_NOTE}
+${AGENT_NOTE}
 
 </details>
 
-<!-- pr-time-estimate: {\"type\":\"${TYPE}\",\"loc\":${LOC},\"files\":${FILES},\"write\":${WRITE},\"review\":${REVIEW},\"docs\":${DOC},\"total\":${TOTAL}} -->"
+<!-- pr-time-estimate: {\"type\":\"${TYPE}\",\"loc\":${LOC},\"files\":${FILES},\"write\":${WRITE},\"review\":${REVIEW},\"docs\":${DOC},\"total\":${TOTAL},\"agent_minutes\":${AGENT_MIN},\"agent_hrs\":${AGENT_HRS},\"speedup\":\"${SPEEDUP}\"} -->"
 
     gh pr comment "$PR_NUM" --body "$BODY"
     echo "  #${PR_NUM} — stamped (${TOTAL} hrs)"
