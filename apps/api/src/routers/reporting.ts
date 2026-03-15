@@ -27,9 +27,13 @@ import type {
 // ---------------------------------------------------------------------------
 
 function buildDateBounds(from: string, to: string) {
-  const fromDate = new Date(`${from}T00:00:00Z`);
-  const toDate = new Date(`${to}T23:59:59.999Z`);
-  return { fromDate, toDate };
+  // Return ISO strings — not Date objects — for use in raw SQL via
+  // db.execute().  postgres-js's unsafe() (which Drizzle uses under the
+  // hood) does not serialize Date parameters the same way the query builder
+  // does, causing "Received an instance of Date" errors.
+  const fromTs = `${from}T00:00:00.000Z`;
+  const toTs = `${to}T23:59:59.999Z`;
+  return { fromTs, toTs };
 }
 
 /**
@@ -41,8 +45,8 @@ function buildContributionsQuery(
   householdId: string,
   from: string,
   to: string,
-  fromDate: Date,
-  toDate: Date
+  fromTs: string,
+  toTs: string
 ) {
   return sql`
     SELECT member_id, task_type,
@@ -52,8 +56,8 @@ function buildContributionsQuery(
       SELECT fl.completed_by AS member_id, 'feeding'::text AS task_type, fl.skipped
       FROM feeding_logs fl
       WHERE fl.household_id = ${householdId}
-        AND fl.completed_at >= ${fromDate}
-        AND fl.completed_at <= ${toDate}
+        AND fl.completed_at >= ${fromTs}::timestamptz
+        AND fl.completed_at <= ${toTs}::timestamptz
       UNION ALL
       SELECT ml.logged_by AS member_id, 'medication'::text AS task_type, ml.skipped
       FROM medication_logs ml
@@ -66,8 +70,8 @@ function buildContributionsQuery(
       WHERE a.household_id = ${householdId}
         AND a.completed_at IS NOT NULL
         AND a.completed_by IS NOT NULL
-        AND a.completed_at >= ${fromDate}
-        AND a.completed_at <= ${toDate}
+        AND a.completed_at >= ${fromTs}::timestamptz
+        AND a.completed_at <= ${toTs}::timestamptz
     ) unified
     GROUP BY member_id, task_type
     ORDER BY member_id
@@ -147,7 +151,7 @@ export const reportingRouter = router({
   completionLog: householdProcedure
     .input(reportingCompletionLogSchema)
     .query(async ({ ctx, input }) => {
-      const { fromDate, toDate } = buildDateBounds(input.from, input.to);
+      const { fromTs, toTs } = buildDateBounds(input.from, input.to);
       const offset = input.offset ?? 0;
       const limit = input.limit ?? 50;
 
@@ -182,8 +186,8 @@ export const reportingRouter = router({
           FROM feeding_logs fl
           INNER JOIN feeding_schedules fs ON fl.feeding_schedule_id = fs.id
           WHERE fl.household_id = ${ctx.householdId}
-            AND fl.completed_at >= ${fromDate}
-            AND fl.completed_at <= ${toDate}
+            AND fl.completed_at >= ${fromTs}::timestamptz
+            AND fl.completed_at <= ${toTs}::timestamptz
             ${input.memberId ? sql`AND fl.completed_by = ${input.memberId}` : sql``}
             ${input.petId ? sql`AND fl.pet_id = ${input.petId}` : sql``}
         `);
@@ -215,8 +219,8 @@ export const reportingRouter = router({
           WHERE a.household_id = ${ctx.householdId}
             AND a.completed_at IS NOT NULL
             AND a.completed_by IS NOT NULL
-            AND a.completed_at >= ${fromDate}
-            AND a.completed_at <= ${toDate}
+            AND a.completed_at >= ${fromTs}::timestamptz
+            AND a.completed_at <= ${toTs}::timestamptz
             ${input.memberId ? sql`AND a.completed_by = ${input.memberId}` : sql``}
             ${input.petId ? sql`AND a.pet_id = ${input.petId}` : sql``}
         `);
@@ -261,7 +265,7 @@ export const reportingRouter = router({
   contributions: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const { fromDate, toDate } = buildDateBounds(input.from, input.to);
+      const { fromTs, toTs } = buildDateBounds(input.from, input.to);
 
       const householdMembers = await db
         .select()
@@ -277,8 +281,8 @@ export const reportingRouter = router({
           ctx.householdId,
           input.from,
           input.to,
-          fromDate,
-          toDate
+          fromTs,
+          toTs
         )
       )) as unknown as ContributionRow[];
 
@@ -291,22 +295,25 @@ export const reportingRouter = router({
   trends: householdProcedure
     .input(reportingTrendsSchema)
     .query(async ({ ctx, input }) => {
-      const { fromDate, toDate } = buildDateBounds(input.from, input.to);
+      const { fromTs, toTs } = buildDateBounds(input.from, input.to);
       const granularity = input.granularity ?? "daily";
 
-      // Use sql.raw for the interval keyword (validated enum, not user input)
-      const truncInterval = granularity === "weekly" ? "week" : "day";
+      // date_trunc interval must be a SQL keyword, not a parameterized value
+      const truncExpr =
+        granularity === "weekly"
+          ? sql`date_trunc('week', completed_at)`
+          : sql`date_trunc('day', completed_at)`;
 
       const rows = (await db.execute(sql`
-        SELECT date_trunc(${truncInterval}, completed_at) AS bucket_date,
+        SELECT ${truncExpr} AS bucket_date,
                COUNT(*) FILTER (WHERE NOT skipped)::int AS completed,
                COUNT(*) FILTER (WHERE skipped)::int AS skipped
         FROM (
           SELECT fl.completed_at, fl.skipped
           FROM feeding_logs fl
           WHERE fl.household_id = ${ctx.householdId}
-            AND fl.completed_at >= ${fromDate}
-            AND fl.completed_at <= ${toDate}
+            AND fl.completed_at >= ${fromTs}::timestamptz
+            AND fl.completed_at <= ${toTs}::timestamptz
           UNION ALL
           SELECT ml.logged_date::timestamp AS completed_at, ml.skipped
           FROM medication_logs ml
@@ -319,8 +326,8 @@ export const reportingRouter = router({
           WHERE a.household_id = ${ctx.householdId}
             AND a.completed_at IS NOT NULL
             AND a.completed_by IS NOT NULL
-            AND a.completed_at >= ${fromDate}
-            AND a.completed_at <= ${toDate}
+            AND a.completed_at >= ${fromTs}::timestamptz
+            AND a.completed_at <= ${toTs}::timestamptz
         ) unified
         GROUP BY 1
         ORDER BY 1
@@ -364,7 +371,7 @@ export const reportingRouter = router({
   summary: householdProcedure
     .input(reportDateRangeSchema)
     .query(async ({ ctx, input }) => {
-      const { fromDate, toDate } = buildDateBounds(input.from, input.to);
+      const { fromTs, toTs } = buildDateBounds(input.from, input.to);
 
       // Run all queries in parallel:
       // 1. Members (for name lookup)
@@ -383,8 +390,8 @@ export const reportingRouter = router({
               ctx.householdId,
               input.from,
               input.to,
-              fromDate,
-              toDate
+              fromTs,
+              toTs
             )
           ) as unknown as Promise<ContributionRow[]>,
 
