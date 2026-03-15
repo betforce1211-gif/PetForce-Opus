@@ -38,39 +38,46 @@ jobs:
               assignees: [author],
             });
 
-            // Extract workspace name from branch prefix pattern: <prefix>/<workspace>/<description>
-            // or from conductor workspace branches like: betforce1211-gif/<name>
+            // Extract workspace name from branch
+            // Conductor branches: <prefix>/<name> e.g. betforce1211-gif/pr-template-check
             const branch = pr.head.ref;
             const parts = branch.split('/');
 
-            // Use second segment as workspace label if branch has slashes
             if (parts.length >= 2) {
-              const workspaceName = parts[1];
-              const labelName = `workspace:${workspaceName}`;
+              const workspaceName = parts.slice(1).join('/');
+              const labelName = `workspace-${workspaceName}`;
 
-              // Create label if it doesn't exist
+              // Ensure label exists, then apply it
               try {
                 await github.rest.issues.getLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   name: labelName,
                 });
-              } catch {
-                await github.rest.issues.createLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name: labelName,
-                  color: '1D76DB',
-                  description: `PR created from ${workspaceName} workspace`,
-                });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: labelName,
+                    color: '1D76DB',
+                    description: `PR from ${workspaceName} workspace`,
+                  });
+                } else {
+                  core.warning(`Failed to check label: ${e.message}`);
+                }
               }
 
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: [labelName],
-              });
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: [labelName],
+                });
+              } catch (e) {
+                core.warning(`Failed to add workspace label: ${e.message}`);
+              }
             }
 
   check-template:
