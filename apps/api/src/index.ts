@@ -86,7 +86,36 @@ app.use("/trpc/*", async (c) => {
   return response;
 });
 
-app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/health", async (c) => {
+  const checks: Record<string, "ok" | "error"> = {};
+
+  // Database connectivity check
+  try {
+    const { db, households } = await import("@petforce/db");
+    const { count } = await import("drizzle-orm");
+    await db.select({ n: count() }).from(households).limit(1);
+    checks.db = "ok";
+  } catch {
+    checks.db = "error";
+  }
+
+  // Clerk auth reachability check (public JWKS endpoint — no auth needed)
+  try {
+    const res = await fetch("https://api.clerk.com/.well-known/jwks.json", {
+      signal: AbortSignal.timeout(5000),
+    });
+    checks.auth = res.status < 500 ? "ok" : "error";
+  } catch {
+    checks.auth = "error";
+  }
+
+  const allOk = Object.values(checks).every((v) => v === "ok");
+  const status = allOk ? "ok" : "degraded";
+
+  // Always return 200 — this is a liveness endpoint used by CI and load
+  // balancers. The `status` field in the body communicates dependency health.
+  return c.json({ status, checks });
+});
 
 const port = env.PORT ?? env.API_PORT ?? 3001;
 

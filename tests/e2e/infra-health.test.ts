@@ -3,11 +3,14 @@ import { test, expect } from "@playwright/test";
 import "./helpers/load-env";
 
 test.describe("Infrastructure Health Gate", () => {
-  test("API /health returns 200", async ({ request }) => {
+  test("API /health returns 200 with dependency checks", async ({ request }) => {
     const response = await request.get("http://localhost:3001/health");
     expect(response.ok()).toBeTruthy();
     const body = await response.json();
-    expect(body).toEqual({ status: "ok" });
+    expect(body.status).toBe("ok");
+    expect(body.checks).toBeDefined();
+    expect(body.checks.db).toBe("ok");
+    expect(body.checks.auth).toBe("ok");
   });
 
   test("unauthenticated tRPC call returns error (not 500)", async ({
