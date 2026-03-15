@@ -86,7 +86,44 @@ app.use("/trpc/*", async (c) => {
   return response;
 });
 
-app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/health", async (c) => {
+  const checks: Record<string, "ok" | "error"> = {};
+
+  // Database connectivity check
+  try {
+    const { db, households } = await import("@petforce/db");
+    const { count } = await import("drizzle-orm");
+    await db.select({ n: count() }).from(households).limit(1);
+    checks.db = "ok";
+  } catch {
+    checks.db = "error";
+  }
+
+  // Clerk auth reachability check
+  try {
+    if (env.CLERK_SECRET_KEY) {
+      const res = await fetch("https://api.clerk.com/v1/clients", {
+        headers: { Authorization: `Bearer ${env.CLERK_SECRET_KEY}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      checks.auth = res.ok ? "ok" : "error";
+    } else {
+      // JWT key mode — verify Clerk API is reachable via public JWKS endpoint
+      const res = await fetch("https://api.clerk.com/.well-known/jwks.json", {
+        signal: AbortSignal.timeout(5000),
+      });
+      checks.auth = res.status < 500 ? "ok" : "error";
+    }
+  } catch {
+    checks.auth = "error";
+  }
+
+  const allOk = Object.values(checks).every((v) => v === "ok");
+  const anyError = Object.values(checks).some((v) => v === "error");
+  const status = allOk ? "ok" : anyError ? "degraded" : "ok";
+
+  return c.json({ status, checks }, allOk ? 200 : 503);
+});
 
 const port = env.PORT ?? env.API_PORT ?? 3001;
 

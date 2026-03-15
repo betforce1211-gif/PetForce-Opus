@@ -43,12 +43,15 @@ test.describe("PetForce Smoke Tests (Unauthenticated)", () => {
     expect(page.url()).toContain("sign-in");
   });
 
-  test("API health endpoint responds", async ({ request }) => {
+  test("API health endpoint responds with dependency checks", async ({ request }) => {
     const response = await request.get("http://localhost:3001/health");
     expect(response.ok()).toBeTruthy();
 
     const body = await response.json();
-    expect(body).toEqual({ status: "ok" });
+    expect(body.status).toBe("ok");
+    expect(body.checks).toBeDefined();
+    expect(body.checks.db).toBe("ok");
+    expect(body.checks.auth).toBe("ok");
   });
 
   test("API rejects unauthenticated tRPC calls", async ({ request }) => {
