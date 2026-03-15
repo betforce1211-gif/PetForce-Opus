@@ -61,7 +61,7 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
   });
 
   const pets = dashboardQuery.data?.pets ?? [];
-  const schedules = schedulesQuery.data ?? [];
+  const schedules = schedulesQuery.data?.items ?? [];
 
   // Auto-select first pet if only one
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
@@ -218,7 +218,7 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
         <legend style={legendStyle}>Current Schedules</legend>
 
         {schedules.length === 0 ? (
-          <p style={{ color: "#A5A8BA", fontSize: "0.85rem", textAlign: "center", margin: "1rem 0 0.5rem" }}>
+          <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.85rem", textAlign: "center", margin: "1rem 0 0.5rem" }}>
             No feeding schedules yet. Add one above!
           </p>
         ) : (
@@ -295,11 +295,11 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1.25rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -309,7 +309,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const chipRow: React.CSSProperties = {
@@ -327,8 +327,8 @@ const suggestionChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer",
   background: active
     ? "linear-gradient(135deg, #6366F1, #8B5CF6)"
-    : "rgba(99, 102, 241, 0.06)",
-  color: active ? "white" : "#6366F1",
+    : "var(--pf-highlight)",
+  color: active ? "white" : "var(--pf-primary)",
   transition: "all 0.15s ease",
 });
 
@@ -339,12 +339,12 @@ const formGrid: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
-const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "#374151" };
+const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "var(--pf-text-muted)" };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.85rem",
   outline: "none",
 };
@@ -365,7 +365,7 @@ const addBtn = (loading: boolean): React.CSSProperties => ({
 const petGroupHeader: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: "0.25rem 0",
   borderBottom: "1px solid rgba(99, 102, 241, 0.1)",
   marginBottom: "0.35rem",
@@ -381,24 +381,24 @@ const scheduleRow: React.CSSProperties = {
 
 const schedLabel: React.CSSProperties = {
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const schedTime: React.CSSProperties = {
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontWeight: 500,
 };
 
 const schedMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.75rem",
 };
 
 const editBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -409,7 +409,7 @@ const deleteBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
   background: "rgba(239, 68, 68, 0.06)",
-  color: "#DC2626",
+  color: "var(--pf-error-strong)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -419,7 +419,7 @@ const deleteBtn: React.CSSProperties = {
 const saveBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   fontSize: "0.75rem",
@@ -430,8 +430,8 @@ const saveBtn: React.CSSProperties = {
 const cancelBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -441,8 +441,8 @@ const cancelBtn: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.6rem 1.5rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.875rem",
   border: "none",
@@ -450,7 +450,7 @@ const closeBtnStyle: React.CSSProperties = {
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.825rem",
   marginTop: "0.5rem",
 };

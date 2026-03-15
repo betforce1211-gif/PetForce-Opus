@@ -148,8 +148,8 @@ function HouseholdTab({ household }: { household: GamificationHouseholdView }) {
             <span style={{ fontSize: "1.1rem", fontWeight: 800 }}>Lv.{household.level}</span>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1A1637" }}>{household.levelName}</p>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "#7C7F95" }}>{household.householdName}</p>
+            <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--pf-text)" }}>{household.levelName}</p>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--pf-text-secondary)" }}>{household.householdName}</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ function HouseholdTab({ household }: { household: GamificationHouseholdView }) {
           <div style={bigProgressTrack}>
             <div style={{ ...bigProgressFill, width: `${progressPct}%` }} />
           </div>
-          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#7C7F95", textAlign: "center" }}>
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "var(--pf-text-secondary)", textAlign: "center" }}>
             {isMaxLevel ? "MAX LEVEL REACHED" : `${household.totalXp} / ${household.totalXp + household.xpToNextLevel} XP to Lv.${household.level + 1}`}
           </p>
         </div>
@@ -313,7 +313,7 @@ const categorySummary: React.CSSProperties = {
   cursor: "pointer",
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   padding: "0.35rem 0",
   listStyle: "none",
   display: "flex",
@@ -324,14 +324,14 @@ const categorySummary: React.CSSProperties = {
 const categoryCount: React.CSSProperties = {
   fontSize: "0.65rem",
   fontWeight: 500,
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
 };
 
 const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
   fontSize: "1.4rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.02em",
 };
 
@@ -339,7 +339,7 @@ const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "0.5rem",
   marginBottom: "1.25rem",
-  borderBottom: "1px solid #E5E7EB",
+  borderBottom: "1px solid var(--pf-border-muted)",
   paddingBottom: "0.5rem",
 };
 
@@ -348,7 +348,7 @@ const tabBtn = (active: boolean): React.CSSProperties => ({
   borderRadius: "0.5rem",
   border: "none",
   background: active ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "transparent",
-  color: active ? "#fff" : "#7C7F95",
+  color: active ? "#fff" : "var(--pf-text-secondary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   cursor: "pointer",
@@ -358,30 +358,30 @@ const tabBtn = (active: boolean): React.CSSProperties => ({
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.5rem 1.25rem",
   borderRadius: "0.625rem",
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   background: "#fff",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   fontSize: "0.825rem",
   fontWeight: 600,
   cursor: "pointer",
 };
 
 const loadingText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   padding: "2rem 0",
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.85rem",
   textAlign: "center",
   padding: "2rem 0",
 };
 
 const emptyText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   padding: "2rem 0",
@@ -391,7 +391,7 @@ const sectionTitle: React.CSSProperties = {
   margin: "0 0 0.5rem",
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
 };
@@ -404,7 +404,7 @@ const lbRow: React.CSSProperties = {
   padding: "0.75rem",
   borderRadius: "0.625rem",
   background: "rgba(99, 102, 241, 0.03)",
-  border: "1px solid rgba(99, 102, 241, 0.08)",
+  border: "1px solid var(--pf-highlight)",
 };
 
 const lbRank: React.CSSProperties = {
@@ -424,12 +424,12 @@ const lbInfo: React.CSSProperties = {
 const lbName: React.CSSProperties = {
   fontSize: "0.9rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const lbSub: React.CSSProperties = {
   fontSize: "0.75rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
 };
 
 const lbRight: React.CSSProperties = {
@@ -442,12 +442,12 @@ const lbRight: React.CSSProperties = {
 const lbXp: React.CSSProperties = {
   fontSize: "0.9rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
 };
 
 const lbStreak: React.CSSProperties = {
   fontSize: "0.7rem",
-  color: "#F59E0B",
+  color: "var(--pf-warning)",
   fontWeight: 600,
 };
 
@@ -465,7 +465,7 @@ const badgeCard = (earned: boolean): React.CSSProperties => ({
   gap: "0.35rem",
   padding: "1rem 0.5rem",
   borderRadius: "0.75rem",
-  background: earned ? "rgba(99, 102, 241, 0.06)" : "rgba(0, 0, 0, 0.02)",
+  background: earned ? "var(--pf-highlight)" : "rgba(0, 0, 0, 0.02)",
   border: `1px solid ${earned ? "rgba(99, 102, 241, 0.15)" : "rgba(0, 0, 0, 0.05)"}`,
   textAlign: "center",
 });
@@ -473,12 +473,12 @@ const badgeCard = (earned: boolean): React.CSSProperties => ({
 const badgeName = (earned: boolean): React.CSSProperties => ({
   fontSize: "0.8rem",
   fontWeight: 600,
-  color: earned ? "#1A1637" : "#A5A8BA",
+  color: earned ? "var(--pf-text)" : "var(--pf-text-secondary)",
 });
 
 const badgeDesc: React.CSSProperties = {
   fontSize: "0.7rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   lineHeight: 1.3,
 };
 
@@ -487,7 +487,7 @@ const statsSection: React.CSSProperties = {
   padding: "1rem",
   borderRadius: "0.75rem",
   background: "rgba(99, 102, 241, 0.03)",
-  border: "1px solid rgba(99, 102, 241, 0.08)",
+  border: "1px solid var(--pf-highlight)",
 };
 
 const bigLevelBadge: React.CSSProperties = {
@@ -504,7 +504,7 @@ const bigLevelBadge: React.CSSProperties = {
 const bigProgressTrack: React.CSSProperties = {
   height: 10,
   borderRadius: 5,
-  background: "rgba(99, 102, 241, 0.1)",
+  background: "var(--pf-highlight)",
   overflow: "hidden",
 };
 
@@ -529,19 +529,19 @@ const statCard: React.CSSProperties = {
   padding: "0.75rem 0.5rem",
   borderRadius: "0.625rem",
   background: "rgba(99, 102, 241, 0.03)",
-  border: "1px solid rgba(99, 102, 241, 0.08)",
+  border: "1px solid var(--pf-highlight)",
 };
 
 const statCardValue: React.CSSProperties = {
   fontSize: "1.1rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const statCardLabel: React.CSSProperties = {
   fontSize: "0.65rem",
   fontWeight: 500,
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   textAlign: "center",
 };
 

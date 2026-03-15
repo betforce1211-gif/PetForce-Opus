@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ERRORS=0
+WARNINGS=0
+
+green()  { printf "\033[32m✓\033[0m %s\n" "$1"; }
+yellow() { printf "\033[33m⚠\033[0m %s\n" "$1"; WARNINGS=$((WARNINGS + 1)); }
+red()    { printf "\033[31m✗\033[0m %s\n" "$1"; ERRORS=$((ERRORS + 1)); }
+
+echo "═══ PetForce Doc Gardener ═══"
+echo ""
+
+# ── 1. Every router should be documented in API docs ──
+echo "── Router → API Docs ──"
+API_DOCS="$REPO_ROOT/docs/api/README.md"
+for router in "$REPO_ROOT"/apps/api/src/routers/*.ts; do
+  name=$(basename "$router" .ts)
+  # Match both hyphenated (access-request) and camelCase (accessRequest)
+  search_name=$(echo "$name" | sed 's/-//g')
+  if grep -qi "$search_name\|$name" "$API_DOCS" 2>/dev/null; then
+    green "$name router documented"
+  else
+    red "$name router missing from docs/api/README.md"
+  fi
+done
+echo ""
+
+# ── 2. Every E2E test should be in playwright config testMatch ──
+echo "── E2E Tests → Playwright Config ──"
+PW_CONFIG="$REPO_ROOT/tests/playwright.config.ts"
+for test_file in "$REPO_ROOT"/tests/e2e/*.test.ts; do
+  name=$(basename "$test_file" .test.ts)
+  if grep -q "$name" "$PW_CONFIG" 2>/dev/null; then
+    green "$name in testMatch"
+  else
+    yellow "$name.test.ts not in playwright.config.ts testMatch"
+  fi
+done
+echo ""
+
+# ── 3. Quality score freshness ──
+echo "── Quality Score ──"
+QS="$REPO_ROOT/docs/dev/quality-score.md"
+if [[ -f "$QS" ]]; then
+  last_updated=$(grep 'Last updated:' "$QS" 2>/dev/null | head -1 | sed 's/.*Last updated: //' | tr -d '[:space:]' || echo "")
+  if [[ -n "$last_updated" ]]; then
+    last_epoch=$(date -j -f "%Y-%m-%d" "$last_updated" "+%s" 2>/dev/null || date -d "$last_updated" "+%s" 2>/dev/null || echo "0")
+    now_epoch=$(date "+%s")
+    days_old=$(( (now_epoch - last_epoch) / 86400 ))
+    if [[ $days_old -gt 30 ]]; then
+      yellow "Quality score is ${days_old} days old — consider updating"
+    else
+      green "Quality score is current (${days_old} days old)"
+    fi
+  else
+    yellow "Could not parse 'Last updated' date in quality-score.md"
+  fi
+else
+  red "docs/dev/quality-score.md does not exist"
+fi
+echo ""
+
+# ── 4. Active exec plans with no remaining steps ──
+echo "── Execution Plans ──"
+PLANS_DIR="$REPO_ROOT/docs/exec-plans/active"
+if [[ -d "$PLANS_DIR" ]]; then
+  for plan in "$PLANS_DIR"/*.md; do
+    [[ -f "$plan" ]] || continue
+    name=$(basename "$plan" .md)
+    unchecked=$(grep -c '^\- \[ \]' "$plan" 2>/dev/null || echo "0")
+    checked=$(grep -c '^\- \[x\]' "$plan" 2>/dev/null || echo "0")
+    if [[ $unchecked -eq 0 && $checked -gt 0 ]]; then
+      yellow "$name: all steps complete — move to completed/"
+    else
+      green "$name: ${unchecked} steps remaining"
+    fi
+  done
+else
+  yellow "No docs/exec-plans/active/ directory found"
+fi
+echo ""
+
+# ── 5. Routers without E2E test files ──
+echo "── Router → E2E Test Coverage ──"
+for router in "$REPO_ROOT"/apps/api/src/routers/*.ts; do
+  name=$(basename "$router" .ts)
+  # Check for exact match or partial match (e.g., household-manage for household)
+  if ls "$REPO_ROOT"/tests/e2e/*"$name"*.test.ts &>/dev/null || ls "$REPO_ROOT"/tests/e2e/"$name"*.test.ts &>/dev/null; then
+    green "$name has E2E tests"
+  else
+    yellow "$name router has no dedicated E2E test file"
+  fi
+done
+echo ""
+
+# ── Summary ──
+echo "═══ Summary ═══"
+if [[ $ERRORS -gt 0 ]]; then
+  red "${ERRORS} error(s), ${WARNINGS} warning(s)"
+  exit 1
+elif [[ $WARNINGS -gt 0 ]]; then
+  yellow "${WARNINGS} warning(s), 0 errors"
+  exit 0
+else
+  green "All checks passed"
+  exit 0
+fi

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { eq, and, lt, gt, asc, desc, inArray, count as drizzleCount } from "drizzle-orm";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   healthRecords,
@@ -14,8 +14,10 @@ import {
   updateHealthRecordSchema,
   createMedicationSchema,
   updateMedicationSchema,
+  paginationInput,
 } from "@petforce/core";
 import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
+import { logActivity } from "../lib/audit.js";
 
 export const healthRouter = router({
   // ── Health Records ──
@@ -26,18 +28,23 @@ export const healthRouter = router({
         type: z
           .enum(["vet_visit", "vaccination", "checkup", "procedure"])
           .optional(),
-      })
+      }).merge(paginationInput)
     )
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(healthRecords)
-        .where(eq(healthRecords.householdId, ctx.householdId));
-
-      if (input.type) {
-        return rows.filter((r) => r.type === input.type);
-      }
-      return rows;
+      const where = input.type
+        ? and(eq(healthRecords.householdId, ctx.householdId), eq(healthRecords.type, input.type))
+        : eq(healthRecords.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(healthRecords)
+          .where(where)
+          .orderBy(desc(healthRecords.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(healthRecords).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createRecord: householdProcedure
@@ -75,6 +82,17 @@ export const healthRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "health_record.updated",
+        subjectType: "health_record",
+        subjectId: record.id,
+        subjectName: record.type,
+        performedBy: ctx.membership.id,
+        metadata: { recordType: record.type, changedFields: Object.keys(data) },
+      });
+
       return record;
     }),
 
@@ -95,17 +113,22 @@ export const healthRouter = router({
   // ── Medications ──
 
   listMedications: householdProcedure
-    .input(z.object({ activeOnly: z.boolean().optional() }))
+    .input(z.object({ activeOnly: z.boolean().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(medications)
-        .where(eq(medications.householdId, ctx.householdId));
-
-      if (input.activeOnly) {
-        return rows.filter((m) => m.isActive);
-      }
-      return rows;
+      const where = input.activeOnly
+        ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
+        : eq(medications.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(medications)
+          .where(where)
+          .orderBy(desc(medications.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(medications).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createMedication: householdProcedure
@@ -142,6 +165,17 @@ export const healthRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "medication.updated",
+        subjectType: "medication",
+        subjectId: med.id,
+        subjectName: med.name,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(data) },
+      });
+
       return med;
     }),
 
@@ -317,53 +351,55 @@ export const healthRouter = router({
   summary: householdProcedure.query(async ({ ctx }) => {
     const now = new Date();
 
-    // Active medications count
-    const allMeds = await db
-      .select()
-      .from(medications)
-      .where(
-        and(
-          eq(medications.householdId, ctx.householdId),
-          eq(medications.isActive, true)
+    // Fetch only the data we need with targeted queries
+    const [allMeds, overdueVaccinations, nextAppointmentRows] = await Promise.all([
+      db
+        .select()
+        .from(medications)
+        .where(
+          and(
+            eq(medications.householdId, ctx.householdId),
+            eq(medications.isActive, true)
+          )
+        ),
+      db
+        .select()
+        .from(healthRecords)
+        .where(
+          and(
+            eq(healthRecords.householdId, ctx.householdId),
+            eq(healthRecords.type, "vaccination"),
+            lt(healthRecords.nextDueDate, now)
+          )
+        ),
+      db
+        .select({
+          petId: healthRecords.petId,
+          date: healthRecords.date,
+          reason: healthRecords.reason,
+        })
+        .from(healthRecords)
+        .where(
+          and(
+            eq(healthRecords.householdId, ctx.householdId),
+            inArray(healthRecords.type, ["vet_visit", "checkup", "procedure"]),
+            gt(healthRecords.date, now)
+          )
         )
-      );
-
-    // Overdue vaccinations: type=vaccination AND nextDueDate < now
-    const allRecords = await db
-      .select()
-      .from(healthRecords)
-      .where(eq(healthRecords.householdId, ctx.householdId));
-
-    const overdueVaccinations = allRecords.filter(
-      (r) =>
-        r.type === "vaccination" &&
-        r.nextDueDate &&
-        new Date(r.nextDueDate) < now
-    );
-
-    // Next future appointment (vet_visit, checkup, or procedure with date > now)
-    const futureAppointments = allRecords
-      .filter(
-        (r) =>
-          (r.type === "vet_visit" ||
-            r.type === "checkup" ||
-            r.type === "procedure") &&
-          new Date(r.date) > now
-      )
-      .sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
+        .orderBy(asc(healthRecords.date))
+        .limit(1),
+    ]);
 
     let nextAppointment: HealthSummary["nextAppointment"] = null;
-    if (futureAppointments.length > 0) {
-      const appt = futureAppointments[0];
-      const householdPets = await db
-        .select()
+    if (nextAppointmentRows.length > 0) {
+      const appt = nextAppointmentRows[0];
+      // Fetch pet name only if we have an appointment
+      const [pet] = await db
+        .select({ name: pets.name })
         .from(pets)
-        .where(eq(pets.householdId, ctx.householdId));
-      const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
+        .where(eq(pets.id, appt.petId));
       nextAppointment = {
-        petName: petMap.get(appt.petId) ?? "Unknown",
+        petName: pet?.name ?? "Unknown",
         date: appt.date.toISOString(),
         reason: appt.reason,
       };

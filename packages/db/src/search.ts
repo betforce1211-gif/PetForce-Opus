@@ -3,7 +3,7 @@
  * These use sql`` because FTS operations have no Drizzle ORM equivalent.
  */
 import { sql } from "drizzle-orm";
-import { db } from "./client";
+import { db } from "./client.js";
 
 export type SearchEntityType = "pet" | "activity" | "note";
 

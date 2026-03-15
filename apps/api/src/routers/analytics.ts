@@ -1,4 +1,6 @@
-import { protectedProcedure, router } from "../trpc";
+import { z } from "zod";
+import { eq, and } from "drizzle-orm";
+import { protectedProcedure, router } from "../trpc.js";
 import { db, analyticsEvents } from "@petforce/db";
 import { trackEventSchema } from "@petforce/core";
 
@@ -15,4 +17,14 @@ export const analyticsRouter = router({
       .returning();
     return event;
   }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [deleted] = await db
+        .delete(analyticsEvents)
+        .where(and(eq(analyticsEvents.id, input.id), eq(analyticsEvents.userId, ctx.userId)))
+        .returning();
+      return deleted ?? null;
+    }),
 });

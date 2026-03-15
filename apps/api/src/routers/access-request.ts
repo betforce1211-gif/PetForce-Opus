@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc";
+import { householdProcedure, protectedProcedure, router, requireAdmin } from "../trpc.js";
 import { db, accessRequests, members, households } from "@petforce/db";
-import { createAccessRequestSchema } from "@petforce/core";
+import { createAccessRequestSchema, paginationInput } from "@petforce/core";
+import { logger } from "../lib/logger.js";
 
 export const accessRequestRouter = router({
   create: protectedProcedure
@@ -72,34 +73,32 @@ export const accessRequestRouter = router({
       return request;
     }),
 
-  listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners and admins can view access requests",
-      });
-    }
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      requireAdmin(ctx.membership);
 
-    return db
-      .select()
-      .from(accessRequests)
-      .where(
-        and(
-          eq(accessRequests.householdId, ctx.householdId),
-          eq(accessRequests.status, "pending")
-        )
+      const where = and(
+        eq(accessRequests.householdId, ctx.householdId),
+        eq(accessRequests.status, "pending")
       );
-  }),
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(accessRequests)
+          .where(where)
+          .orderBy(desc(accessRequests.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(accessRequests).where(where),
+      ]);
+      return { items, totalCount: count };
+    }),
 
   approve: householdProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can approve requests",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [request] = await db
         .select()
@@ -136,18 +135,14 @@ export const accessRequestRouter = router({
         .set({ status: "approved", reviewedBy: ctx.membership.id })
         .where(eq(accessRequests.id, input.requestId));
 
+      logger.info({ audit: true, action: "accessRequest.approve", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, approvedUserId: request.userId }, "access request approved");
       return member;
     }),
 
   deny: householdProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can deny requests",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [request] = await db
         .update(accessRequests)
@@ -168,6 +163,7 @@ export const accessRequestRouter = router({
         });
       }
 
+      logger.info({ audit: true, action: "accessRequest.deny", userId: ctx.userId, householdId: ctx.householdId, requestId: input.requestId, deniedUserId: request.userId }, "access request denied");
       return { success: true };
     }),
 });

@@ -107,7 +107,7 @@ function VetVisitsTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const records = (recordsQuery.data ?? []).filter(
+  const records = (recordsQuery.data?.items ?? []).filter(
     (r) => r.type === "vet_visit" || r.type === "checkup" || r.type === "procedure"
   );
 
@@ -314,7 +314,7 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const records = (recordsQuery.data ?? []).filter((r) => r.type === "vaccination");
+  const records = (recordsQuery.data?.items ?? []).filter((r) => r.type === "vaccination");
 
   // Determine species for suggestions
   const selectedPet = pets.find((p) => p.id === effectivePetId);
@@ -457,7 +457,7 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
                         <span style={recordLabel}>{r.vaccineName ?? "Vaccination"}</span>
                         <span style={recordDate}>{formatDate(r.date)}</span>
                         {r.nextDueDate && (
-                          <span style={{ ...recordMeta, color: overdue ? "#DC2626" : "#6B7280", fontWeight: overdue ? 700 : 500 }}>
+                          <span style={{ ...recordMeta, color: overdue ? "var(--pf-error-strong)" : "var(--pf-text-muted)", fontWeight: overdue ? 700 : 500 }}>
                             Due: {formatDate(r.nextDueDate)}
                             {overdue && " (OVERDUE)"}
                           </span>
@@ -529,7 +529,7 @@ function MedicationsTab({ householdId }: { householdId: string }) {
 
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
-  const meds = medsQuery.data ?? [];
+  const meds = medsQuery.data?.items ?? [];
 
   function resetForm() {
     setName("");
@@ -691,7 +691,7 @@ function MedicationsTab({ householdId }: { householdId: string }) {
                         <span style={{
                           ...statusBadge,
                           background: m.isActive ? "rgba(16, 185, 129, 0.1)" : "rgba(107, 114, 128, 0.1)",
-                          color: m.isActive ? "#059669" : "#6B7280",
+                          color: m.isActive ? "var(--pf-success-strong)" : "var(--pf-text-muted)",
                         }}>
                           {m.isActive ? "Active" : "Inactive"}
                         </span>
@@ -746,14 +746,14 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "0.35rem",
   marginBottom: "1.25rem",
-  borderBottom: "2px solid #E5E7EB",
+  borderBottom: "2px solid var(--pf-border-muted)",
   paddingBottom: "0",
 };
 
@@ -762,16 +762,16 @@ const tabBtn = (active: boolean): React.CSSProperties => ({
   fontSize: "0.85rem",
   fontWeight: 600,
   border: "none",
-  borderBottom: active ? "2px solid #6366F1" : "2px solid transparent",
+  borderBottom: active ? "2px solid var(--pf-primary)" : "2px solid transparent",
   marginBottom: "-2px",
   background: "none",
-  color: active ? "#6366F1" : "#6B7280",
+  color: active ? "var(--pf-primary)" : "var(--pf-text-muted)",
   cursor: "pointer",
   transition: "all 0.15s ease",
 });
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -781,7 +781,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const chipRow: React.CSSProperties = {
@@ -800,8 +800,8 @@ const suggestionChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer",
   background: active
     ? "linear-gradient(135deg, #6366F1, #8B5CF6)"
-    : "rgba(99, 102, 241, 0.06)",
-  color: active ? "white" : "#6366F1",
+    : "var(--pf-highlight)",
+  color: active ? "white" : "var(--pf-primary)",
   transition: "all 0.15s ease",
 });
 
@@ -812,12 +812,12 @@ const formGrid: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
-const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "#374151" };
+const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "var(--pf-text-muted)" };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.85rem",
   outline: "none",
 };
@@ -838,7 +838,7 @@ const addBtn = (loading: boolean): React.CSSProperties => ({
 const petGroupHeader: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: "0.25rem 0",
   borderBottom: "1px solid rgba(99, 102, 241, 0.1)",
   marginBottom: "0.35rem",
@@ -871,16 +871,16 @@ const recordIcon: React.CSSProperties = {
 
 const recordLabel: React.CSSProperties = {
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const recordDate: React.CSSProperties = {
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontWeight: 500,
 };
 
 const recordMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.75rem",
 };
 
@@ -894,8 +894,8 @@ const statusBadge: React.CSSProperties = {
 const editBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -906,7 +906,7 @@ const deleteBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
   background: "rgba(239, 68, 68, 0.06)",
-  color: "#DC2626",
+  color: "var(--pf-error-strong)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -916,7 +916,7 @@ const deleteBtnStyle: React.CSSProperties = {
 const saveBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   fontSize: "0.75rem",
@@ -927,8 +927,8 @@ const saveBtn: React.CSSProperties = {
 const cancelBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -939,7 +939,7 @@ const toggleBtn = (isActive: boolean): React.CSSProperties => ({
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
   background: isActive ? "rgba(239, 68, 68, 0.06)" : "rgba(16, 185, 129, 0.06)",
-  color: isActive ? "#DC2626" : "#059669",
+  color: isActive ? "var(--pf-error-strong)" : "var(--pf-success-strong)",
   fontWeight: 600,
   fontSize: "0.7rem",
   border: "none",
@@ -949,8 +949,8 @@ const toggleBtn = (isActive: boolean): React.CSSProperties => ({
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.6rem 1.5rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.875rem",
   border: "none",
@@ -958,13 +958,13 @@ const closeBtnStyle: React.CSSProperties = {
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.825rem",
   marginTop: "0.5rem",
 };
 
 const emptyText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   margin: "1rem 0 0.5rem",

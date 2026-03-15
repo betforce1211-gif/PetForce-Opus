@@ -2,14 +2,16 @@
   "name": "@petforce/db",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/index.ts",
+  "type": "module",
+  "main": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/",
     "clean": "rm -rf dist",
     "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
-    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push"
+    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push",
+    "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
     "@petforce/core": "workspace:*",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@petforce/config": "workspace:*",
     "drizzle-kit": "^0.24.0",
+    "tsx": "^4.16.0",
     "typescript": "^5.4.0"
   }
 }

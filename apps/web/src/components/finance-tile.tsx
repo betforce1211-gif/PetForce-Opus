@@ -18,7 +18,7 @@ export function FinanceTileContent({ householdId, onManage }: FinanceTileContent
   if (summaryQuery.isLoading) {
     return (
       <div style={centered}>
-        <span style={{ color: "#A5A8BA", fontSize: "0.8rem" }}>Loading...</span>
+        <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
       </div>
     );
   }
@@ -26,7 +26,7 @@ export function FinanceTileContent({ householdId, onManage }: FinanceTileContent
   if (summaryQuery.isError) {
     return (
       <div style={centered}>
-        <span style={{ color: "#EF4444", fontSize: "0.8rem" }}>Failed to load</span>
+        <span style={{ color: "var(--pf-error)", fontSize: "0.8rem" }}>Failed to load</span>
       </div>
     );
   }
@@ -37,7 +37,7 @@ export function FinanceTileContent({ householdId, onManage }: FinanceTileContent
       <>
         <div style={centered}>
           <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{"\uD83D\uDCB0"}</span>
-          <p style={{ color: "#A5A8BA", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
+          <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
             No expenses tracked yet
           </p>
         </div>
@@ -53,7 +53,7 @@ export function FinanceTileContent({ householdId, onManage }: FinanceTileContent
     ? ((data.monthlyTotal - data.previousMonthTotal) / data.previousMonthTotal) * 100
     : data.monthlyTotal > 0 ? 100 : 0;
   const changeSign = pctChange > 0 ? "+" : "";
-  const changeColor = pctChange > 0 ? "#DC2626" : pctChange < 0 ? "#059669" : "#6B7280";
+  const changeColor = pctChange > 0 ? "var(--pf-error-strong)" : pctChange < 0 ? "var(--pf-success-strong)" : "var(--pf-text-muted)";
 
   // Top category
   const topCat = data.byCategory[0];
@@ -120,7 +120,7 @@ const summaryRow: React.CSSProperties = {
   alignItems: "center",
   gap: "0.625rem",
   padding: "0.5rem 0.25rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.06)",
+  borderBottom: "1px solid var(--pf-highlight)",
 };
 
 const summaryIcon: React.CSSProperties = {
@@ -133,21 +133,21 @@ const summaryIcon: React.CSSProperties = {
 const summaryLabel: React.CSSProperties = {
   flex: 1,
   fontSize: "0.8rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
 };
 
 const summaryValue: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const linkBtn: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -157,6 +157,6 @@ const linkBtn: React.CSSProperties = {
   border: "none",
   borderTopStyle: "solid",
   borderTopWidth: "1px",
-  borderTopColor: "rgba(99, 102, 241, 0.08)",
+  borderTopColor: "var(--pf-highlight)",
   cursor: "pointer",
 };

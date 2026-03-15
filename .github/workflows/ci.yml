@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter=@petforce/core test
+      - run: cd tests && npx vitest run --passWithNoTests
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: lint-and-build
+    if: ${{ vars.E2E_ENABLED == 'true' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      CLERK_JWT_KEY: ${{ secrets.CLERK_JWT_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+      NEXT_PUBLIC_WEB_URL: http://localhost:3000
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      CLERK_TEST_CODE: "424242"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+
+      # Build with NEXT_PUBLIC_* vars available (set via job-level env)
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: cd tests && npx playwright install --with-deps chromium
+
+      - name: Use Supabase pooler for IPv4 connectivity
+        run: |
+          # GHA runners can't route IPv6, and Supabase direct DB hostnames
+          # (db.xxx.supabase.co) are IPv6-only. Use the pooler URL which supports IPv4.
+          echo "Using DATABASE_POOLER_URL secret for IPv4-only pooler connection"
+          echo "DATABASE_URL=$DATABASE_POOLER_URL" >> "$GITHUB_ENV"
+        env:
+          DATABASE_POOLER_URL: ${{ secrets.DATABASE_POOLER_URL }}
+
+      - name: Run database migrations
+        run: pnpm --filter=@petforce/db db:migrate
+        env:
+          NODE_OPTIONS: "--dns-result-order=ipv4first"
+
+      - name: Start API server
+        run: |
+          cd apps/api
+          node --dns-result-order=ipv4first dist/index.js > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+          # Wait for API to be ready (up to 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -f http://localhost:3001/health || { echo "API failed to start:"; cat /tmp/api.log; exit 1; }
+          # Verify API is reachable on 127.0.0.1 (what browsers resolve localhost to)
+          curl -f http://127.0.0.1:3001/health || { echo "API not reachable on 127.0.0.1"; cat /tmp/api.log; exit 1; }
+
+      - name: Start web server
+        run: |
+          cd apps/web
+          npx next start > /tmp/web.log 2>&1 &
+          echo $! > /tmp/web.pid
+          # Wait for web to be ready (up to 30s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
+              echo "Web ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -f http://localhost:3000 || { echo "Web failed to start:"; cat /tmp/web.log; exit 1; }
+
+      - name: Verify CSP header includes API URL
+        run: |
+          CSP=$(curl -sI http://localhost:3000 | grep -i content-security-policy || echo "NO CSP HEADER")
+          echo "CSP: $CSP"
+          echo "Looking for connect-src with API URL..."
+          echo "$CSP" | grep -o "connect-src[^;]*" || echo "connect-src not found"
+
+      - name: Run E2E tests
+        shell: bash
+        run: |
+          set -o pipefail
+          cd tests && npx playwright test --config=playwright.config.ts 2>&1 | tee /tmp/e2e-output.log
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: tests/test-results/
+          retention-days: 7
+
+      - name: Upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            /tmp/api.log
+            /tmp/web.log
+            /tmp/e2e-output.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/playwright-report/
+          retention-days: 7

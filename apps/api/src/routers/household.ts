@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc";
+import { protectedProcedure, householdProcedure, router, requireAdmin, requireOwner } from "../trpc.js";
 import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
-import { generateJoinCode } from "../utils/join-code";
+import { generateJoinCode } from "../utils/join-code.js";
+import { logActivity } from "../lib/audit.js";
 
 export const householdRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -26,28 +27,27 @@ export const householdRouter = router({
     return results;
   }),
 
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const [household] = await db
-        .select()
-        .from(households)
-        .where(eq(households.id, input.id));
-      return household ?? null;
-    }),
+  getById: householdProcedure.query(async ({ ctx }) => {
+    const [household] = await db
+      .select()
+      .from(households)
+      .where(eq(households.id, ctx.householdId));
+    return household ?? null;
+  }),
 
   create: protectedProcedure
     .input(createHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
-      // Enforce one-household-creation limit
-      const ownerRows = await db
-        .select({ id: members.id })
+      // Enforce one-household-per-owner limit
+      const owned = await db
+        .select({ cnt: count() })
         .from(members)
         .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
-      if (ownerRows.length > 0) {
+      if ((owned[0]?.cnt ?? 0) > 0) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You have already created a household. You can join other households using a join code.",
+          message:
+            "You have already created a household. You can join other households using a join code.",
         });
       }
 
@@ -74,17 +74,19 @@ export const householdRouter = router({
       return household;
     }),
 
-  update: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }).merge(updateHouseholdSchema))
-    .mutation(async ({ input }) => {
-      const { id, theme, ...rest } = input;
+  update: householdProcedure
+    .input(updateHouseholdSchema)
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx.membership);
+
+      const { theme, ...rest } = input;
 
       const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
       if (theme) {
         const [existing] = await db
           .select()
           .from(households)
-          .where(eq(households.id, id));
+          .where(eq(households.id, ctx.householdId));
         if (existing) {
           updateData.theme = { ...existing.theme, ...theme };
         }
@@ -93,31 +95,46 @@ export const householdRouter = router({
       const [household] = await db
         .update(households)
         .set(updateData)
-        .where(eq(households.id, id))
+        .where(eq(households.id, ctx.householdId))
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "household.updated",
+        subjectType: "household",
+        subjectId: household.id,
+        subjectName: household.name,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(input) },
+      });
+
       return household;
     }),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      await db.delete(households).where(eq(households.id, input.id));
-      return { success: true };
-    }),
+  delete: householdProcedure.mutation(async ({ ctx }) => {
+    requireOwner(ctx.membership);
+
+    await db.delete(households).where(eq(households.id, ctx.householdId));
+    return { success: true };
+  }),
 
   regenerateJoinCode: householdProcedure.mutation(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners can regenerate the join code",
-      });
-    }
+    requireOwner(ctx.membership);
 
     const [household] = await db
       .update(households)
       .set({ joinCode: generateJoinCode(), updatedAt: new Date() })
       .where(eq(households.id, ctx.householdId))
       .returning();
+
+    await logActivity({
+      householdId: ctx.householdId,
+      action: "household.join_code_regenerated",
+      subjectType: "household",
+      subjectId: household.id,
+      subjectName: household.name,
+      performedBy: ctx.membership.id,
+    });
 
     return household;
   }),

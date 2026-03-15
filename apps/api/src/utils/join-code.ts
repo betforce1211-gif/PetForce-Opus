@@ -4,13 +4,14 @@ import crypto from "crypto";
 const LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
 export function generateJoinCode(): string {
+  const bytes = crypto.randomBytes(7);
   let code = "";
   for (let i = 0; i < 3; i++) {
-    code += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+    code += LETTERS[bytes[i] % LETTERS.length];
   }
   code += "-";
-  for (let i = 0; i < 4; i++) {
-    code += Math.floor(Math.random() * 10).toString();
+  for (let i = 3; i < 7; i++) {
+    code += (bytes[i] % 10).toString();
   }
   return code;
 }

@@ -1,6 +1,11 @@
 import { Page, APIRequestContext } from "@playwright/test";
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+// Module-level cache for the last successfully extracted auth token.
+// extractAuthToken() stores it here so getHouseholdId() can reuse it
+// without re-extracting from Clerk JS (which may not be available).
+let _cachedAuthToken: string | null = null;
 
 /**
  * Detects if Clerk redirected to its hosted sign-in page (session expired) and
@@ -93,33 +98,76 @@ export async function safeGoto(page: Page, url: string): Promise<void> {
   }
   const didReAuth = await ensureAuthenticated(page);
   if (didReAuth) {
-    // After re-auth, navigate to the original target
+    // After re-auth, navigate to the original target and reload to ensure
+    // fresh tRPC calls fire (so extractAuthToken can capture the new JWT)
     await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000);
+    await page.reload();
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
   }
 }
 
 /**
- * Intercepts outbound tRPC requests from the browser to capture the real
- * Clerk JWT token. Call this BEFORE navigating to a page that makes API calls.
+ * Extracts the Clerk session token from the browser.
+ *
+ * Tries two approaches:
+ * 1. Use Clerk's JS API (window.Clerk.session.getToken()) — most reliable
+ * 2. Fall back to intercepting outbound tRPC requests
+ *
+ * Call this AFTER navigating to an authenticated page.
  */
 export async function extractAuthToken(page: Page): Promise<string> {
+  // Approach 1: Get token directly from Clerk's JS API
+  for (let attempt = 0; attempt < 15; attempt++) {
+    try {
+      const token = await page.evaluate(async () => {
+        const clerk = (window as any).Clerk;
+        if (clerk?.session) {
+          return await clerk.session.getToken();
+        }
+        return null;
+      });
+      if (token) {
+        _cachedAuthToken = token;
+        return token;
+      }
+    } catch {
+      // Clerk not loaded yet
+    }
+    await page.waitForTimeout(2000);
+  }
+
+  // Approach 2: Fall back to intercepting a tRPC request
+  console.log("Clerk JS API unavailable, falling back to request interception");
   return new Promise((resolve, reject) => {
+    let resolved = false;
     const timeout = setTimeout(() => {
-      reject(new Error("Timed out waiting for auth token from browser requests"));
-    }, 60_000);
+      if (!resolved) {
+        reject(new Error(
+          `Timed out waiting for auth token. Current URL: ${page.url()}`
+        ));
+      }
+    }, 30_000);
 
     page.on("request", (request) => {
+      if (resolved) return;
       const url = request.url();
       if (url.includes("/trpc/")) {
         const auth = request.headers()["authorization"];
         if (auth?.startsWith("Bearer ")) {
+          resolved = true;
           clearTimeout(timeout);
-          resolve(auth.replace("Bearer ", ""));
+          const t = auth.replace("Bearer ", "");
+          _cachedAuthToken = t;
+          resolve(t);
         }
       }
     });
+
+    // Trigger a tRPC call by reloading
+    page.reload().catch(() => {});
   });
 }
 
@@ -139,8 +187,10 @@ export async function trpcMutation(
     },
     data: { json: input },
   });
-  const body = await response.json();
-  if (body.error) {
+  const raw = await response.json();
+  // tRPC may return single object or batch array
+  const body = Array.isArray(raw) ? raw[0] : raw;
+  if (body?.error) {
     const parsed =
       typeof body.error.json === "object"
         ? body.error.json
@@ -148,10 +198,10 @@ export async function trpcMutation(
     throw Object.assign(new Error(parsed.message ?? JSON.stringify(parsed)), {
       code: parsed.data?.code ?? parsed.code,
       httpStatus: parsed.data?.httpStatus ?? response.status(),
-      raw: body,
+      raw,
     });
   }
-  return body.result?.data?.json ?? body.result?.data ?? body.result;
+  return body?.result?.data?.json ?? body?.result?.data ?? body?.result;
 }
 
 /**
@@ -172,8 +222,10 @@ export async function trpcQuery(
       authorization: `Bearer ${token}`,
     },
   });
-  const body = await response.json();
-  if (body.error) {
+  const raw = await response.json();
+  // tRPC may return single object or batch array
+  const body = Array.isArray(raw) ? raw[0] : raw;
+  if (body?.error) {
     const parsed =
       typeof body.error.json === "object"
         ? body.error.json
@@ -181,19 +233,104 @@ export async function trpcQuery(
     throw Object.assign(new Error(parsed.message ?? JSON.stringify(parsed)), {
       code: parsed.data?.code ?? parsed.code,
       httpStatus: parsed.data?.httpStatus ?? response.status(),
-      raw: body,
+      raw,
     });
   }
-  return body.result?.data?.json ?? body.result?.data ?? body.result;
+  return body?.result?.data?.json ?? body?.result?.data ?? body?.result;
 }
 
 /**
  * Reads the active household ID from the browser's localStorage.
+ * If not found, waits for the dashboard to set it (React useEffect).
+ * As a last resort, extracts the Clerk token and queries the API directly
+ * using Node.js fetch (bypasses browser CSP/CORS entirely).
  */
 export async function getHouseholdId(page: Page): Promise<string> {
-  const id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
-  if (!id) throw new Error("No petforce_household_id found in localStorage");
-  return id;
+  // Try immediately
+  let id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+  if (id) return id;
+
+  // Wait for React to hydrate and set localStorage (up to 10s)
+  for (let i = 0; i < 5; i++) {
+    await page.waitForTimeout(2000);
+    id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+    if (id) return id;
+  }
+
+  // Fallback: query API directly via Node.js fetch with cached or fresh token
+  console.log("getHouseholdId: localStorage empty after 10s, trying direct API query");
+  const diag: string[] = [`url=${page.url()}`];
+
+  // Try to get a fresh token from Clerk, fall back to cached token from extractAuthToken
+  let token: string | null = null;
+  try {
+    token = await page.evaluate(async () => {
+      const clerk = (window as any).Clerk;
+      if (clerk?.session) return await clerk.session.getToken();
+      return null;
+    });
+  } catch {
+    // Clerk JS not available
+  }
+  if (!token && _cachedAuthToken) {
+    token = _cachedAuthToken;
+    diag.push("token=cached");
+  } else if (token) {
+    diag.push("token=fresh");
+  } else {
+    diag.push("token=none");
+  }
+
+  if (token) {
+    // Retry up to 3 times with backoff (handles 429 rate limiting)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`${API_BASE}/trpc/household.list`, {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        diag.push(`api=${res.status}`);
+        if (res.status === 429) {
+          diag.push(`retry=${attempt}`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+          continue;
+        }
+        const body = await res.json();
+        // tRPC may return single object or batch array
+        const item = Array.isArray(body) ? body[0] : body;
+        const households =
+          item?.result?.data?.json ?? item?.result?.data ?? item?.result;
+        if (Array.isArray(households)) {
+          diag.push(`households=${households.length}`);
+          if (households.length > 0) {
+            id = households[0].id;
+            await page.evaluate(
+              (hid) => localStorage.setItem("petforce_household_id", hid),
+              id
+            );
+            console.log("getHouseholdId: set via direct API query:", id);
+            return id;
+          }
+        } else {
+          diag.push(`body=${JSON.stringify(body).substring(0, 150)}`);
+        }
+        break; // Don't retry on non-429 responses
+      } catch (err: any) {
+        diag.push(`fetchErr=${err.message}`);
+        break;
+      }
+    }
+  }
+
+  // Last resort: reload and wait
+  await page.reload();
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await page.waitForTimeout(5000);
+  id = await page.evaluate(() => localStorage.getItem("petforce_household_id"));
+  if (id) return id;
+
+  throw new Error(
+    `No petforce_household_id found. Diag: ${diag.join(", ")}`
+  );
 }
 
 /**

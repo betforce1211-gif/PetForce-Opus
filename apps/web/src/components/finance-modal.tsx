@@ -89,7 +89,7 @@ function OverviewTab({ householdId }: { householdId: string }) {
     ? ((data.monthlyTotal - data.previousMonthTotal) / data.previousMonthTotal) * 100
     : data && data.monthlyTotal > 0 ? 100 : 0;
   const changeSign = pctChange > 0 ? "+" : "";
-  const changeColor = pctChange > 0 ? "#DC2626" : pctChange < 0 ? "#059669" : "#6B7280";
+  const changeColor = pctChange > 0 ? "var(--pf-error-strong)" : pctChange < 0 ? "var(--pf-success-strong)" : "var(--pf-text-muted)";
 
   // Max for bar chart
   const maxCat = data ? Math.max(...data.byCategory.map((c) => c.total), 1) : 1;
@@ -104,7 +104,7 @@ function OverviewTab({ householdId }: { householdId: string }) {
       </div>
 
       {summaryQuery.isLoading && <p style={emptyText}>Loading...</p>}
-      {summaryQuery.isError && <p style={{ ...emptyText, color: "#EF4444" }}>Failed to load summary</p>}
+      {summaryQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load summary</p>}
 
       {data && (
         <>
@@ -215,7 +215,7 @@ function ExpensesTab({ householdId }: { householdId: string }) {
   const pets = dashboardQuery.data?.pets ?? [];
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
-  const allExpenses = expensesQuery.data ?? [];
+  const allExpenses = expensesQuery.data?.items ?? [];
 
   // Description suggestion chips
   const suggestions = EXPENSE_DESCRIPTION_SUGGESTIONS[category] ?? [];
@@ -410,14 +410,14 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "0.35rem",
   marginBottom: "1.25rem",
-  borderBottom: "2px solid #E5E7EB",
+  borderBottom: "2px solid var(--pf-border-muted)",
   paddingBottom: "0",
 };
 
@@ -426,10 +426,10 @@ const tabBtn = (active: boolean): React.CSSProperties => ({
   fontSize: "0.85rem",
   fontWeight: 600,
   border: "none",
-  borderBottom: active ? "2px solid #6366F1" : "2px solid transparent",
+  borderBottom: active ? "2px solid var(--pf-primary)" : "2px solid transparent",
   marginBottom: "-2px",
   background: "none",
-  color: active ? "#6366F1" : "#6B7280",
+  color: active ? "var(--pf-primary)" : "var(--pf-text-muted)",
   cursor: "pointer",
   transition: "all 0.15s ease",
 });
@@ -447,14 +447,14 @@ const arrowBtn: React.CSSProperties = {
   border: "none",
   fontSize: "0.9rem",
   cursor: "pointer",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: "0.25rem 0.5rem",
 };
 
 const monthLabelStyle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   minWidth: "10rem",
   textAlign: "center",
 };
@@ -467,7 +467,7 @@ const totalSection: React.CSSProperties = {
 const totalAmount: React.CSSProperties = {
   fontSize: "2rem",
   fontWeight: 800,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   display: "block",
   letterSpacing: "-0.02em",
 };
@@ -502,7 +502,7 @@ const breakdownIcon: React.CSSProperties = {
 const breakdownLabel: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.825rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   width: "5.5rem",
   flexShrink: 0,
 };
@@ -510,7 +510,7 @@ const breakdownLabel: React.CSSProperties = {
 const barContainer: React.CSSProperties = {
   flex: 1,
   height: 8,
-  background: "rgba(99, 102, 241, 0.08)",
+  background: "var(--pf-highlight)",
   borderRadius: 4,
   overflow: "hidden",
 };
@@ -525,14 +525,14 @@ const barFill: React.CSSProperties = {
 const breakdownAmount: React.CSSProperties = {
   fontSize: "0.825rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   width: "4.5rem",
   textAlign: "right",
   flexShrink: 0,
 };
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -542,7 +542,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const chipRow: React.CSSProperties = {
@@ -561,8 +561,8 @@ const suggestionChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer",
   background: active
     ? "linear-gradient(135deg, #6366F1, #8B5CF6)"
-    : "rgba(99, 102, 241, 0.06)",
-  color: active ? "white" : "#6366F1",
+    : "var(--pf-highlight)",
+  color: active ? "white" : "var(--pf-primary)",
   transition: "all 0.15s ease",
 });
 
@@ -573,12 +573,12 @@ const formGrid: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
-const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "#374151" };
+const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "var(--pf-text-muted)" };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.85rem",
   outline: "none",
 };
@@ -599,9 +599,9 @@ const addBtn = (loading: boolean): React.CSSProperties => ({
 const petGroupHeader: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: "0.25rem 0",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.1)",
+  borderBottom: "1px solid var(--pf-highlight)",
   marginBottom: "0.35rem",
 };
 
@@ -627,30 +627,30 @@ const recordIcon: React.CSSProperties = {
 
 const recordLabel: React.CSSProperties = {
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const recordDate: React.CSSProperties = {
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   fontWeight: 500,
 };
 
 const recordMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.75rem",
 };
 
 const recordAmount: React.CSSProperties = {
   fontWeight: 700,
-  color: "#059669",
+  color: "var(--pf-success-strong)",
   fontSize: "0.85rem",
 };
 
 const editBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -661,7 +661,7 @@ const deleteBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
   background: "rgba(239, 68, 68, 0.06)",
-  color: "#DC2626",
+  color: "var(--pf-error-strong)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -671,7 +671,7 @@ const deleteBtnStyle: React.CSSProperties = {
 const saveBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   fontSize: "0.75rem",
@@ -682,8 +682,8 @@ const saveBtn: React.CSSProperties = {
 const cancelBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -693,8 +693,8 @@ const cancelBtn: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.6rem 1.5rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.875rem",
   border: "none",
@@ -702,13 +702,13 @@ const closeBtnStyle: React.CSSProperties = {
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.825rem",
   marginTop: "0.5rem",
 };
 
 const emptyText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   margin: "1rem 0 0.5rem",

@@ -1,51 +1,83 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { protectedProcedure, router } from "../trpc";
+import { eq, desc, count as drizzleCount } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { protectedProcedure, householdProcedure, router, verifyMembership, requireAdmin } from "../trpc.js";
 import { db, pets } from "@petforce/db";
-import { createPetSchema, updatePetSchema } from "@petforce/core";
+import { createPetSchema, updatePetSchema, paginationInput } from "@petforce/core";
 
 export const petRouter = router({
-  listByHousehold: protectedProcedure
-    .input(z.object({ householdId: z.string().uuid() }))
-    .query(async ({ input }) => {
-      return db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, input.householdId));
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      const where = eq(pets.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(pets)
+          .where(where)
+          .orderBy(desc(pets.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(pets).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const [pet] = await db
         .select()
         .from(pets)
         .where(eq(pets.id, input.id));
-      return pet ?? null;
+      if (!pet) return null;
+
+      await verifyMembership(pet.householdId, ctx.userId);
+
+      return pet;
     }),
 
-  create: protectedProcedure
-    .input(z.object({ householdId: z.string().uuid() }).merge(createPetSchema))
-    .mutation(async ({ input }) => {
-      const [pet] = await db.insert(pets).values(input).returning();
+  create: householdProcedure
+    .input(createPetSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [pet] = await db
+        .insert(pets)
+        .values({ ...input, householdId: ctx.householdId })
+        .returning();
       return pet;
     }),
 
   update: protectedProcedure
     .input(z.object({ id: z.string().uuid() }).merge(updatePetSchema))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const [pet] = await db
+
+      const [pet] = await db.select().from(pets).where(eq(pets.id, id));
+      if (!pet) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Pet not found" });
+      }
+
+      await verifyMembership(pet.householdId, ctx.userId);
+
+      const [updated] = await db
         .update(pets)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(pets.id, id))
         .returning();
-      return pet;
+      return updated;
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const [pet] = await db.select().from(pets).where(eq(pets.id, input.id));
+      if (!pet) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Pet not found" });
+      }
+
+      const membership = await verifyMembership(pet.householdId, ctx.userId);
+      requireAdmin(membership);
+
       await db.delete(pets).where(eq(pets.id, input.id));
       return { success: true };
     }),

@@ -48,7 +48,7 @@ export function NotesModal({ householdId, onClose }: NotesModalProps) {
   });
 
   const pets = dashboardQuery.data?.pets ?? [];
-  const allNotes = notesQuery.data ?? [];
+  const allNotes = notesQuery.data?.items ?? [];
   const petMap = new Map(pets.map((p) => [p.id, p.name]));
 
   // Client-side filter
@@ -280,11 +280,11 @@ const titleStyle: React.CSSProperties = {
   margin: "0 0 1rem",
   fontSize: "1.25rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
 };
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -294,7 +294,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const formGrid: React.CSSProperties = {
@@ -310,12 +310,12 @@ const editFormGrid: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
-const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "#374151" };
+const labelText: React.CSSProperties = { fontWeight: 600, fontSize: "0.75rem", color: "var(--pf-text-muted)" };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.85rem",
   outline: "none",
 };
@@ -349,8 +349,8 @@ const filterChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer",
   background: active
     ? "linear-gradient(135deg, #6366F1, #8B5CF6)"
-    : "rgba(99, 102, 241, 0.06)",
-  color: active ? "white" : "#6366F1",
+    : "var(--pf-highlight)",
+  color: active ? "white" : "var(--pf-primary)",
   transition: "all 0.15s ease",
 });
 
@@ -365,7 +365,7 @@ const recordsContainer: React.CSSProperties = {
 const noteCard: React.CSSProperties = {
   padding: "0.6rem 0.75rem",
   borderRadius: "0.625rem",
-  border: "1px solid rgba(99, 102, 241, 0.1)",
+  border: "1px solid var(--pf-highlight)",
   background: "rgba(255, 255, 255, 0.8)",
 };
 
@@ -379,7 +379,7 @@ const noteCardHeader: React.CSSProperties = {
 const noteCardTitle: React.CSSProperties = {
   fontSize: "0.875rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   flex: 1,
 };
 
@@ -396,8 +396,8 @@ const petBadge: React.CSSProperties = {
 const householdBadge: React.CSSProperties = {
   padding: "0.1rem 0.5rem",
   borderRadius: "999px",
-  background: "rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.65rem",
   fontWeight: 600,
   flexShrink: 0,
@@ -405,13 +405,13 @@ const householdBadge: React.CSSProperties = {
 
 const noteDate: React.CSSProperties = {
   fontSize: "0.72rem",
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
 };
 
 const noteContent: React.CSSProperties = {
   fontSize: "0.825rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
   margin: "0.35rem 0",
   lineHeight: 1.5,
   whiteSpace: "pre-wrap",
@@ -435,8 +435,8 @@ const editActions: React.CSSProperties = {
 const editBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -447,7 +447,7 @@ const deleteBtnStyle: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
   background: "rgba(239, 68, 68, 0.06)",
-  color: "#DC2626",
+  color: "var(--pf-error-strong)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -457,7 +457,7 @@ const deleteBtnStyle: React.CSSProperties = {
 const saveBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   fontSize: "0.75rem",
@@ -468,8 +468,8 @@ const saveBtn: React.CSSProperties = {
 const cancelBtn: React.CSSProperties = {
   padding: "0.2rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.75rem",
   border: "none",
@@ -479,8 +479,8 @@ const cancelBtn: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   padding: "0.6rem 1.5rem",
   borderRadius: "0.5rem",
-  background: "#F3F4F6",
-  color: "#374151",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   fontSize: "0.875rem",
   border: "none",
@@ -488,13 +488,13 @@ const closeBtnStyle: React.CSSProperties = {
 };
 
 const errorText: React.CSSProperties = {
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.825rem",
   marginTop: "0.5rem",
 };
 
 const emptyText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.85rem",
   textAlign: "center",
   margin: "1rem 0 0.5rem",

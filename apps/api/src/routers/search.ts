@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import { fullTextSearch } from "@petforce/db";
 import type { SearchEntityType } from "@petforce/db";
 

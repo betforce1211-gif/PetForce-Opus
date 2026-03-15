@@ -11,13 +11,13 @@ interface CalendarTileContentProps {
 export function CalendarTileContent({ householdId, onAddEvent }: CalendarTileContentProps) {
   const upcomingQuery = trpc.calendar.upcoming.useQuery(
     { householdId, limit: 5 },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
 
   if (upcomingQuery.isLoading) {
     return (
       <div style={centered}>
-        <span style={{ color: "#A5A8BA", fontSize: "0.8rem" }}>Loading...</span>
+        <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
       </div>
     );
   }
@@ -25,7 +25,7 @@ export function CalendarTileContent({ householdId, onAddEvent }: CalendarTileCon
   if (upcomingQuery.isError) {
     return (
       <div style={centered}>
-        <span style={{ color: "#EF4444", fontSize: "0.8rem" }}>Failed to load</span>
+        <span style={{ color: "var(--pf-error)", fontSize: "0.8rem" }}>Failed to load</span>
       </div>
     );
   }
@@ -36,7 +36,7 @@ export function CalendarTileContent({ householdId, onAddEvent }: CalendarTileCon
       <>
         <div style={centered}>
           <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>📅</span>
-          <p style={{ color: "#A5A8BA", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
+          <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
             No upcoming events
           </p>
         </div>
@@ -128,7 +128,7 @@ const eventIcon: React.CSSProperties = {
 const eventTitle: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.75rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.005em",
   whiteSpace: "nowrap",
   overflow: "hidden",
@@ -136,7 +136,7 @@ const eventTitle: React.CSSProperties = {
 };
 
 const eventMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.65rem",
   fontWeight: 500,
   letterSpacing: "0.01em",
@@ -145,7 +145,7 @@ const eventMeta: React.CSSProperties = {
 const moreCount: React.CSSProperties = {
   textAlign: "center",
   fontSize: "0.7rem",
-  color: "#8B8FA3",
+  color: "var(--pf-text-secondary)",
   fontWeight: 500,
   padding: "0.15rem 0",
 };
@@ -153,13 +153,13 @@ const moreCount: React.CSSProperties = {
 const footerRow: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.6rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
+  borderTop: "1px solid var(--pf-highlight)",
   display: "flex",
   justifyContent: "center",
 };
 
 const footerBtn: React.CSSProperties = {
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   fontSize: "0.75rem",
   fontWeight: 600,
   letterSpacing: "0.01em",

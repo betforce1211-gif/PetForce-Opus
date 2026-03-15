@@ -76,7 +76,7 @@ const closeBtn: React.CSSProperties = {
   background: "none",
   border: "none",
   fontSize: "1.5rem",
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   cursor: "pointer",
   lineHeight: 1,
   width: 32,

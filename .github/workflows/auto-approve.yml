@@ -1,0 +1,77 @@
+name: Auto-approve PRs
+
+on:
+  # Trigger when CI workflow completes on a PR
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    # Only approve when CI succeeded and it was triggered by a PR
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    steps:
+      - name: Get PR number from workflow run
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the PR associated with the workflow run's head branch
+            const headBranch = context.payload.workflow_run.head_branch;
+            const headSha = context.payload.workflow_run.head_sha;
+
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${headBranch}`,
+            });
+
+            const pr = prs.find(p => p.head.sha === headSha);
+            if (!pr) {
+              core.info(`No open PR found for branch ${headBranch} at ${headSha}`);
+              return;
+            }
+
+            core.setOutput('number', pr.number);
+            core.setOutput('title', pr.title);
+            core.info(`Found PR #${pr.number}: ${pr.title}`);
+
+      - name: Approve PR
+        if: steps.pr.outputs.number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.pr.outputs.number }};
+
+            // Check if already approved by github-actions bot
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const alreadyApproved = reviews.some(
+              r => r.user.login === 'github-actions[bot]' && r.state === 'APPROVED'
+            );
+
+            if (alreadyApproved) {
+              core.info(`PR #${prNumber} already approved by github-actions[bot]`);
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              event: 'APPROVE',
+              body: '✅ All CI checks passed — auto-approved by PetForce review bot.',
+            });
+
+            core.info(`Approved PR #${prNumber}`);

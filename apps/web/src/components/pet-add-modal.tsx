@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { usePetAvatarUpload } from "@/lib/use-pet-avatar-upload";
@@ -36,6 +36,13 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = usePetAvatarUpload();
+
+  // Revoke blob URL on cleanup to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
   const createPet = trpc.pet.create.useMutation({
     async onSuccess(pet) {
@@ -121,10 +128,10 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
             }}
           />
           <div>
-            <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "#1A1637" }}>
+            <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--pf-text)" }}>
               Add a Pet
             </h2>
-            <span style={{ fontSize: "0.8rem", color: "#8B8FA3" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--pf-text-secondary)" }}>
               {photoFile ? photoFile.name : "Click photo to add"}
             </span>
           </div>
@@ -203,7 +210,7 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
         </fieldset>
 
         {createPet.error && (
-          <p style={{ color: "#EF4444", fontSize: "0.875rem", marginTop: "0.75rem" }}>{createPet.error.message}</p>
+          <p style={{ color: "var(--pf-error)", fontSize: "0.875rem", marginTop: "0.75rem" }}>{createPet.error.message}</p>
         )}
 
         {/* Actions */}
@@ -221,7 +228,7 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
 // ── Styles ──
 
 const fieldsetStyle: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--pf-border-muted)",
   borderRadius: "0.75rem",
   padding: "0.75rem 1rem",
   margin: 0,
@@ -231,7 +238,7 @@ const legendStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.9rem",
   padding: "0 0.5rem",
-  color: "#374151",
+  color: "var(--pf-text-muted)",
 };
 
 const gridStyle: React.CSSProperties = {
@@ -241,12 +248,12 @@ const gridStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem" };
-const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.8rem", color: "#374151" };
+const labelTextStyle: React.CSSProperties = { fontWeight: 600, fontSize: "0.8rem", color: "var(--pf-text-muted)" };
 
 const inputStyle: React.CSSProperties = {
   padding: "0.4rem 0.6rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.875rem",
   outline: "none",
 };
@@ -254,8 +261,8 @@ const inputStyle: React.CSSProperties = {
 const cancelButtonStyle: React.CSSProperties = {
   padding: "0.6rem 1.25rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#F3F4F6",
-  color: "#374151",
+  backgroundColor: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
   fontWeight: 600,
   border: "none",
   cursor: "pointer",
@@ -266,7 +273,7 @@ const submitButtonStyle = (loading: boolean): React.CSSProperties => ({
   flex: 1,
   padding: "0.6rem 1.25rem",
   borderRadius: "0.5rem",
-  backgroundColor: "#6366F1",
+  backgroundColor: "var(--pf-primary)",
   color: "white",
   fontWeight: 600,
   border: "none",
@@ -279,7 +286,7 @@ const photoPickerStyle: React.CSSProperties = {
   width: 64,
   height: 64,
   borderRadius: "50%",
-  border: "2px dashed #D1D5DB",
+  border: "2px dashed var(--pf-input-border)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -287,7 +294,7 @@ const photoPickerStyle: React.CSSProperties = {
   position: "relative",
   overflow: "hidden",
   flexShrink: 0,
-  background: "#F9FAFB",
+  background: "var(--pf-surface-muted)",
 };
 
 const photoOverlayStyle: React.CSSProperties = {
@@ -297,7 +304,7 @@ const photoOverlayStyle: React.CSSProperties = {
   width: 22,
   height: 22,
   borderRadius: "50%",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   display: "flex",
   alignItems: "center",

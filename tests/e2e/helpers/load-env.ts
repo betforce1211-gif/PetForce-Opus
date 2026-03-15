@@ -7,7 +7,11 @@ function loadEnvFile(filePath: string) {
   for (const line of content.split("\n")) {
     const [key, ...rest] = line.split("=");
     if (key && rest.length && !key.startsWith("#")) {
-      process.env[key.trim()] = rest.join("=").trim();
+      const k = key.trim();
+      // Don't overwrite env vars already set (e.g. from CI secrets)
+      if (!process.env[k]) {
+        process.env[k] = rest.join("=").trim();
+      }
     }
   }
 }

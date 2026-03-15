@@ -79,6 +79,36 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 - **Theming:** Each Household has `primaryColor`, `secondaryColor`, and `avatar`
 - **Database:** All schema changes go through `packages/db/`, use `drizzle-kit` for migrations
 - **API:** All endpoints are tRPC procedures in `apps/api/src/routers/`
+- **PRs:** Always include `Closes #<issue>` in the PR description when working on a tracked issue. This auto-closes the issue on merge.
+- **PR size:** Keep PRs under 400 lines of diff when possible. Larger changes should be split into stacked PRs.
+- **PR template:** Fill out all sections — type of change, breaking changes, docs, screenshots (for UI changes), and test plan.
+- **Breaking changes:** If a PR changes API contracts, DB schema, or shared types in `@petforce/core`, list affected packages and agents in the "Breaking changes" section.
+- **Screenshots:** UI changes must include before/after screenshots or a recording in the PR.
+- **Docs with PRs:** New features and enhancements must include documentation updates (API docs, user guide, or dev docs as appropriate). Note what was updated in the PR's Documentation section.
+- **Branch protection:** `main` requires passing `lint-and-build` and `unit-tests` CI checks, 1 approving review, and stale reviews are dismissed on new pushes.
+- **Code owners:** `.github/CODEOWNERS` auto-requests reviewers based on changed paths.
+
+## Deep-Dive Docs
+
+This file is the map. For details, go deeper:
+
+| Topic | Location |
+|-------|----------|
+| Architecture & domain model | `docs/dev/architecture.md` |
+| Code conventions & patterns | `docs/dev/conventions.md` |
+| Multi-agent workflow | `docs/dev/multi-agent.md` |
+| Quality scores by domain | `docs/dev/quality-score.md` |
+| Active execution plans | `docs/exec-plans/active/` |
+| API reference (all 15 routers) | `docs/api/README.md` |
+| User guide | `docs/user-guide/README.md` |
+
+## Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `infra/scripts/setup-env.sh` | Symlink env files from `~/.config/petforce/` |
+| `infra/scripts/doc-gardener` | Scan for stale docs, missing test coverage |
+| `infra/scripts/roadmap` | Push ideas to GitHub Issues |
 
 ## Environment Variables
 

@@ -24,8 +24,13 @@ test.describe("Infrastructure Health Gate", () => {
     );
     expect(response.status()).toBeLessThan(500);
     const body = await response.json();
-    expect(body.error).toBeDefined();
-    const code = body.error.json?.data?.code ?? body.error.data?.code;
+    // tRPC may return single object or batch array
+    const error = Array.isArray(body) ? body[0]?.error : body.error;
+    expect(error).toBeDefined();
+    const code =
+      error?.json?.data?.code ??
+      error?.data?.code ??
+      error?.code;
     // UNAUTHORIZED or NOT_FOUND are both valid — means the API is healthy
     expect(["UNAUTHORIZED", "NOT_FOUND"]).toContain(code);
   });

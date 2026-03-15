@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   feedingSchedules,
@@ -13,25 +14,35 @@ import {
   updateFeedingScheduleSchema,
   logFeedingSchema,
   snoozeFeedingSchema,
+  paginationInput,
 } from "@petforce/core";
 import type {
   HouseholdFeedingStatus,
   PetFeedingStatus,
   FeedingScheduleStatus,
 } from "@petforce/core";
+import { logActivity } from "../lib/audit.js";
 
 export const feedingRouter = router({
-  listSchedules: householdProcedure.query(async ({ ctx }) => {
-    return db
-      .select()
-      .from(feedingSchedules)
-      .where(
-        and(
-          eq(feedingSchedules.householdId, ctx.householdId),
-          eq(feedingSchedules.isActive, true)
-        )
+  listSchedules: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      const where = and(
+        eq(feedingSchedules.householdId, ctx.householdId),
+        eq(feedingSchedules.isActive, true)
       );
-  }),
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(feedingSchedules)
+          .where(where)
+          .orderBy(desc(feedingSchedules.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(feedingSchedules).where(where),
+      ]);
+      return { items, totalCount: count };
+    }),
 
   createSchedule: householdProcedure
     .input(createFeedingScheduleSchema)
@@ -65,6 +76,17 @@ export const feedingRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "feeding_schedule.updated",
+        subjectType: "feeding_schedule",
+        subjectId: schedule.id,
+        subjectName: schedule.label,
+        performedBy: ctx.membership.id,
+        metadata: { changedFields: Object.keys(data) },
+      });
+
       return schedule;
     }),
 
@@ -238,7 +260,7 @@ export const feedingRouter = router({
         );
 
       if (!schedule) {
-        throw new Error("Feeding schedule not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feeding schedule not found" });
       }
 
       const [log] = await db

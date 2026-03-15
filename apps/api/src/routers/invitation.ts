@@ -1,21 +1,17 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, protectedProcedure, router } from "../trpc";
+import { householdProcedure, protectedProcedure, router, requireAdmin } from "../trpc.js";
 import { db, invitations, members, households } from "@petforce/db";
-import { createInvitationSchema } from "@petforce/core";
-import { generateInviteToken } from "../utils/join-code";
+import { createInvitationSchema, paginationInput } from "@petforce/core";
+import { generateInviteToken } from "../utils/join-code.js";
+import { logger } from "../lib/logger.js";
 
 export const invitationRouter = router({
   create: householdProcedure
     .input(createInvitationSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can create invitations",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
@@ -32,32 +28,33 @@ export const invitationRouter = router({
         })
         .returning();
 
+      logger.info({ audit: true, action: "invitation.create", userId: ctx.userId, householdId: ctx.householdId, invitationId: invitation.id, role: input.role }, "invitation created");
       return invitation;
     }),
 
-  listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only owners and admins can view invitations",
-      });
-    }
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      requireAdmin(ctx.membership);
 
-    return db
-      .select()
-      .from(invitations)
-      .where(eq(invitations.householdId, ctx.householdId));
-  }),
+      const where = eq(invitations.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(invitations)
+          .where(where)
+          .orderBy(desc(invitations.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(invitations).where(where),
+      ]);
+      return { items, totalCount: count };
+    }),
 
   revoke: householdProcedure
     .input(z.object({ invitationId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can revoke invitations",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [invitation] = await db
         .update(invitations)
@@ -78,6 +75,7 @@ export const invitationRouter = router({
         });
       }
 
+      logger.info({ audit: true, action: "invitation.revoke", userId: ctx.userId, householdId: ctx.householdId, invitationId: input.invitationId }, "invitation revoked");
       return invitation;
     }),
 
@@ -174,6 +172,7 @@ export const invitationRouter = router({
         .set({ status: "accepted" })
         .where(eq(invitations.id, invitation.id));
 
+      logger.info({ audit: true, action: "invitation.accept", userId: ctx.userId, householdId: invitation.householdId, invitationId: invitation.id }, "invitation accepted");
       return member;
     }),
 
@@ -198,6 +197,7 @@ export const invitationRouter = router({
         });
       }
 
+      logger.info({ audit: true, action: "invitation.decline", invitationId: invitation.id }, "invitation declined");
       return { success: true };
     }),
 });

@@ -1,5 +1,5 @@
 import { and, eq, gte, lte, isNull, asc } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   activities,
@@ -28,53 +28,55 @@ export const calendarRouter = router({
       const monthStart = new Date(year, mon - 1, 1);
       const monthEnd = new Date(year, mon, 0, 23, 59, 59, 999); // last day of month
 
-      // Fetch activities for this month (by scheduledAt or completedAt)
-      const monthActivities = await db
-        .select()
-        .from(activities)
-        .where(
-          and(
-            eq(activities.householdId, householdId),
-            gte(activities.scheduledAt, monthStart),
-            lte(activities.scheduledAt, monthEnd)
-          )
-        );
-
-      // Fetch active feeding schedules (recurring daily)
-      const schedules = await db
-        .select()
-        .from(feedingSchedules)
-        .where(
-          and(
-            eq(feedingSchedules.householdId, householdId),
-            eq(feedingSchedules.isActive, true)
-          )
-        );
-
-      // Fetch feeding logs for the month
+      // Fetch all data in parallel
       const monthStartStr = `${month}-01`;
       const lastDay = monthEnd.getDate();
       const monthEndStr = `${month}-${String(lastDay).padStart(2, "0")}`;
-      const logs = await db
-        .select()
-        .from(feedingLogs)
-        .where(
-          and(
-            eq(feedingLogs.householdId, householdId),
-            gte(feedingLogs.feedingDate, monthStartStr),
-            lte(feedingLogs.feedingDate, monthEndStr)
-          )
-        );
 
-      // Fetch pets + members for name lookups
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, householdId));
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, householdId));
+      const [monthActivities, schedules, logs, householdPets, householdMembers, monthHealthRecords] =
+        await Promise.all([
+          db
+            .select()
+            .from(activities)
+            .where(
+              and(
+                eq(activities.householdId, householdId),
+                gte(activities.scheduledAt, monthStart),
+                lte(activities.scheduledAt, monthEnd)
+              )
+            ),
+          db
+            .select()
+            .from(feedingSchedules)
+            .where(
+              and(
+                eq(feedingSchedules.householdId, householdId),
+                eq(feedingSchedules.isActive, true)
+              )
+            ),
+          db
+            .select()
+            .from(feedingLogs)
+            .where(
+              and(
+                eq(feedingLogs.householdId, householdId),
+                gte(feedingLogs.feedingDate, monthStartStr),
+                lte(feedingLogs.feedingDate, monthEndStr)
+              )
+            ),
+          db.select().from(pets).where(eq(pets.householdId, householdId)),
+          db.select().from(members).where(eq(members.householdId, householdId)),
+          db
+            .select()
+            .from(healthRecords)
+            .where(
+              and(
+                eq(healthRecords.householdId, householdId),
+                gte(healthRecords.date, monthStart),
+                lte(healthRecords.date, monthEnd)
+              )
+            ),
+        ]);
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       const memberMap = new Map(householdMembers.map((m) => [m.id, m.displayName]));
@@ -133,17 +135,6 @@ export const calendarRouter = router({
       }
 
       // Add health records (vet visits, vaccinations, checkups, procedures)
-      const monthHealthRecords = await db
-        .select()
-        .from(healthRecords)
-        .where(
-          and(
-            eq(healthRecords.householdId, householdId),
-            gte(healthRecords.date, monthStart),
-            lte(healthRecords.date, monthEnd)
-          )
-        );
-
       for (const rec of monthHealthRecords) {
         const dateKey = rec.date.toISOString().split("T")[0];
         const label =
@@ -226,54 +217,57 @@ export const calendarRouter = router({
       const limit = input.limit ?? 5;
       const now = new Date();
 
-      // Fetch upcoming activities (scheduled in the future, not completed)
-      const upcomingActivities = await db
-        .select()
-        .from(activities)
-        .where(
-          and(
-            eq(activities.householdId, householdId),
-            gte(activities.scheduledAt, now),
-            isNull(activities.completedAt)
-          )
-        )
-        .orderBy(asc(activities.scheduledAt))
-        .limit(limit);
-
-      // Fetch active feeding schedules
-      const schedules = await db
-        .select()
-        .from(feedingSchedules)
-        .where(
-          and(
-            eq(feedingSchedules.householdId, householdId),
-            eq(feedingSchedules.isActive, true)
-          )
-        );
-
-      // Check today's feeding logs
+      // Fetch all data in parallel
       const today = now.toISOString().split("T")[0];
-      const todayLogs = await db
-        .select()
-        .from(feedingLogs)
-        .where(
-          and(
-            eq(feedingLogs.householdId, householdId),
-            eq(feedingLogs.feedingDate, today)
-          )
-        );
+
+      const [upcomingActivities, schedules, todayLogs, householdPets, householdMembers, upcomingHealth] =
+        await Promise.all([
+          db
+            .select()
+            .from(activities)
+            .where(
+              and(
+                eq(activities.householdId, householdId),
+                gte(activities.scheduledAt, now),
+                isNull(activities.completedAt)
+              )
+            )
+            .orderBy(asc(activities.scheduledAt))
+            .limit(limit),
+          db
+            .select()
+            .from(feedingSchedules)
+            .where(
+              and(
+                eq(feedingSchedules.householdId, householdId),
+                eq(feedingSchedules.isActive, true)
+              )
+            ),
+          db
+            .select()
+            .from(feedingLogs)
+            .where(
+              and(
+                eq(feedingLogs.householdId, householdId),
+                eq(feedingLogs.feedingDate, today)
+              )
+            ),
+          db.select().from(pets).where(eq(pets.householdId, householdId)),
+          db.select().from(members).where(eq(members.householdId, householdId)),
+          db
+            .select()
+            .from(healthRecords)
+            .where(
+              and(
+                eq(healthRecords.householdId, householdId),
+                gte(healthRecords.date, now)
+              )
+            )
+            .orderBy(asc(healthRecords.date))
+            .limit(limit),
+        ]);
 
       const loggedScheduleIds = new Set(todayLogs.map((l) => l.feedingScheduleId));
-
-      // Fetch pets + members
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, householdId));
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, householdId));
 
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
       const memberMap = new Map(householdMembers.map((m) => [m.id, m.displayName]));
@@ -298,18 +292,6 @@ export const calendarRouter = router({
       }
 
       // Add upcoming health records (future vet visits, vaccinations, etc.)
-      const upcomingHealth = await db
-        .select()
-        .from(healthRecords)
-        .where(
-          and(
-            eq(healthRecords.householdId, householdId),
-            gte(healthRecords.date, now)
-          )
-        )
-        .orderBy(asc(healthRecords.date))
-        .limit(limit);
-
       for (const rec of upcomingHealth) {
         const label =
           rec.type === "vaccination"
@@ -384,26 +366,28 @@ export const calendarRouter = router({
       }
 
       // Add upcoming pet holidays (next 7 days)
+      const holidayMap = new Map(
+        PET_HOLIDAYS.map((h) => [`${h.month}-${h.day}`, h])
+      );
       for (let d = 0; d <= 7; d++) {
         const futureDate = new Date(now.getTime() + d * 86400000);
         const fMonth = futureDate.getMonth() + 1;
         const fDay = futureDate.getDate();
-        const dateStr = `${futureDate.getFullYear()}-${String(fMonth).padStart(2, "0")}-${String(fDay).padStart(2, "0")}`;
-        for (const holiday of PET_HOLIDAYS) {
-          if (holiday.month === fMonth && holiday.day === fDay) {
-            events.push({
-              id: `holiday-${holiday.month}-${holiday.day}`,
-              kind: "holiday",
-              title: holiday.name,
-              petId: "",
-              petName: "",
-              memberId: null,
-              memberName: null,
-              type: "holiday",
-              scheduledAt: `${dateStr}T00:00:00`,
-              completedAt: null,
-            });
-          }
+        const holiday = holidayMap.get(`${fMonth}-${fDay}`);
+        if (holiday) {
+          const dateStr = `${futureDate.getFullYear()}-${String(fMonth).padStart(2, "0")}-${String(fDay).padStart(2, "0")}`;
+          events.push({
+            id: `holiday-${holiday.month}-${holiday.day}`,
+            kind: "holiday",
+            title: holiday.name,
+            petId: "",
+            petName: "",
+            memberId: null,
+            memberName: null,
+            type: "holiday",
+            scheduledAt: `${dateStr}T00:00:00`,
+            completedAt: null,
+          });
         }
       }
 

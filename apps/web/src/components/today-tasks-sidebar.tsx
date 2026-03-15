@@ -15,6 +15,7 @@ import type {
 } from "@petforce/core";
 import { TASK_KIND_ICONS, TASK_KIND_LABELS } from "@petforce/core";
 import { useTrackEvent } from "@/lib/use-track-event";
+import { useVisibilityRefetch } from "@/lib/use-visibility-refetch";
 
 // ── Internal task item type ──
 
@@ -183,20 +184,26 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
 
   const feedingQuery = trpc.feeding.todayStatus.useQuery(
     { householdId, date: today },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 10_000 }
   );
   const calendarQuery = trpc.calendar.upcoming.useQuery(
     { householdId, limit: 20 },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
   const healthQuery = trpc.health.summary.useQuery(
     { householdId },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 15_000 }
   );
   const medicationQuery = trpc.health.todayMedicationStatus.useQuery(
     { householdId, date: today },
-    { refetchInterval: 30_000 }
+    { refetchInterval: 10_000 }
   );
+  useVisibilityRefetch([
+    () => feedingQuery.refetch(),
+    () => calendarQuery.refetch(),
+    () => healthQuery.refetch(),
+    () => medicationQuery.refetch(),
+  ]);
 
   // Mutations
   const logFeeding = trpc.feeding.logCompletion.useMutation({
@@ -395,7 +402,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
       ) : totalTasks === 0 ? (
         <div style={centeredState}>
           <span style={{ fontSize: "2rem", lineHeight: 1, opacity: 0.8 }}>{"\uD83C\uDF89"}</span>
-          <p style={{ ...stateText, fontWeight: 600, color: "#1A1637" }}>All caught up!</p>
+          <p style={{ ...stateText, fontWeight: 600, color: "var(--pf-text)" }}>All caught up!</p>
           <p style={stateText}>No tasks for today.</p>
         </div>
       ) : (
@@ -420,7 +427,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
                     style={{
                       ...taskRow,
                       borderLeft: task.kind === "alert"
-                        ? "3px solid #DC2626"
+                        ? "3px solid var(--pf-error-strong)"
                         : "3px solid transparent",
                       cursor: actionable || task.kind === "birthday" ? "default" : "pointer",
                       opacity: snoozed || task.completed || task.skipped ? 0.5 : 1,
@@ -436,7 +443,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
                       <div style={{
                         ...taskTitle,
                         textDecoration: task.completed || task.skipped ? "line-through" : "none",
-                        color: task.skipped ? "#9CA3AF" : task.completed ? "#1A1637" : "#1A1637",
+                        color: task.skipped ? "var(--pf-text-secondary)" : task.completed ? "var(--pf-text)" : "var(--pf-text)",
                       }}>{task.title}</div>
                       <div style={taskMeta}>
                         {snoozed && !task.skipped
@@ -597,10 +604,10 @@ function LaterDropdown({ busy, onSelect }: { busy: boolean; onSelect: (minutes: 
               {p.label}
             </button>
           ))}
-          <div style={{ borderTop: "1px solid rgba(99,102,241,0.1)", margin: "0.2rem 0" }} />
+          <div style={{ borderTop: "1px solid var(--pf-highlight)", margin: "0.2rem 0" }} />
           <div style={laterCustomRow}>
             <StepperInput value={customH} onChange={setCustomH} min={0} max={23} />
-            <span style={{ color: "#6B7280", fontSize: "0.75rem", fontWeight: 700 }}>:</span>
+            <span style={{ color: "var(--pf-text-muted)", fontSize: "0.75rem", fontWeight: 700 }}>:</span>
             <StepperInput value={customM} onChange={setCustomM} min={0} max={59} />
             <button
               type="button"
@@ -646,7 +653,7 @@ const sidebarTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   margin: "0 0 1rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   textAlign: "center",
   letterSpacing: "-0.01em",
   display: "flex",
@@ -687,7 +694,7 @@ const centeredState: React.CSSProperties = {
 };
 
 const stateText: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.8rem",
   margin: 0,
   fontWeight: 500,
@@ -698,7 +705,7 @@ const spinnerStyle: React.CSSProperties = {
   width: 28,
   height: 28,
   border: "3px solid rgba(99, 102, 241, 0.15)",
-  borderTopColor: "#6366F1",
+  borderTopColor: "var(--pf-primary)",
   borderRadius: "50%",
   animation: "spin 0.8s linear infinite",
 };
@@ -721,11 +728,11 @@ const sectionHeader: React.CSSProperties = {
   gap: "0.4rem",
   fontSize: "0.675rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   textTransform: "uppercase",
   letterSpacing: "0.08em",
   padding: "0.75rem 0 0.375rem",
-  borderBottom: "1px solid rgba(99, 102, 241, 0.08)",
+  borderBottom: "1px solid var(--pf-highlight)",
   marginBottom: "0.375rem",
 };
 
@@ -733,7 +740,7 @@ const sectionCount: React.CSSProperties = {
   marginLeft: "auto",
   fontSize: "0.65rem",
   fontWeight: 600,
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
 };
 
 const taskRow: React.CSSProperties = {
@@ -751,7 +758,7 @@ const taskIconWrap: React.CSSProperties = {
   width: 28,
   height: 28,
   borderRadius: "0.375rem",
-  background: "rgba(99, 102, 241, 0.06)",
+  background: "var(--pf-highlight)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -761,13 +768,13 @@ const taskIconWrap: React.CSSProperties = {
 const taskTitle: React.CSSProperties = {
   fontWeight: 600,
   fontSize: "0.8rem",
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.005em",
   lineHeight: 1.4,
 };
 
 const taskMeta: React.CSSProperties = {
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontSize: "0.7rem",
   fontWeight: 500,
   marginTop: "0.1rem",
@@ -795,33 +802,33 @@ const actionBtnBase: React.CSSProperties = {
 
 const actionBtnDone: React.CSSProperties = {
   ...actionBtnBase,
-  background: "#059669",
+  background: "var(--pf-success-strong)",
   color: "white",
 };
 
 const actionBtnLater: React.CSSProperties = {
   ...actionBtnBase,
-  background: "rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  background: "var(--pf-highlight)",
+  color: "var(--pf-primary)",
 };
 
 const actionBtnUndo: React.CSSProperties = {
   ...actionBtnBase,
   background: "rgba(245, 158, 11, 0.1)",
-  color: "#D97706",
+  color: "var(--pf-warning)",
 };
 
 const actionBtnSkip: React.CSSProperties = {
   ...actionBtnBase,
-  background: "#F3F4F6",
-  color: "#6B7280",
+  background: "var(--pf-surface-muted)",
+  color: "var(--pf-text-muted)",
 };
 
 const tileLinkStyle: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -855,7 +862,7 @@ const laterOptionStyle: React.CSSProperties = {
   fontFamily: "inherit",
   fontSize: "0.72rem",
   fontWeight: 500,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   textAlign: "left",
   transition: "background-color 0.1s ease",
 };
@@ -891,7 +898,7 @@ const stepperBtn: React.CSSProperties = {
   background: "rgba(99,102,241,0.04)",
   cursor: "pointer",
   fontSize: "0.4rem",
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   padding: 0,
   lineHeight: 1,
 };
@@ -900,7 +907,7 @@ const laterCustomGoBtn: React.CSSProperties = {
   padding: "0.2rem 0.5rem",
   borderRadius: "0.25rem",
   border: "none",
-  background: "#6366F1",
+  background: "var(--pf-primary)",
   color: "white",
   fontSize: "0.65rem",
   fontWeight: 600,

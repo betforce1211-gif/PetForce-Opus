@@ -22,7 +22,7 @@ export function GamificationTileContent({ householdId, onManage }: GamificationT
   if (statsQuery.isLoading) {
     return (
       <div style={centered}>
-        <span style={{ color: "#A5A8BA", fontSize: "0.8rem" }}>Loading...</span>
+        <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export function GamificationTileContent({ householdId, onManage }: GamificationT
   if (statsQuery.isError) {
     return (
       <div style={centered}>
-        <span style={{ color: "#EF4444", fontSize: "0.8rem" }}>Failed to load</span>
+        <span style={{ color: "var(--pf-error)", fontSize: "0.8rem" }}>Failed to load</span>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export function GamificationTileContent({ householdId, onManage }: GamificationT
     return (
       <div style={centered}>
         <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{"\uD83C\uDFC6"}</span>
-        <p style={{ color: "#A5A8BA", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
+        <p style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem", margin: "0.5rem 0 0" }}>
           No stats yet
         </p>
       </div>
@@ -141,7 +141,7 @@ function MeView({ me, members }: {
           {nextBadges.map((b) => (
             <span key={b.id} style={badgeChip}>
               <span style={{ fontSize: "0.65rem" }}>{b.icon}</span>
-              <span style={{ fontSize: "0.6rem", color: "#7C7F95" }}>{b.name}</span>
+              <span style={{ fontSize: "0.6rem", color: "var(--pf-text-secondary)" }}>{b.name}</span>
             </span>
           ))}
         </div>
@@ -157,7 +157,7 @@ function HomeView({ household }: {
     <div style={{ textAlign: "center" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginBottom: "0.2rem" }}>
         <span style={{ fontSize: "0.85rem" }}>{"\uD83C\uDFE0"}</span>
-        <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1A1637" }}>
+        <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--pf-text)" }}>
           Lv.{household.level} {household.levelName}
         </span>
       </div>
@@ -226,7 +226,7 @@ const levelNameStyle: React.CSSProperties = {
   margin: 0,
   fontSize: "0.8rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   letterSpacing: "-0.01em",
 };
 
@@ -237,7 +237,7 @@ const progressContainer: React.CSSProperties = {
 const progressTrack: React.CSSProperties = {
   height: 6,
   borderRadius: 3,
-  background: "rgba(99, 102, 241, 0.1)",
+  background: "var(--pf-highlight)",
   overflow: "hidden",
 };
 
@@ -252,7 +252,7 @@ const xpLabel: React.CSSProperties = {
   margin: "0.15rem 0 0",
   fontSize: "0.65rem",
   fontWeight: 600,
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   textAlign: "center",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
@@ -269,8 +269,8 @@ const pillBtn = (active: boolean): React.CSSProperties => ({
   padding: "0.2rem 0.6rem",
   borderRadius: "999px",
   border: "none",
-  background: active ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "rgba(99, 102, 241, 0.08)",
-  color: active ? "#fff" : "#7C7F95",
+  background: active ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "var(--pf-highlight)",
+  color: active ? "#fff" : "var(--pf-text-secondary)",
   fontSize: "0.65rem",
   fontWeight: 600,
   cursor: "pointer",
@@ -288,13 +288,13 @@ const streakRow: React.CSSProperties = {
 const streakText: React.CSSProperties = {
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#F59E0B",
+  color: "var(--pf-warning)",
 };
 
 const subInfoText: React.CSSProperties = {
   margin: 0,
   fontSize: "0.7rem",
-  color: "#7C7F95",
+  color: "var(--pf-text-secondary)",
 };
 
 const miniStat: React.CSSProperties = {
@@ -307,13 +307,13 @@ const miniStat: React.CSSProperties = {
 const miniStatValue: React.CSSProperties = {
   fontSize: "0.8rem",
   fontWeight: 700,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   lineHeight: 1.1,
 };
 
 const miniStatLabel: React.CSSProperties = {
   fontSize: "0.55rem",
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
   fontWeight: 600,
@@ -330,7 +330,7 @@ const badgePreviewRow: React.CSSProperties = {
 const badgePreviewLabel: React.CSSProperties = {
   fontSize: "0.6rem",
   fontWeight: 600,
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
 };
@@ -341,7 +341,7 @@ const badgeChip: React.CSSProperties = {
   gap: "0.2rem",
   padding: "0.1rem 0.4rem",
   borderRadius: "999px",
-  background: "rgba(99, 102, 241, 0.06)",
+  background: "var(--pf-highlight)",
   border: "1px dashed rgba(99, 102, 241, 0.2)",
 };
 
@@ -355,7 +355,7 @@ const petRow: React.CSSProperties = {
 const petName: React.CSSProperties = {
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#1A1637",
+  color: "var(--pf-text)",
   flex: 1,
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -365,13 +365,13 @@ const petName: React.CSSProperties = {
 const petLevel: React.CSSProperties = {
   fontSize: "0.6rem",
   fontWeight: 700,
-  color: "#6366F1",
+  color: "var(--pf-primary)",
   flexShrink: 0,
 };
 
 const petXp: React.CSSProperties = {
   fontSize: "0.6rem",
-  color: "#A5A8BA",
+  color: "var(--pf-text-secondary)",
   fontWeight: 600,
   flexShrink: 0,
 };
@@ -379,8 +379,8 @@ const petXp: React.CSSProperties = {
 const linkBtn: React.CSSProperties = {
   marginTop: "auto",
   paddingTop: "0.75rem",
-  borderTop: "1px solid rgba(99, 102, 241, 0.08)",
-  color: "#6366F1",
+  borderTop: "1px solid var(--pf-highlight)",
+  color: "var(--pf-primary)",
   fontSize: "0.8rem",
   fontWeight: 600,
   textDecoration: "none",
@@ -390,6 +390,6 @@ const linkBtn: React.CSSProperties = {
   border: "none",
   borderTopStyle: "solid",
   borderTopWidth: "1px",
-  borderTopColor: "rgba(99, 102, 241, 0.08)",
+  borderTopColor: "var(--pf-highlight)",
   cursor: "pointer",
 };

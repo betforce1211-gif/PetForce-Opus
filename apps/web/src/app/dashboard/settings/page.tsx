@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
 import { useTrackEvent } from "@/lib/use-track-event";
@@ -21,7 +22,7 @@ export default function SettingsPage() {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>
-          <p style={{ color: "#6B7280" }}>No household selected.</p>
+          <p style={{ color: "var(--pf-text-muted)" }}>No household selected.</p>
           <Link href="/dashboard" style={actionButton}>Go to Dashboard</Link>
         </div>
       </main>
@@ -33,7 +34,7 @@ export default function SettingsPage() {
       <main style={pageShell}>
         <div style={centeredMessage}>
           <div style={spinner} />
-          <p style={{ color: "#6B7280", margin: 0 }}>Loading settings...</p>
+          <p style={{ color: "var(--pf-text-muted)", margin: 0 }}>Loading settings...</p>
         </div>
       </main>
     );
@@ -43,7 +44,7 @@ export default function SettingsPage() {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>
-          <p style={{ color: "#EF4444" }}>Failed to load settings.</p>
+          <p style={{ color: "var(--pf-error)" }}>Failed to load settings.</p>
           <button onClick={() => dashboardQuery.refetch()} style={actionButton}>Retry</button>
         </div>
       </main>
@@ -62,10 +63,10 @@ export default function SettingsPage() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <Link href="/dashboard" style={{ color: "#6366F1", textDecoration: "none", fontSize: "0.875rem" }}>
+            <Link href="/dashboard" style={{ color: "var(--pf-primary)", textDecoration: "none", fontSize: "0.875rem" }}>
               &larr; Dashboard
             </Link>
-            <h1 style={{ fontSize: "1.35rem", fontWeight: 700, margin: 0, color: "#1E1B4B" }}>
+            <h1 style={{ fontSize: "1.35rem", fontWeight: 700, margin: 0, color: "var(--pf-text)" }}>
               Settings
             </h1>
           </div>
@@ -79,8 +80,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab)}
               style={{
                 ...tabButton,
-                borderBottomColor: activeTab === tab ? "#6366F1" : "transparent",
-                color: activeTab === tab ? "#6366F1" : "#6B7280",
+                borderBottomColor: activeTab === tab ? "var(--pf-primary)" : "transparent",
+                color: activeTab === tab ? "var(--pf-primary)" : "var(--pf-text-muted)",
                 fontWeight: activeTab === tab ? 600 : 400,
               }}
             >
@@ -149,7 +150,7 @@ function MembersTab({
               <div style={initialsCircle}>
                 {member.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
               </div>
-              <span style={{ flex: 1, fontSize: "0.875rem", color: "#1E1B4B" }}>
+              <span style={{ flex: 1, fontSize: "0.875rem", color: "var(--pf-text)" }}>
                 {member.displayName}
               </span>
               {isAdmin ? (
@@ -170,7 +171,7 @@ function MembersTab({
                   <option value="sitter">Sitter</option>
                 </select>
               ) : (
-                <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[member.role] ?? "#6B7280" }}>
+                <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[member.role] ?? "rgba(107, 114, 128, 0.15)" }}>
                   {member.role}
                 </span>
               )}
@@ -192,21 +193,21 @@ function MembersTab({
       </div>
 
       {/* Pending Access Requests */}
-      {isAdmin && accessRequestsQuery.data && accessRequestsQuery.data.length > 0 && (
+      {isAdmin && accessRequestsQuery.data?.items && accessRequestsQuery.data.items.length > 0 && (
         <div style={glassCard}>
           <h2 style={sectionTitle}>Pending Requests</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {accessRequestsQuery.data.map((req) => (
+            {accessRequestsQuery.data.items.map((req) => (
               <div key={req.id} style={memberRow}>
                 <div style={{ ...initialsCircle, background: "linear-gradient(135deg, #F59E0B, #FBBF24)" }}>
                   {req.displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.875rem", color: "#1E1B4B", fontWeight: 600 }}>
+                  <div style={{ fontSize: "0.875rem", color: "var(--pf-text)", fontWeight: 600 }}>
                     {req.displayName}
                   </div>
                   {req.message && (
-                    <div style={{ fontSize: "0.75rem", color: "#6B7280", marginTop: "0.125rem" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--pf-text-muted)", marginTop: "0.125rem" }}>
                       &ldquo;{req.message}&rdquo;
                     </div>
                   )}
@@ -259,13 +260,13 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
   if (!isAdmin) {
     return (
       <div style={glassCard}>
-        <p style={{ color: "#6B7280" }}>Only owners and admins can manage invitations.</p>
+        <p style={{ color: "var(--pf-text-muted)" }}>Only owners and admins can manage invitations.</p>
       </div>
     );
   }
 
-  const pendingInvites = (invitesQuery.data ?? []).filter((i) => i.status === "pending");
-  const pastInvites = (invitesQuery.data ?? []).filter((i) => i.status !== "pending");
+  const pendingInvites = (invitesQuery.data?.items ?? []).filter((i) => i.status === "pending");
+  const pastInvites = (invitesQuery.data?.items ?? []).filter((i) => i.status !== "pending");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -307,9 +308,9 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
         {/* Show newly created invite link */}
         {createInvite.data && (
           <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "rgba(99, 102, 241, 0.05)", borderRadius: "0.5rem", border: "1px solid rgba(99, 102, 241, 0.15)" }}>
-            <div style={{ fontSize: "0.8rem", color: "#6B7280", marginBottom: "0.25rem" }}>Invite link created! Share this with the invitee:</div>
+            <div style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", marginBottom: "0.25rem" }}>Invite link created! Share this with the invitee:</div>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <code style={{ flex: 1, fontSize: "0.8rem", padding: "0.375rem 0.5rem", background: "rgba(255,255,255,0.8)", borderRadius: "0.375rem", overflowX: "auto", whiteSpace: "nowrap" }}>
+              <code style={{ flex: 1, fontSize: "0.8rem", padding: "0.375rem 0.5rem", background: "var(--pf-glass-bg)", borderRadius: "0.375rem", overflowX: "auto", whiteSpace: "nowrap" }}>
                 {typeof window !== "undefined" ? `${window.location.origin}/join?token=${createInvite.data.token}` : ""}
               </code>
               <button
@@ -335,13 +336,13 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
             {pendingInvites.map((inv) => (
               <div key={inv.id} style={memberRow}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.875rem", color: "#1E1B4B" }}>
+                  <div style={{ fontSize: "0.875rem", color: "var(--pf-text)" }}>
                     {inv.email ?? "Link invite"}{" "}
-                    <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[inv.role] ?? "#6B7280" }}>
+                    <span style={{ ...roleBadge, backgroundColor: roleBadgeColors[inv.role] ?? "rgba(107, 114, 128, 0.15)" }}>
                       {inv.role}
                     </span>
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: "#9CA3AF" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--pf-text-secondary)" }}>
                     Created {new Date(inv.createdAt).toLocaleDateString()}
                   </div>
                 </div>
@@ -374,7 +375,7 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
             {pastInvites.map((inv) => (
               <div key={inv.id} style={{ ...memberRow, opacity: 0.6 }}>
-                <div style={{ flex: 1, fontSize: "0.85rem", color: "#1E1B4B" }}>
+                <div style={{ flex: 1, fontSize: "0.85rem", color: "var(--pf-text)" }}>
                   {inv.email ?? "Link invite"}
                 </div>
                 <span style={{
@@ -385,8 +386,8 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
                   textTransform: "capitalize",
                   color: "white",
                   backgroundColor:
-                    inv.status === "accepted" ? "#22C55E" :
-                    inv.status === "declined" ? "#EF4444" : "#9CA3AF",
+                    inv.status === "accepted" ? "var(--pf-success)" :
+                    inv.status === "declined" ? "var(--pf-error)" : "var(--pf-text-secondary)",
                 }}>
                   {inv.status}
                 </span>
@@ -450,7 +451,7 @@ function HouseholdSettingsTab({
                 type="color"
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
-                style={{ width: 48, height: 36, border: "1px solid #D1D5DB", borderRadius: "0.375rem", cursor: "pointer" }}
+                style={{ width: 48, height: 36, border: "1px solid var(--pf-input-border)", borderRadius: "0.375rem", cursor: "pointer" }}
               />
             </div>
             <div>
@@ -459,14 +460,14 @@ function HouseholdSettingsTab({
                 type="color"
                 value={secondaryColor}
                 onChange={(e) => setSecondaryColor(e.target.value)}
-                style={{ width: 48, height: 36, border: "1px solid #D1D5DB", borderRadius: "0.375rem", cursor: "pointer" }}
+                style={{ width: 48, height: 36, border: "1px solid var(--pf-input-border)", borderRadius: "0.375rem", cursor: "pointer" }}
               />
             </div>
           </div>
           <button
             onClick={() =>
               updateHousehold.mutate({
-                id: householdId,
+                householdId,
                 name,
                 theme: { primaryColor, secondaryColor },
               })
@@ -482,7 +483,7 @@ function HouseholdSettingsTab({
       {/* Join Code */}
       <div style={glassCard}>
         <h2 style={sectionTitle}>Join Code</h2>
-        <p style={{ fontSize: "0.8rem", color: "#6B7280", margin: "0 0 0.5rem" }}>
+        <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.5rem" }}>
           Share this code so others can request to join your household.
         </p>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -494,7 +495,7 @@ function HouseholdSettingsTab({
             background: "rgba(99, 102, 241, 0.05)",
             borderRadius: "0.5rem",
             border: "1px solid rgba(99, 102, 241, 0.15)",
-            color: "#1E1B4B",
+            color: "var(--pf-text)",
           }}>
             {household.joinCode ?? "Not set"}
           </code>
@@ -526,17 +527,23 @@ function HouseholdSettingsTab({
         </div>
       </div>
 
+      {/* Data Export */}
+      <DataExportCard householdId={householdId} householdName={household.name} isAdmin={isAdmin} />
+
+      {/* Leave Household */}
+      <LeaveHouseholdSection householdId={householdId} />
+
       {/* Danger Zone */}
       {isAdmin && (
         <div style={{ ...glassCard, borderColor: "rgba(239, 68, 68, 0.3)" }}>
-          <h2 style={{ ...sectionTitle, color: "#EF4444" }}>Danger Zone</h2>
-          <p style={{ fontSize: "0.8rem", color: "#6B7280", margin: "0 0 0.75rem" }}>
+          <h2 style={{ ...sectionTitle, color: "var(--pf-error)" }}>Danger Zone</h2>
+          <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.75rem" }}>
             Permanently delete this household and all its data.
           </p>
           <button
             onClick={() => {
               if (confirm("Are you sure? This will permanently delete the household, all pets, activities, and members. This cannot be undone.")) {
-                deleteHousehold.mutate({ id: householdId });
+                deleteHousehold.mutate({ householdId });
               }
             }}
             style={{
@@ -552,12 +559,149 @@ function HouseholdSettingsTab({
   );
 }
 
+// ── Data Export Card ──
+
+function DataExportCard({
+  householdId,
+  householdName,
+  isAdmin,
+}: {
+  householdId: string;
+  householdName: string;
+  isAdmin: boolean;
+}) {
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+  const trackEvent = useTrackEvent();
+
+  const exportQuery = trpc.export.household.useQuery(
+    { householdId },
+    { enabled: false } // only fetch on demand
+  );
+
+  const handleExport = async () => {
+    setExporting(true);
+    setExported(false);
+    try {
+      const result = await exportQuery.refetch();
+      if (result.data) {
+        const json = JSON.stringify(result.data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const slug = householdName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        a.href = url;
+        a.download = `petforce-${slug}-export-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setExported(true);
+        trackEvent("data.exported", { format: "json" });
+        setTimeout(() => setExported(false), 3000);
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  if (!isAdmin) {
+    return (
+      <div style={glassCard}>
+        <h2 style={sectionTitle}>Data Export</h2>
+        <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: 0 }}>
+          Only owners and admins can export household data.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={glassCard}>
+      <h2 style={sectionTitle}>Data Export</h2>
+      <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.75rem" }}>
+        Download all your household data including pets, health records, medications, feeding schedules, expenses, and activities as a JSON file.
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{
+            ...actionButton,
+            background: exporting
+              ? "linear-gradient(135deg, #6B7280, #9CA3AF)"
+              : "linear-gradient(135deg, #6366F1, #818CF8)",
+            cursor: exporting ? "wait" : "pointer",
+          }}
+        >
+          {exporting ? "Exporting..." : "Export as JSON"}
+        </button>
+        {exported && (
+          <span style={{ fontSize: "0.8rem", color: "var(--pf-success)", fontWeight: 600 }}>
+            Download started!
+          </span>
+        )}
+        {exportQuery.isError && (
+          <span style={{ fontSize: "0.8rem", color: "var(--pf-error)" }}>
+            Export failed. Please try again.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Leave Household ──
+
+function LeaveHouseholdSection({ householdId }: { householdId: string }) {
+  const router = useRouter();
+  const { clearHousehold } = useHousehold();
+  const utils = trpc.useContext();
+
+  const leaveMutation = trpc.member.leave.useMutation({
+    onSuccess: () => {
+      clearHousehold();
+      utils.dashboard.myHouseholds.invalidate();
+      router.push("/dashboard");
+    },
+  });
+
+  return (
+    <div style={{ ...glassCard, borderColor: "rgba(245, 158, 11, 0.3)" }}>
+      <h2 style={{ ...sectionTitle, color: "var(--pf-text)" }}>Leave Household</h2>
+      <p style={{ fontSize: "0.8rem", color: "var(--pf-text-muted)", margin: "0 0 0.75rem" }}>
+        Remove yourself from this household. You can rejoin later with an invite or join code.
+      </p>
+      {leaveMutation.isError && (
+        <p style={{ fontSize: "0.8rem", color: "var(--pf-error)", margin: "0 0 0.5rem" }}>
+          {leaveMutation.error?.message}
+        </p>
+      )}
+      <button
+        onClick={() => {
+          if (confirm("Are you sure you want to leave this household?")) {
+            leaveMutation.mutate({ householdId });
+          }
+        }}
+        disabled={leaveMutation.isLoading}
+        style={{
+          ...actionButton,
+          background: "linear-gradient(135deg, #F59E0B, #FBBF24)",
+          color: "#1a1a1a",
+        }}
+      >
+        {leaveMutation.isLoading ? "Leaving..." : "Leave Household"}
+      </button>
+    </div>
+  );
+}
+
 // ── Styles ──
 
 const pageShell: React.CSSProperties = {
   height: "calc(100vh - 73px)",
   overflow: "hidden",
-  background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 25%, #FDF2F8 50%, #FFF7ED 75%, #EEF2FF 100%)",
+  background: "var(--pf-page-gradient)",
   fontFamily: "system-ui, sans-serif",
 };
 
@@ -583,7 +727,7 @@ const centeredMessage: React.CSSProperties = {
 const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "0",
-  borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+  borderBottom: "1px solid var(--pf-border)",
   flexShrink: 0,
 };
 
@@ -599,19 +743,19 @@ const tabButton: React.CSSProperties = {
 };
 
 const glassCard: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.7)",
+  background: "var(--pf-glass-bg)",
   backdropFilter: "blur(10px)",
   borderRadius: "0.875rem",
   padding: "1.25rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-  border: "1px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: "var(--pf-glass-shadow)",
+  border: "1px solid var(--pf-glass-border)",
 };
 
 const sectionTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   margin: "0 0 0.75rem",
-  color: "#1E1B4B",
+  color: "var(--pf-text)",
 };
 
 const memberRow: React.CSSProperties = {
@@ -638,23 +782,23 @@ const initialsCircle: React.CSSProperties = {
 const roleBadge: React.CSSProperties = {
   padding: "0.125rem 0.5rem",
   borderRadius: "999px",
-  color: "white",
+  color: "var(--pf-text)",
   fontSize: "0.7rem",
   fontWeight: 600,
   textTransform: "capitalize",
 };
 
 const roleBadgeColors: Record<string, string> = {
-  owner: "#6366F1",
-  admin: "#3B82F6",
-  member: "#6B7280",
-  sitter: "#22C55E",
+  owner: "rgba(99, 102, 241, 0.15)",
+  admin: "rgba(59, 130, 246, 0.15)",
+  member: "rgba(107, 114, 128, 0.15)",
+  sitter: "rgba(34, 197, 94, 0.15)",
 };
 
 const roleSelect: React.CSSProperties = {
   padding: "0.3rem 0.5rem",
   borderRadius: "0.375rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.8rem",
   fontFamily: "inherit",
   cursor: "pointer",
@@ -664,7 +808,7 @@ const inputLabel: React.CSSProperties = {
   display: "block",
   fontSize: "0.75rem",
   fontWeight: 600,
-  color: "#6B7280",
+  color: "var(--pf-text-muted)",
   marginBottom: "0.25rem",
 };
 
@@ -672,7 +816,7 @@ const inputField: React.CSSProperties = {
   width: "100%",
   padding: "0.5rem 0.75rem",
   borderRadius: "0.5rem",
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--pf-input-border)",
   fontSize: "0.875rem",
   fontFamily: "inherit",
   outline: "none",
@@ -707,8 +851,8 @@ const actionButtonSmall: React.CSSProperties = {
 const outlineButtonSmall: React.CSSProperties = {
   padding: "0.25rem 0.6rem",
   borderRadius: "0.375rem",
-  background: "rgba(255, 255, 255, 0.7)",
-  color: "#6366F1",
+  background: "var(--pf-glass-bg)",
+  color: "var(--pf-primary)",
   fontSize: "0.75rem",
   fontWeight: 600,
   border: "1px solid rgba(99, 102, 241, 0.3)",
@@ -720,7 +864,7 @@ const dangerButtonSmall: React.CSSProperties = {
   padding: "0.25rem 0.6rem",
   borderRadius: "0.375rem",
   background: "rgba(239, 68, 68, 0.1)",
-  color: "#EF4444",
+  color: "var(--pf-error)",
   fontSize: "0.75rem",
   fontWeight: 600,
   border: "1px solid rgba(239, 68, 68, 0.2)",
@@ -731,8 +875,8 @@ const dangerButtonSmall: React.CSSProperties = {
 const spinner: React.CSSProperties = {
   width: 32,
   height: 32,
-  border: "3px solid rgba(99, 102, 241, 0.2)",
-  borderTopColor: "#6366F1",
+  border: "3px solid var(--pf-border-strong)",
+  borderTopColor: "var(--pf-primary)",
   borderRadius: "50%",
   animation: "spin 0.8s linear infinite",
 };

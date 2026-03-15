@@ -15,7 +15,7 @@ const FeedItemFrame = styled(XStack, {
   gap: "$3",
   paddingVertical: "$2",
   borderBottomWidth: 1,
-  borderBottomColor: "#E5E7EB",
+  borderBottomColor: "$pfBorderStrong",
 });
 
 export function ActivityFeedItem({

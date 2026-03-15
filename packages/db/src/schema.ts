@@ -2,12 +2,17 @@ import {
   pgTable,
   text,
   timestamp,
+  date,
   jsonb,
   real,
   uuid,
   boolean,
   integer,
+  index,
+  uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // --- Households ---
 
@@ -35,7 +40,10 @@ export const members = pgTable("members", {
   displayName: text("display_name").notNull(),
   avatarUrl: text("avatar_url"),
   joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdUserUnique: uniqueIndex("members_household_user_idx").on(table.householdId, table.userId),
+  userIdx: index("members_user_idx").on(table.userId),
+}));
 
 // --- Pets ---
 
@@ -60,7 +68,34 @@ export const pets = pgTable("pets", {
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("pets_household_idx").on(table.householdId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
+  medicalNotesLength: check("pets_medical_notes_length", sql`length(${table.medicalNotes}) <= 10240`),
+}));
+
+// --- Pet Photos ---
+
+export const petPhotos = pgTable("pet_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .notNull()
+    .references(() => pets.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  caption: text("caption"),
+  takenAt: timestamp("taken_at", { withTimezone: true }),
+  uploadedBy: uuid("uploaded_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  petIdx: index("pet_photos_pet_idx").on(table.petId),
+  householdIdx: index("pet_photos_household_idx").on(table.householdId),
+  uploadedByIdx: index("pet_photos_uploaded_by_idx").on(table.uploadedBy),
+}));
 
 // --- Activities ---
 
@@ -86,7 +121,12 @@ export const activities = pgTable("activities", {
     onDelete: "set null",
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("activities_household_idx").on(table.householdId),
+  petIdx: index("activities_pet_idx").on(table.petId),
+  householdScheduledIdx: index("activities_household_scheduled_idx").on(table.householdId, table.scheduledAt),
+  householdCompletedIdx: index("activities_household_completed_idx").on(table.householdId, table.completedAt),
+}));
 
 // --- Invitations ---
 
@@ -108,7 +148,11 @@ export const invitations = pgTable("invitations", {
     .default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-});
+}, (table) => ({
+  householdIdx: index("invitations_household_idx").on(table.householdId),
+  householdStatusIdx: index("invitations_household_status_idx").on(table.householdId, table.status),
+  invitedByIdx: index("invitations_invited_by_idx").on(table.invitedBy),
+}));
 
 // --- Feeding Schedules ---
 
@@ -128,7 +172,10 @@ export const feedingSchedules = pgTable("feeding_schedules", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("feeding_schedules_household_idx").on(table.householdId),
+  householdActiveIdx: index("feeding_schedules_household_active_idx").on(table.householdId, table.isActive),
+}));
 
 // --- Feeding Logs ---
 
@@ -147,10 +194,18 @@ export const feedingLogs = pgTable("feeding_logs", {
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
-  feedingDate: text("feeding_date").notNull(), // "YYYY-MM-DD" format
+  feedingDate: date("feeding_date", { mode: "string" }).notNull(),
   notes: text("notes"),
   skipped: boolean("skipped").notNull().default(false),
-});
+}, (table) => ({
+  householdIdx: index("feeding_logs_household_idx").on(table.householdId),
+  scheduleDateMemberUnique: uniqueIndex("feeding_logs_schedule_date_member_idx").on(
+    table.feedingScheduleId,
+    table.feedingDate,
+    table.completedBy
+  ),
+  completedByIdx: index("feeding_logs_completed_by_idx").on(table.completedBy),
+}));
 
 // --- Feeding Snoozes ---
 
@@ -162,13 +217,19 @@ export const feedingSnoozes = pgTable("feeding_snoozes", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozeDate: date("snooze_date", { mode: "string" }).notNull(),
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
   snoozedBy: uuid("snoozed_by")
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  scheduleDateMemberUnique: uniqueIndex("feeding_snoozes_schedule_date_member_idx").on(
+    table.feedingScheduleId,
+    table.snoozeDate,
+    table.snoozedBy
+  ),
+}));
 
 // --- Health Records ---
 
@@ -192,7 +253,10 @@ export const healthRecords = pgTable("health_records", {
   nextDueDate: timestamp("next_due_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("health_records_household_idx").on(table.householdId),
+  householdDateIdx: index("health_records_household_date_idx").on(table.householdId, table.date),
+}));
 
 // --- Medications ---
 
@@ -214,7 +278,10 @@ export const medications = pgTable("medications", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("medications_household_idx").on(table.householdId),
+  householdActiveIdx: index("medications_household_active_idx").on(table.householdId, table.isActive),
+}));
 
 // --- Medication Logs ---
 
@@ -226,13 +293,21 @@ export const medicationLogs = pgTable("medication_logs", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  loggedDate: text("logged_date").notNull(), // "YYYY-MM-DD"
+  loggedDate: date("logged_date", { mode: "string" }).notNull(),
   loggedBy: uuid("logged_by")
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   skipped: boolean("skipped").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  medicationDateMemberUnique: uniqueIndex("medication_logs_medication_date_member_idx").on(
+    table.medicationId,
+    table.loggedDate,
+    table.loggedBy
+  ),
+  householdIdx: index("medication_logs_household_idx").on(table.householdId),
+  loggedByIdx: index("medication_logs_logged_by_idx").on(table.loggedBy),
+}));
 
 // --- Medication Snoozes ---
 
@@ -244,13 +319,19 @@ export const medicationSnoozes = pgTable("medication_snoozes", {
   householdId: uuid("household_id")
     .notNull()
     .references(() => households.id, { onDelete: "cascade" }),
-  snoozeDate: text("snooze_date").notNull(), // "YYYY-MM-DD"
+  snoozeDate: date("snooze_date", { mode: "string" }).notNull(),
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
   snoozedBy: uuid("snoozed_by")
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  medicationDateMemberUnique: uniqueIndex("medication_snoozes_medication_date_member_idx").on(
+    table.medicationId,
+    table.snoozeDate,
+    table.snoozedBy
+  ),
+}));
 
 // --- Expenses ---
 
@@ -281,7 +362,10 @@ export const expenses = pgTable("expenses", {
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("expenses_household_idx").on(table.householdId),
+  householdDateIdx: index("expenses_household_date_idx").on(table.householdId, table.date),
+}));
 
 // --- Pet Notes ---
 
@@ -295,7 +379,12 @@ export const petNotes = pgTable("pet_notes", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("pet_notes_household_idx").on(table.householdId),
+  petIdx: index("pet_notes_pet_idx").on(table.petId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
+  contentLength: check("pet_notes_content_length", sql`length(${table.content}) <= 51200`),
+}));
 
 // --- Access Requests ---
 
@@ -316,7 +405,9 @@ export const accessRequests = pgTable("access_requests", {
     onDelete: "set null",
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdStatusIdx: index("access_requests_household_status_idx").on(table.householdId, table.status),
+}));
 
 // --- Member Game Stats (Gamification) ---
 
@@ -332,14 +423,16 @@ export const memberGameStats = pgTable("member_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
     .default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("member_game_stats_household_idx").on(table.householdId),
+}));
 
 // --- Household Game Stats (Gamification) ---
 
@@ -352,7 +445,7 @@ export const householdGameStats = pgTable("household_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
@@ -375,14 +468,46 @@ export const petGameStats = pgTable("pet_game_stats", {
   level: integer("level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
+  lastActiveDate: date("last_active_date", { mode: "string" }),
   unlockedBadgeIds: jsonb("unlocked_badge_ids")
     .$type<string[]>()
     .notNull()
     .default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  householdIdx: index("pet_game_stats_household_idx").on(table.householdId),
+}));
+
+// --- Activity Log (Audit Trail) ---
+
+export const activityLog = pgTable("activity_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  action: text("action").notNull(), // e.g. "member.role_changed", "pet.updated", "medication.created"
+  subjectType: text("subject_type").notNull(), // e.g. "member", "pet", "medication", "household"
+  subjectId: uuid("subject_id"),
+  subjectName: text("subject_name"), // snapshot: pet name, member name, etc.
+  performedBy: uuid("performed_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  householdCreatedIdx: index("activity_log_household_created_idx").on(
+    table.householdId,
+    table.createdAt
+  ),
+  performedByCreatedIdx: index("activity_log_performed_by_created_idx").on(
+    table.performedBy,
+    table.createdAt
+  ),
+  subjectIdx: index("activity_log_subject_id_idx").on(table.subjectId),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
+  metadataLength: check("activity_log_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
+}));
 
 // --- Analytics Events ---
 
@@ -395,4 +520,9 @@ export const analyticsEvents = pgTable("analytics_events", {
   eventName: text("event_name").notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  userCreatedIdx: index("analytics_events_user_created_idx").on(table.userId, table.createdAt),
+  householdCreatedIdx: index("analytics_events_household_created_idx").on(table.householdId, table.createdAt),
+  // eslint-disable-next-line no-restricted-syntax -- check() requires sql template literal
+  metadataLength: check("analytics_events_metadata_length", sql`length(${table.metadata}::text) <= 10240`),
+}));

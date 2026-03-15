@@ -1,31 +1,36 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { eq, and, desc, isNull, count as drizzleCount } from "drizzle-orm";
+import { householdProcedure, router } from "../trpc.js";
 import { db, petNotes, pets } from "@petforce/db";
-import { createNoteSchema, updateNoteSchema } from "@petforce/core";
+import { createNoteSchema, updateNoteSchema, paginationInput } from "@petforce/core";
 
 export const notesRouter = router({
   list: householdProcedure
     .input(
       z.object({
         petId: z.string().uuid().nullable().optional(),
-      })
+      }).merge(paginationInput)
     )
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(petNotes)
-        .where(eq(petNotes.householdId, ctx.householdId))
-        .orderBy(desc(petNotes.updatedAt));
-
+      const conditions = [eq(petNotes.householdId, ctx.householdId)];
       if (input.petId === null) {
-        // Household-only notes
-        return rows.filter((r) => r.petId === null);
+        conditions.push(isNull(petNotes.petId));
+      } else if (input.petId) {
+        conditions.push(eq(petNotes.petId, input.petId));
       }
-      if (input.petId) {
-        return rows.filter((r) => r.petId === input.petId);
-      }
-      return rows;
+      const where = and(...conditions);
+
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(petNotes)
+          .where(where)
+          .orderBy(desc(petNotes.updatedAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(petNotes).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   recent: householdProcedure.query(async ({ ctx }) => {

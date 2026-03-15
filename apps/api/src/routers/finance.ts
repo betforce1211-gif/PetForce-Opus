@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { eq, and, gte, lt, gt, isNotNull, desc, count as drizzleCount } from "drizzle-orm";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   expenses,
@@ -12,22 +12,28 @@ import {
   updateExpenseSchema,
   financeSummaryInputSchema,
   HEALTH_RECORD_TYPE_LABELS,
+  paginationInput,
 } from "@petforce/core";
 import type { FinanceSummary, FinanceSummaryItem } from "@petforce/core";
 
 export const financeRouter = router({
   listExpenses: householdProcedure
-    .input(z.object({ petId: z.string().uuid().optional() }))
+    .input(z.object({ petId: z.string().uuid().optional() }).merge(paginationInput))
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select()
-        .from(expenses)
-        .where(eq(expenses.householdId, ctx.householdId));
-
-      if (input.petId) {
-        return rows.filter((r) => r.petId === input.petId);
-      }
-      return rows;
+      const where = input.petId
+        ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
+        : eq(expenses.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(expenses)
+          .where(where)
+          .orderBy(desc(expenses.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(expenses).where(where),
+      ]);
+      return { items, totalCount: count };
     }),
 
   createExpense: householdProcedure
@@ -96,38 +102,55 @@ export const financeRouter = router({
       const prevStart = new Date(year, month - 2, 1);
       const prevEnd = new Date(year, month - 1, 1);
 
-      // Fetch pets for name mapping
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, ctx.householdId));
+      // Fetch pets and split expenses/health into targeted current/prev queries
+      const [householdPets, currentExpenses, prevExpenses, currentHealth, prevHealth] = await Promise.all([
+        db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+        db
+          .select()
+          .from(expenses)
+          .where(
+            and(
+              eq(expenses.householdId, ctx.householdId),
+              gte(expenses.date, currentStart),
+              lt(expenses.date, currentEnd)
+            )
+          ),
+        db
+          .select()
+          .from(expenses)
+          .where(
+            and(
+              eq(expenses.householdId, ctx.householdId),
+              gte(expenses.date, prevStart),
+              lt(expenses.date, prevEnd)
+            )
+          ),
+        db
+          .select()
+          .from(healthRecords)
+          .where(
+            and(
+              eq(healthRecords.householdId, ctx.householdId),
+              gte(healthRecords.date, currentStart),
+              lt(healthRecords.date, currentEnd),
+              isNotNull(healthRecords.cost),
+              gt(healthRecords.cost, 0)
+            )
+          ),
+        db
+          .select()
+          .from(healthRecords)
+          .where(
+            and(
+              eq(healthRecords.householdId, ctx.householdId),
+              gte(healthRecords.date, prevStart),
+              lt(healthRecords.date, prevEnd),
+              isNotNull(healthRecords.cost),
+              gt(healthRecords.cost, 0)
+            )
+          ),
+      ]);
       const petMap = new Map(householdPets.map((p) => [p.id, p.name]));
-
-      // Fetch expenses for current + previous month
-      const allExpenses = await db
-        .select()
-        .from(expenses)
-        .where(eq(expenses.householdId, ctx.householdId));
-
-      const currentExpenses = allExpenses.filter(
-        (e) => new Date(e.date) >= currentStart && new Date(e.date) < currentEnd
-      );
-      const prevExpenses = allExpenses.filter(
-        (e) => new Date(e.date) >= prevStart && new Date(e.date) < prevEnd
-      );
-
-      // Fetch health records with cost for current + previous month
-      const allHealth = await db
-        .select()
-        .from(healthRecords)
-        .where(eq(healthRecords.householdId, ctx.householdId));
-
-      const currentHealth = allHealth.filter(
-        (h) => h.cost != null && h.cost > 0 && new Date(h.date) >= currentStart && new Date(h.date) < currentEnd
-      );
-      const prevHealth = allHealth.filter(
-        (h) => h.cost != null && h.cost > 0 && new Date(h.date) >= prevStart && new Date(h.date) < prevEnd
-      );
 
       // Compute totals
       const expenseTotal = currentExpenses.reduce((sum, e) => sum + e.amount, 0);

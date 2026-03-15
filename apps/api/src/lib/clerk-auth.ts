@@ -1,4 +1,5 @@
 import { verifyToken } from "@clerk/backend";
+import { env } from "./env.js";
 
 /**
  * Verify a Clerk JWT from an Authorization header value.
@@ -11,14 +12,15 @@ export async function verifyClerkToken(
 
   const token = authHeader.slice(7);
   try {
-    const jwtKey = process.env.CLERK_JWT_KEY?.replace(/\\n/g, "\n");
+    const jwtKey = env.CLERK_JWT_KEY?.replace(/\\n/g, "\n");
     const payload = await verifyToken(token, {
       ...(jwtKey
         ? { jwtKey }
-        : { secretKey: process.env.CLERK_SECRET_KEY! }),
+        : { secretKey: env.CLERK_SECRET_KEY! }),
     });
     return payload.sub;
-  } catch {
+  } catch (err) {
+    console.error("verifyClerkToken failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

@@ -1,16 +1,28 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, count as drizzleCount } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router, requireAdmin } from "../trpc.js";
 import { db, members } from "@petforce/db";
+import { paginationInput } from "@petforce/core";
+import { logActivity } from "../lib/audit.js";
 
 export const memberRouter = router({
-  listByHousehold: householdProcedure.query(async ({ ctx }) => {
-    return db
-      .select()
-      .from(members)
-      .where(eq(members.householdId, ctx.householdId));
-  }),
+  listByHousehold: householdProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      const where = eq(members.householdId, ctx.householdId);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(members)
+          .where(where)
+          .orderBy(desc(members.joinedAt))
+          .limit(input.limit)
+          .offset(input.offset),
+        db.select({ count: drizzleCount() }).from(members).where(where),
+      ]);
+      return { items, totalCount: count };
+    }),
 
   invite: householdProcedure
     .input(
@@ -21,12 +33,7 @@ export const memberRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can invite members",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [existing] = await db
         .select()
@@ -54,6 +61,17 @@ export const memberRouter = router({
           displayName: input.displayName,
         })
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.invited",
+        subjectType: "member",
+        subjectId: member.id,
+        subjectName: input.displayName,
+        performedBy: ctx.membership.id,
+        metadata: { role: input.role, targetUserId: input.userId },
+      });
+
       return member;
     }),
 
@@ -65,12 +83,7 @@ export const memberRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can update roles",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       const [member] = await db
         .update(members)
@@ -82,18 +95,24 @@ export const memberRouter = router({
           )
         )
         .returning();
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.role_changed",
+        subjectType: "member",
+        subjectId: member.id,
+        subjectName: member.displayName,
+        performedBy: ctx.membership.id,
+        metadata: { newRole: input.role },
+      });
+
       return member;
     }),
 
   remove: householdProcedure
     .input(z.object({ memberId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.membership.role !== "owner" && ctx.membership.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only owners and admins can remove members",
-        });
-      }
+      requireAdmin(ctx.membership);
 
       // Prevent removing the last owner
       const [target] = await db
@@ -136,6 +155,58 @@ export const memberRouter = router({
             eq(members.householdId, ctx.householdId)
           )
         );
+
+      await logActivity({
+        householdId: ctx.householdId,
+        action: "member.removed",
+        subjectType: "member",
+        subjectId: target.id,
+        subjectName: target.displayName,
+        performedBy: ctx.membership.id,
+      });
+
       return { success: true };
     }),
+
+  leave: householdProcedure.mutation(async ({ ctx }) => {
+    // Prevent the last owner from leaving
+    if (ctx.membership.role === "owner") {
+      const owners = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, ctx.householdId),
+            eq(members.role, "owner")
+          )
+        );
+      if (owners.length <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "You are the last owner. Transfer ownership to another member before leaving.",
+        });
+      }
+    }
+
+    await db
+      .delete(members)
+      .where(
+        and(
+          eq(members.id, ctx.membership.id),
+          eq(members.householdId, ctx.householdId)
+        )
+      );
+
+    await logActivity({
+      householdId: ctx.householdId,
+      action: "member.left",
+      subjectType: "member",
+      subjectId: ctx.membership.id,
+      subjectName: ctx.membership.displayName,
+      performedBy: ctx.membership.id,
+    });
+
+    return { success: true };
+  }),
 });

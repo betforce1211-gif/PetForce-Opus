@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc";
+import { householdProcedure, router } from "../trpc.js";
 import {
   db,
   members,
@@ -8,10 +8,10 @@ import {
   petGameStats,
   pets,
   households,
+  feedingSchedules,
+  medications,
 } from "@petforce/db";
 import {
-  GAMIFICATION_LEVELS,
-  GAMIFICATION_LEVEL_NAMES,
   GAMIFICATION_XP_VALUES,
   evaluateBadges,
 } from "@petforce/core";
@@ -21,91 +21,8 @@ import type {
   GamificationPetView,
   GamificationFullStats,
 } from "@petforce/core";
-import { fetchUnifiedCompletions } from "../lib/unified-completions";
-
-function levelFromXp(xp: number): number {
-  for (let i = GAMIFICATION_LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= GAMIFICATION_LEVELS[i].xpThreshold) return GAMIFICATION_LEVELS[i].level;
-  }
-  return 1;
-}
-
-function levelName(level: number, track?: string): string {
-  if (track) {
-    const names = GAMIFICATION_LEVEL_NAMES[track];
-    if (names && names[level - 1]) return names[level - 1];
-  }
-  const otherNames = GAMIFICATION_LEVEL_NAMES["other"];
-  return (otherNames && otherNames[level - 1]) ?? `Level ${level}`;
-}
-
-function nextLevelXp(level: number): number {
-  const next = GAMIFICATION_LEVELS.find((l) => l.level === level + 1);
-  return next ? next.xpThreshold : GAMIFICATION_LEVELS[GAMIFICATION_LEVELS.length - 1].xpThreshold;
-}
-
-function currentLevelXp(level: number): number {
-  return GAMIFICATION_LEVELS.find((l) => l.level === level)?.xpThreshold ?? 0;
-}
-
-function computeStreaks(
-  activeDays: Set<string>,
-  today: string
-): { currentStreak: number; longestStreak: number; lastDay: string | null } {
-  const sortedDays = Array.from(activeDays).sort();
-  if (sortedDays.length === 0) {
-    return { currentStreak: 0, longestStreak: 0, lastDay: null };
-  }
-
-  let longestStreak = 1;
-  let streakCount = 1;
-
-  for (let i = 1; i < sortedDays.length; i++) {
-    const prev = new Date(sortedDays[i - 1]);
-    const curr = new Date(sortedDays[i]);
-    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-    if (diffDays === 1) {
-      streakCount++;
-    } else {
-      streakCount = 1;
-    }
-    if (streakCount > longestStreak) longestStreak = streakCount;
-  }
-
-  const lastDay = sortedDays[sortedDays.length - 1];
-  let currentStreak = 0;
-
-  const lastDate = new Date(lastDay);
-  const todayDate = new Date(today);
-  const diffDays = (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-  if (diffDays <= 1) {
-    currentStreak = 1;
-    for (let i = sortedDays.length - 2; i >= 0; i--) {
-      const prev = new Date(sortedDays[i]);
-      const curr = new Date(sortedDays[i + 1]);
-      const d = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-      if (d === 1) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-  }
-
-  return { currentStreak, longestStreak, lastDay };
-}
-
-function buildLevelView(xp: number, track?: string) {
-  const lvl = levelFromXp(xp);
-  const nxtXp = nextLevelXp(lvl);
-  const curXp = currentLevelXp(lvl);
-  return {
-    level: lvl,
-    levelName: levelName(lvl, track),
-    xpToNextLevel: nxtXp - xp,
-    nextLevelXp: nxtXp - curXp,
-  };
-}
+import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
+import { levelFromXp, buildLevelView, computeStreaks } from "../lib/gamification-helpers.js";
 
 interface AccumulatorData {
   totalXp: number;
@@ -207,12 +124,35 @@ export const gamificationRouter = router({
 
   recalculate: householdProcedure.mutation(async ({ ctx }) => {
     const today = new Date().toISOString().split("T")[0];
-    const raw = await fetchUnifiedCompletions(ctx.householdId, "2000-01-01", today);
 
-    const [householdMembers, petRows] = await Promise.all([
+    // Pre-fetch lookup data and existing stats in parallel
+    const [householdMembers, petRows, schedules, meds, existingMemberStats] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+      db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
+      db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
+      db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
     ]);
+
+    // Use lastActiveDate to bound the fetch instead of scanning from 2000-01-01.
+    // 90-day buffer ensures streak continuity across recalculations.
+    let startDate = "2000-01-01";
+    if (existingMemberStats.length > 0) {
+      const dates = existingMemberStats
+        .map((s) => s.lastActiveDate)
+        .filter(Boolean) as string[];
+      if (dates.length > 0) {
+        const earliest = dates.sort()[0];
+        const d = new Date(earliest);
+        d.setDate(d.getDate() - 90);
+        startDate = d.toISOString().split("T")[0];
+      }
+    }
+
+    const raw = await fetchUnifiedCompletions(ctx.householdId, startDate, today, {
+      schedules,
+      medications: meds,
+    });
 
     // --- Accumulators ---
     const memberData = new Map<string, AccumulatorData>();

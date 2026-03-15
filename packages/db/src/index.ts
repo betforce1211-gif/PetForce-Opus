@@ -1,3 +1,3 @@
-export * from "./schema";
-export * from "./client";
-export * from "./search";
+export * from "./schema.js";
+export * from "./client.js";
+export * from "./search.js";

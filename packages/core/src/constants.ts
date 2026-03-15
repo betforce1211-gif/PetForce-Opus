@@ -245,7 +245,7 @@ export const EXPENSE_DESCRIPTION_SUGGESTIONS: Record<string, string[]> = {
 
 // --- Today's Tasks ---
 
-import type { TaskKind } from "./types";
+import type { TaskKind } from "./types.js";
 
 export const TASK_KIND_ICONS: Record<TaskKind, string> = {
   alert: "\u26A0\uFE0F",
@@ -271,6 +271,14 @@ export const PET_AVATAR_ALLOWED_TYPES = [
   "image/png",
   "image/webp",
 ] as const;
+
+export const PET_PHOTO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
+export const PET_PHOTO_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export const PET_PHOTO_MAX_PER_PET = 50;
 
 // --- Gamification ---
 

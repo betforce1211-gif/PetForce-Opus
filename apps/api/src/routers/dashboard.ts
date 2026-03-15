@@ -1,19 +1,10 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, householdProcedure, router } from "../trpc";
+import { protectedProcedure, householdProcedure, router } from "../trpc.js";
 import { db, households, members, pets, activities, invitations, accessRequests } from "@petforce/db";
 import { onboardHouseholdSchema } from "@petforce/core";
 import type { HouseholdSummary } from "@petforce/core";
-import { generateJoinCode } from "../utils/join-code";
-
-/** Check if a user already owns (created) a household */
-async function hasCreatedHousehold(userId: string): Promise<boolean> {
-  const ownerRows = await db
-    .select({ id: members.id })
-    .from(members)
-    .where(and(eq(members.userId, userId), eq(members.role, "owner")));
-  return ownerRows.length > 0;
-}
+import { generateJoinCode } from "../utils/join-code.js";
 
 export const dashboardRouter = router({
   myHouseholds: protectedProcedure.query(async ({ ctx }) => {
@@ -24,32 +15,37 @@ export const dashboardRouter = router({
 
     if (userMemberships.length === 0) return [];
 
+    const householdIds = userMemberships.map((m) => m.householdId);
+
+    // Batch: fetch all households, members, and pets in 3 queries instead of 3N
+    const [allHouseholds, allMembers, allPets] = await Promise.all([
+      db.select().from(households).where(inArray(households.id, householdIds)),
+      db.select().from(members).where(inArray(members.householdId, householdIds)),
+      db.select().from(pets).where(inArray(pets.householdId, householdIds)),
+    ]);
+
+    const householdMap = new Map(allHouseholds.map((h) => [h.id, h]));
+    const memberCounts = new Map<string, number>();
+    const petCounts = new Map<string, number>();
+
+    for (const m of allMembers) {
+      memberCounts.set(m.householdId, (memberCounts.get(m.householdId) ?? 0) + 1);
+    }
+    for (const p of allPets) {
+      petCounts.set(p.householdId, (petCounts.get(p.householdId) ?? 0) + 1);
+    }
+
     const summaries: HouseholdSummary[] = [];
-
     for (const membership of userMemberships) {
-      const [household] = await db
-        .select()
-        .from(households)
-        .where(eq(households.id, membership.householdId));
-
+      const household = householdMap.get(membership.householdId);
       if (!household) continue;
-
-      const householdMembers = await db
-        .select()
-        .from(members)
-        .where(eq(members.householdId, household.id));
-
-      const householdPets = await db
-        .select()
-        .from(pets)
-        .where(eq(pets.householdId, household.id));
 
       summaries.push({
         id: household.id,
         name: household.name,
         theme: household.theme,
-        petCount: householdPets.length,
-        memberCount: householdMembers.length,
+        petCount: petCounts.get(household.id) ?? 0,
+        memberCount: memberCounts.get(household.id) ?? 0,
         role: membership.role,
       });
     }
@@ -58,35 +54,25 @@ export const dashboardRouter = router({
   }),
 
   get: householdProcedure.query(async ({ ctx }) => {
-    const [household] = await db
-      .select()
-      .from(households)
-      .where(eq(households.id, ctx.householdId));
-
-    const householdMembers = await db
-      .select()
-      .from(members)
-      .where(eq(members.householdId, ctx.householdId));
-
-    const householdPets = await db
-      .select()
-      .from(pets)
-      .where(eq(pets.householdId, ctx.householdId));
-
-    const recentActivities = await db
-      .select()
-      .from(activities)
-      .where(eq(activities.householdId, ctx.householdId))
-      .orderBy(desc(activities.createdAt))
-      .limit(20);
-
-    // Pending counts for owners/admins
-    const callerMember = householdMembers.find((m) => m.userId === ctx.userId);
-    let pendingInviteCount = 0;
-    let pendingRequestCount = 0;
-
-    if (callerMember && (callerMember.role === "owner" || callerMember.role === "admin")) {
-      const pendingInvites = await db
+    // Parallelize all independent queries
+    const [
+      [household],
+      householdMembers,
+      householdPets,
+      recentActivities,
+      pendingInvites,
+      pendingRequests,
+    ] = await Promise.all([
+      db.select().from(households).where(eq(households.id, ctx.householdId)),
+      db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+      db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
+      db
+        .select()
+        .from(activities)
+        .where(eq(activities.householdId, ctx.householdId))
+        .orderBy(desc(activities.createdAt))
+        .limit(20),
+      db
         .select()
         .from(invitations)
         .where(
@@ -94,10 +80,8 @@ export const dashboardRouter = router({
             eq(invitations.householdId, ctx.householdId),
             eq(invitations.status, "pending")
           )
-        );
-      pendingInviteCount = pendingInvites.length;
-
-      const pendingRequests = await db
+        ),
+      db
         .select()
         .from(accessRequests)
         .where(
@@ -105,32 +89,44 @@ export const dashboardRouter = router({
             eq(accessRequests.householdId, ctx.householdId),
             eq(accessRequests.status, "pending")
           )
-        );
-      pendingRequestCount = pendingRequests.length;
-    }
+        ),
+    ]);
+
+    // Only expose pending counts to owners/admins (use membership from context)
+    const isAdmin =
+      ctx.membership.role === "owner" || ctx.membership.role === "admin";
 
     return {
       household,
       members: householdMembers,
       pets: householdPets,
       recentActivities,
-      pendingInviteCount,
-      pendingRequestCount,
+      pendingInviteCount: isAdmin ? pendingInvites.length : 0,
+      pendingRequestCount: isAdmin ? pendingRequests.length : 0,
     };
   }),
 
   canCreateHousehold: protectedProcedure.query(async ({ ctx }) => {
-    const alreadyOwner = await hasCreatedHousehold(ctx.userId);
-    return { canCreate: !alreadyOwner };
+    const owned = await db
+      .select({ cnt: count() })
+      .from(members)
+      .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
+    return { canCreate: (owned[0]?.cnt ?? 0) === 0 };
   }),
 
   onboard: protectedProcedure
     .input(onboardHouseholdSchema)
     .mutation(async ({ ctx, input }) => {
-      if (await hasCreatedHousehold(ctx.userId)) {
+      // Enforce one-household-per-owner limit
+      const owned = await db
+        .select({ cnt: count() })
+        .from(members)
+        .where(and(eq(members.userId, ctx.userId), eq(members.role, "owner")));
+      if ((owned[0]?.cnt ?? 0) > 0) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You have already created a household. You can join other households using a join code.",
+          message:
+            "You have already created a household. You can join other households using a join code.",
         });
       }
 
