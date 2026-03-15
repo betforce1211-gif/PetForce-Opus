@@ -199,6 +199,7 @@ export const feedingLogs = pgTable("feeding_logs", {
   skipped: boolean("skipped").notNull().default(false),
 }, (table) => ({
   householdIdx: index("feeding_logs_household_idx").on(table.householdId),
+  householdCompletedAtIdx: index("feeding_logs_household_completed_at_idx").on(table.householdId, table.completedAt),
   scheduleDateMemberUnique: uniqueIndex("feeding_logs_schedule_date_member_idx").on(
     table.feedingScheduleId,
     table.feedingDate,
@@ -306,6 +307,7 @@ export const medicationLogs = pgTable("medication_logs", {
     table.loggedBy
   ),
   householdIdx: index("medication_logs_household_idx").on(table.householdId),
+  householdLoggedDateIdx: index("medication_logs_household_logged_date_idx").on(table.householdId, table.loggedDate),
   loggedByIdx: index("medication_logs_logged_by_idx").on(table.loggedBy),
 }));
 

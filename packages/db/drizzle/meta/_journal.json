@@ -43,6 +43,13 @@
       "when": 1773463189252,
       "tag": "0005_add-missing-fk-indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773808800000,
+      "tag": "0006_reporting-composite-indexes",
+      "breakpoints": true
     }
   ]
 }
