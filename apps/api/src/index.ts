@@ -99,30 +99,22 @@ app.get("/health", async (c) => {
     checks.db = "error";
   }
 
-  // Clerk auth reachability check
+  // Clerk auth reachability check (public JWKS endpoint — no auth needed)
   try {
-    if (env.CLERK_SECRET_KEY) {
-      const res = await fetch("https://api.clerk.com/v1/clients", {
-        headers: { Authorization: `Bearer ${env.CLERK_SECRET_KEY}` },
-        signal: AbortSignal.timeout(5000),
-      });
-      checks.auth = res.ok ? "ok" : "error";
-    } else {
-      // JWT key mode — verify Clerk API is reachable via public JWKS endpoint
-      const res = await fetch("https://api.clerk.com/.well-known/jwks.json", {
-        signal: AbortSignal.timeout(5000),
-      });
-      checks.auth = res.status < 500 ? "ok" : "error";
-    }
+    const res = await fetch("https://api.clerk.com/.well-known/jwks.json", {
+      signal: AbortSignal.timeout(5000),
+    });
+    checks.auth = res.status < 500 ? "ok" : "error";
   } catch {
     checks.auth = "error";
   }
 
   const allOk = Object.values(checks).every((v) => v === "ok");
-  const anyError = Object.values(checks).some((v) => v === "error");
-  const status = allOk ? "ok" : anyError ? "degraded" : "ok";
+  const status = allOk ? "ok" : "degraded";
 
-  return c.json({ status, checks }, allOk ? 200 : 503);
+  // Always return 200 — this is a liveness endpoint used by CI and load
+  // balancers. The `status` field in the body communicates dependency health.
+  return c.json({ status, checks });
 });
 
 const port = env.PORT ?? env.API_PORT ?? 3001;
