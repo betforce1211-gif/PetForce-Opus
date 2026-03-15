@@ -12,6 +12,7 @@ const client = postgres(dbEnv.DATABASE_URL, {
   idle_timeout: 20,
   connect_timeout: 10,
   max_lifetime: 60 * 30,
+  ssl: isProduction ? "require" : undefined,
   connection: {
     application_name: "petforce-api",
     statement_timeout: dbEnv.DB_STATEMENT_TIMEOUT ?? 30000,
