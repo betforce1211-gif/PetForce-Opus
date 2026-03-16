@@ -209,8 +209,8 @@ function VetVisitsTab({ householdId }: { householdId: string }) {
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" maxLength={2000} style={inputStyle} />
           </label>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button type="submit" disabled={createMut.isLoading || !effectivePetId || !date} style={addBtn(createMut.isLoading)}>
-              {createMut.isLoading ? "Adding..." : "Add"}
+            <button type="submit" disabled={createMut.isPending || !effectivePetId || !date} style={addBtn(createMut.isPending)}>
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -240,7 +240,7 @@ function VetVisitsTab({ householdId }: { householdId: string }) {
                         <input value={editVet} onChange={(e) => setEditVet(e.target.value)} placeholder="Vet" style={{ ...inputStyle, width: 90 }} />
                         <input value={editReason} onChange={(e) => setEditReason(e.target.value)} placeholder="Reason" style={{ ...inputStyle, flex: 1 }} />
                         <input type="number" value={editCost} onChange={(e) => setEditCost(e.target.value)} placeholder="$" style={{ ...inputStyle, width: 60 }} />
-                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>{updateMut.isLoading ? "..." : "Save"}</button>
+                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>{updateMut.isPending ? "..." : "Save"}</button>
                         <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                       </div>
                     ) : (
@@ -253,7 +253,7 @@ function VetVisitsTab({ householdId }: { householdId: string }) {
                         {r.cost != null && <span style={recordMeta}>${r.cost.toFixed(2)}</span>}
                         <span style={{ flex: 1 }} />
                         <button type="button" onClick={() => startEdit(r)} style={editBtnStyle}>Edit</button>
-                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isLoading} style={deleteBtnStyle}>Delete</button>
+                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isPending} style={deleteBtnStyle}>Delete</button>
                       </div>
                     )
                   )}
@@ -421,8 +421,8 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" maxLength={2000} style={inputStyle} />
           </label>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button type="submit" disabled={createMut.isLoading || !effectivePetId || !vaccineName || !date} style={addBtn(createMut.isLoading)}>
-              {createMut.isLoading ? "Adding..." : "Add"}
+            <button type="submit" disabled={createMut.isPending || !effectivePetId || !vaccineName || !date} style={addBtn(createMut.isPending)}>
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -448,7 +448,7 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
                         <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} style={inputStyle} />
                         <input type="date" value={editNextDue} onChange={(e) => setEditNextDue(e.target.value)} style={inputStyle} />
                         <input value={editVet} onChange={(e) => setEditVet(e.target.value)} placeholder="Vet" style={{ ...inputStyle, width: 90 }} />
-                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>{updateMut.isLoading ? "..." : "Save"}</button>
+                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>{updateMut.isPending ? "..." : "Save"}</button>
                         <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                       </div>
                     ) : (
@@ -465,7 +465,7 @@ function VaccinationsTab({ householdId }: { householdId: string }) {
                         {r.vetOrClinic && <span style={recordMeta}>{r.vetOrClinic}</span>}
                         <span style={{ flex: 1 }} />
                         <button type="button" onClick={() => startEdit(r)} style={editBtnStyle}>Edit</button>
-                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isLoading} style={deleteBtnStyle}>Delete</button>
+                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isPending} style={deleteBtnStyle}>Delete</button>
                       </div>
                     );
                   })}
@@ -652,8 +652,8 @@ function MedicationsTab({ householdId }: { householdId: string }) {
             <input type="text" value={medNotes} onChange={(e) => setMedNotes(e.target.value)} placeholder="Optional" maxLength={2000} style={inputStyle} />
           </label>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button type="submit" disabled={createMut.isLoading || !effectivePetId || !name} style={addBtn(createMut.isLoading)}>
-              {createMut.isLoading ? "Adding..." : "Add"}
+            <button type="submit" disabled={createMut.isPending || !effectivePetId || !name} style={addBtn(createMut.isPending)}>
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -679,7 +679,7 @@ function MedicationsTab({ householdId }: { householdId: string }) {
                         <input value={editFrequency} onChange={(e) => setEditFrequency(e.target.value)} placeholder="Frequency" style={{ ...inputStyle, width: 90 }} />
                         <input type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} style={inputStyle} title="Start" />
                         <input type="date" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} style={inputStyle} title="End" />
-                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>{updateMut.isLoading ? "..." : "Save"}</button>
+                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>{updateMut.isPending ? "..." : "Save"}</button>
                         <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                       </div>
                     ) : (
@@ -696,11 +696,11 @@ function MedicationsTab({ householdId }: { householdId: string }) {
                           {m.isActive ? "Active" : "Inactive"}
                         </span>
                         <span style={{ flex: 1 }} />
-                        <button type="button" onClick={() => handleToggleActive(m)} disabled={updateMut.isLoading} style={toggleBtn(m.isActive)}>
+                        <button type="button" onClick={() => handleToggleActive(m)} disabled={updateMut.isPending} style={toggleBtn(m.isActive)}>
                           {m.isActive ? "Deactivate" : "Activate"}
                         </button>
                         <button type="button" onClick={() => startEdit(m)} style={editBtnStyle}>Edit</button>
-                        <button type="button" onClick={() => handleDelete(m.id)} disabled={deleteMut.isLoading} style={deleteBtnStyle}>Delete</button>
+                        <button type="button" onClick={() => handleDelete(m.id)} disabled={deleteMut.isPending} style={deleteBtnStyle}>Delete</button>
                       </div>
                     )
                   )}

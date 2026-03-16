@@ -137,8 +137,8 @@ export default function LogActivityPage() {
           <button type="button" onClick={() => router.back()} style={cancelButtonStyle}>
             Cancel
           </button>
-          <button type="submit" disabled={createActivity.isLoading} style={submitButtonStyle(createActivity.isLoading)}>
-            {createActivity.isLoading ? "Logging..." : "Log Activity"}
+          <button type="submit" disabled={createActivity.isPending} style={submitButtonStyle(createActivity.isPending)}>
+            {createActivity.isPending ? "Logging..." : "Log Activity"}
           </button>
         </div>
       </form>

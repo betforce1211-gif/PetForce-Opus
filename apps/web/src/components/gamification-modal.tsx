@@ -47,7 +47,7 @@ export function GamificationModal({ householdId, onClose }: GamificationModalPro
         ))}
       </div>
 
-      {statsQuery.isLoading && <p style={loadingText}>Loading...</p>}
+      {statsQuery.isPending && <p style={loadingText}>Loading...</p>}
       {statsQuery.isError && <p style={errorText}>Failed to load stats</p>}
 
       {statsQuery.data && (
@@ -63,10 +63,10 @@ export function GamificationModal({ householdId, onClose }: GamificationModalPro
         <button
           type="button"
           onClick={() => recalculate.mutate({ householdId })}
-          disabled={recalculate.isLoading}
+          disabled={recalculate.isPending}
           style={refreshBtn}
         >
-          {recalculate.isLoading ? "Recalculating..." : "Refresh Stats"}
+          {recalculate.isPending ? "Recalculating..." : "Refresh Stats"}
         </button>
         <button type="button" onClick={onClose} style={closeBtnStyle}>
           Done

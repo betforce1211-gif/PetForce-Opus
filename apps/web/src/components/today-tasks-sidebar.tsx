@@ -255,7 +255,7 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
     onSuccess: () => utils.feeding.todayStatus.invalidate(),
   });
 
-  const isLoading = feedingQuery.isLoading || calendarQuery.isLoading || healthQuery.isLoading || medicationQuery.isLoading;
+  const isPending = feedingQuery.isPending || calendarQuery.isPending || healthQuery.isPending || medicationQuery.isPending;
   const isError = feedingQuery.isError || calendarQuery.isError || healthQuery.isError || medicationQuery.isError;
 
   const sections = aggregateAndSort(feedingQuery.data, calendarQuery.data, healthQuery.data, medicationQuery.data);
@@ -356,11 +356,11 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
   }
 
   function isMutating(task: TaskItem): boolean {
-    if (task.kind === "feeding") return logFeeding.isLoading || snoozeFeeding.isLoading || undoSnooze.isLoading || undoFeedingCompletion.isLoading;
+    if (task.kind === "feeding") return logFeeding.isPending || snoozeFeeding.isPending || undoSnooze.isPending || undoFeedingCompletion.isPending;
     if (task.kind === "activity") {
-      return completeActivity.isLoading || updateActivity.isLoading || deleteActivity.isLoading;
+      return completeActivity.isPending || updateActivity.isPending || deleteActivity.isPending;
     }
-    if (task.kind === "medication") return logMedication.isLoading || undoMedicationLog.isLoading || snoozeMedication.isLoading || undoMedicationSnooze.isLoading;
+    if (task.kind === "medication") return logMedication.isPending || undoMedicationLog.isPending || snoozeMedication.isPending || undoMedicationSnooze.isPending;
     return false;
   }
 
@@ -372,12 +372,12 @@ export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeedi
       <h2 style={sidebarTitle}>
         <span style={titleEmoji}>{"\u2705"}</span>
         Today&apos;s Tasks
-        {!isLoading && !isError && totalTasks > 0 && (
+        {!isPending && !isError && totalTasks > 0 && (
           <span style={countBadge}>{pendingTasks > 0 ? pendingTasks : "\u2713"}</span>
         )}
       </h2>
 
-      {isLoading ? (
+      {isPending ? (
         <div style={centeredState}>
           <div style={spinnerStyle} />
           <p style={stateText}>Loading tasks...</p>

@@ -121,7 +121,7 @@ export default function PetDetailPage() {
     deletePet.mutate({ id: petId });
   };
 
-  if (petQuery.isLoading) {
+  if (petQuery.isPending) {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>
@@ -155,7 +155,7 @@ export default function PetDetailPage() {
   }
 
   const displayAvatar = photoPreview ?? existingAvatar;
-  const isSaving = updatePet.isLoading || isUploading;
+  const isSaving = updatePet.isPending || isUploading;
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "system-ui, sans-serif" }}>
@@ -292,15 +292,15 @@ export default function PetDetailPage() {
             Cancel
           </button>
           <button type="submit" disabled={isSaving} style={submitButtonStyle(isSaving)}>
-            {isUploading ? "Uploading photo..." : updatePet.isLoading ? "Saving..." : "Save Changes"}
+            {isUploading ? "Uploading photo..." : updatePet.isPending ? "Saving..." : "Save Changes"}
           </button>
           <button
             type="button"
             onClick={handleDelete}
-            disabled={deletePet.isLoading}
+            disabled={deletePet.isPending}
             style={deleteButtonStyle}
           >
-            {deletePet.isLoading ? "Deleting..." : "Delete"}
+            {deletePet.isPending ? "Deleting..." : "Delete"}
           </button>
         </div>
       </form>

@@ -218,8 +218,8 @@ export default function AddPetPage() {
           <button type="button" onClick={() => router.back()} style={cancelButtonStyle}>
             Cancel
           </button>
-          <button type="submit" disabled={createPet.isLoading || isUploading} style={submitButtonStyle(createPet.isLoading || isUploading)}>
-            {isUploading ? "Uploading photo..." : createPet.isLoading ? "Adding..." : "Add Pet"}
+          <button type="submit" disabled={createPet.isPending || isUploading} style={submitButtonStyle(createPet.isPending || isUploading)}>
+            {isUploading ? "Uploading photo..." : createPet.isPending ? "Adding..." : "Add Pet"}
           </button>
         </div>
       </form>

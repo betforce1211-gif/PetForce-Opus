@@ -35,7 +35,7 @@ function AcceptInvite({ token }: { token: string }) {
     onSuccess: () => router.push("/dashboard"),
   });
 
-  if (inviteQuery.isLoading) {
+  if (inviteQuery.isPending) {
     return (
       <div style={glassCard}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
@@ -116,14 +116,14 @@ function AcceptInvite({ token }: { token: string }) {
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
             <button
               onClick={() => acceptMutation.mutate({ token })}
-              disabled={acceptMutation.isLoading}
+              disabled={acceptMutation.isPending}
               style={actionButton}
             >
-              {acceptMutation.isLoading ? "Joining..." : "Accept & Join"}
+              {acceptMutation.isPending ? "Joining..." : "Accept & Join"}
             </button>
             <button
               onClick={() => declineMutation.mutate({ token })}
-              disabled={declineMutation.isLoading}
+              disabled={declineMutation.isPending}
               style={outlineButton}
             >
               Decline
@@ -224,7 +224,7 @@ function RequestAccess() {
               message: message.trim() || undefined,
             })
           }
-          disabled={!joinCode.trim() || !displayName.trim() || createRequest.isLoading}
+          disabled={!joinCode.trim() || !displayName.trim() || createRequest.isPending}
           style={{
             ...actionButton,
             opacity: !joinCode.trim() || !displayName.trim() ? 0.5 : 1,
@@ -232,7 +232,7 @@ function RequestAccess() {
             padding: "0.6rem",
           }}
         >
-          {createRequest.isLoading ? "Sending..." : "Request Access"}
+          {createRequest.isPending ? "Sending..." : "Request Access"}
         </button>
       </div>
     </div>

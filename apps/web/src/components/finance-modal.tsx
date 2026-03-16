@@ -103,7 +103,7 @@ function OverviewTab({ householdId }: { householdId: string }) {
         <button type="button" onClick={goNext} style={arrowBtn}>{"\u25B6"}</button>
       </div>
 
-      {summaryQuery.isLoading && <p style={emptyText}>Loading...</p>}
+      {summaryQuery.isPending && <p style={emptyText}>Loading...</p>}
       {summaryQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load summary</p>}
 
       {data && (
@@ -322,8 +322,8 @@ function ExpensesTab({ householdId }: { householdId: string }) {
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" maxLength={2000} style={inputStyle} />
           </label>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button type="submit" disabled={createMut.isLoading || !effectivePetId || !description || !amount || !date} style={addBtn(createMut.isLoading)}>
-              {createMut.isLoading ? "Adding..." : "Add"}
+            <button type="submit" disabled={createMut.isPending || !effectivePetId || !description || !amount || !date} style={addBtn(createMut.isPending)}>
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -352,7 +352,7 @@ function ExpensesTab({ householdId }: { householdId: string }) {
                         <input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Description" style={{ ...inputStyle, flex: 1 }} />
                         <input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} placeholder="$" style={{ ...inputStyle, width: 70 }} />
                         <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} style={inputStyle} />
-                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>{updateMut.isLoading ? "..." : "Save"}</button>
+                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>{updateMut.isPending ? "..." : "Save"}</button>
                         <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                       </div>
                     ) : (
@@ -364,7 +364,7 @@ function ExpensesTab({ householdId }: { householdId: string }) {
                         <span style={recordAmount}>${r.amount.toFixed(2)}</span>
                         <span style={{ flex: 1 }} />
                         <button type="button" onClick={() => startEdit(r)} style={editBtnStyle}>Edit</button>
-                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isLoading} style={deleteBtnStyle}>Delete</button>
+                        <button type="button" onClick={() => handleDelete(r.id)} disabled={deleteMut.isPending} style={deleteBtnStyle}>Delete</button>
                       </div>
                     )
                   )}

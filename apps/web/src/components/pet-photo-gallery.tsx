@@ -147,7 +147,7 @@ export function PetPhotoGallery({ petId, petName }: PetPhotoGalleryProps) {
         </div>
       )}
 
-      {photos.length === 0 && !photosQuery.isLoading && (
+      {photos.length === 0 && !photosQuery.isPending && (
         <p style={{ color: "var(--pf-text-muted)", fontSize: "0.875rem", textAlign: "center", margin: "0.5rem 0" }}>
           No photos yet. Add some memories of {petName}!
         </p>
