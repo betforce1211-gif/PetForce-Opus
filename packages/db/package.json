@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@petforce/config": "workspace:*",
+    "@types/node": "^20.0.0",
     "drizzle-kit": "^0.31.9",
     "tsx": "^4.16.0",
     "typescript": "^5.4.0"
