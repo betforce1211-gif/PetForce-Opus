@@ -24,7 +24,7 @@ export const petRouter = router({
     }),
 
   getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const [pet] = await db
         .select()
@@ -48,7 +48,7 @@ export const petRouter = router({
     }),
 
   update: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }).merge(updatePetSchema))
+    .input(z.object({ id: z.uuid(), ...updatePetSchema.shape }))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
@@ -68,7 +68,7 @@ export const petRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [pet] = await db.select().from(pets).where(eq(pets.id, input.id));
       if (!pet) {

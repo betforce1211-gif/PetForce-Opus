@@ -8,7 +8,7 @@ import { deletePetPhotoFile } from "../lib/supabase-storage.js";
 
 export const petPhotoRouter = router({
   listByPet: protectedProcedure
-    .input(z.object({ petId: z.string().uuid() }))
+    .input(z.object({ petId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const [pet] = await db.select().from(pets).where(eq(pets.id, input.petId));
       if (!pet) return [];
@@ -46,7 +46,7 @@ export const petPhotoRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [photo] = await db
         .select()
