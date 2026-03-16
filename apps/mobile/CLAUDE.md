@@ -6,7 +6,7 @@ Expo React Native app (iOS + Android) using Expo Router for file-based navigatio
 
 ## Tech
 
-- **Framework:** Expo SDK 51+ (managed workflow)
+- **Framework:** Expo SDK 55 (managed workflow)
 - **Navigation:** Expo Router (file-based)
 - **UI:** Tamagui components from `@petforce/ui`
 - **Data fetching:** tRPC client via `@trpc/react-query`
