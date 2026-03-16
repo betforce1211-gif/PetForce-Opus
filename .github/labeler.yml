@@ -1,0 +1,47 @@
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/api/**"
+          - "packages/db/**"
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/web/**"
+
+mobile:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "apps/mobile/**"
+
+infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "infra/**"
+          - "docker-compose*.yml"
+          - "Dockerfile*"
+
+design:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/ui/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "**/*.md"
+
+testing:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"
+          - "**/*.test.ts"
+          - "**/*.spec.ts"
+
+"core":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/core/**"
+          - "packages/config/**"
