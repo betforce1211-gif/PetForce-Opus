@@ -18,7 +18,7 @@ import type { FinanceSummary, FinanceSummaryItem } from "@petforce/core";
 
 export const financeRouter = router({
   listExpenses: householdProcedure
-    .input(z.object({ petId: z.string().uuid().optional() }).merge(paginationInput))
+    .input(z.object({ petId: z.uuid().optional(), ...paginationInput.shape }))
     .query(async ({ ctx, input }) => {
       const where = input.petId
         ? and(eq(expenses.householdId, ctx.householdId), eq(expenses.petId, input.petId))
@@ -72,7 +72,7 @@ export const financeRouter = router({
     }),
 
   deleteExpense: householdProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(expenses)

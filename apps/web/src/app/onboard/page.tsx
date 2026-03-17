@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useHousehold } from "@/lib/household-context";
@@ -16,33 +16,35 @@ export default function OnboardPage() {
   const householdsQuery = trpc.dashboard.myHouseholds.useQuery();
   const canCreateQuery = trpc.dashboard.canCreateHousehold.useQuery();
 
-  const [mode, setMode] = useState<Mode>("loading");
-  const [didRoute, setDidRoute] = useState(false);
+  // User can manually switch to create/join from choose screen
+  const [userMode, setUserMode] = useState<"create" | "join" | null>(null);
+  const didRouteRef = useRef(false);
 
-  // ── Scenario routing ──
+  // Derive mode from query data
+  const derivedMode: Mode = (() => {
+    if (householdsQuery.isLoading || canCreateQuery.isLoading) return "loading";
+    const hh = householdsQuery.data ?? [];
+    const canCreate = canCreateQuery.data?.canCreate ?? true;
+    if (hh.length > 0 && !canCreate) return "loading"; // will redirect
+    if (hh.length > 0) return "create";
+    return "choose";
+  })();
+
+  const mode: Mode = userMode ?? derivedMode;
+
+  // Redirect owner who already has a household
   useEffect(() => {
-    if (didRoute) return;
+    if (didRouteRef.current) return;
     if (householdsQuery.isPending || canCreateQuery.isPending) return;
 
     const hh = householdsQuery.data ?? [];
     const canCreate = canCreateQuery.data?.canCreate ?? true;
 
     if (hh.length > 0 && !canCreate) {
-      // Owner who already has a household — redirect to dashboard
+      didRouteRef.current = true;
       router.push("/dashboard");
-      setDidRoute(true);
-      return;
     }
-
-    if (hh.length > 0) {
-      // Existing user adding another household — go straight to create form
-      setMode("create");
-    } else {
-      // Brand new user — show welcome choose screen
-      setMode("choose");
-    }
-    setDidRoute(true);
-  }, [householdsQuery.isPending, householdsQuery.data, canCreateQuery.isPending, canCreateQuery.data, didRoute, router]);
+  }, [householdsQuery.isPending, householdsQuery.data, canCreateQuery.isPending, canCreateQuery.data, router]);
 
   // ── Create state ──
   const [name, setName] = useState("");
@@ -129,7 +131,7 @@ export default function OnboardPage() {
             <p style={subtitle}>How would you like to get started?</p>
 
             <div style={cardRow}>
-              <button type="button" onClick={() => setMode("create")} style={optionCard}>
+              <button type="button" onClick={() => setUserMode("create")} style={optionCard}>
                 <span style={cardEmoji}>🏠</span>
                 <strong style={cardTitle}>Create a Household</strong>
                 <p style={cardDesc}>
@@ -137,7 +139,7 @@ export default function OnboardPage() {
                 </p>
               </button>
 
-              <button type="button" onClick={() => setMode("join")} style={optionCard}>
+              <button type="button" onClick={() => setUserMode("join")} style={optionCard}>
                 <span style={cardEmoji}>🔑</span>
                 <strong style={cardTitle}>Join a Household</strong>
                 <p style={cardDesc}>
@@ -179,7 +181,7 @@ export default function OnboardPage() {
       <div style={centeredContainer}>
         <div style={formCard}>
           {hasHouseholds ? null : (
-            <button type="button" onClick={() => setMode("choose")} style={backLink}>
+            <button type="button" onClick={() => setUserMode(null)} style={backLink}>
               ← Back
             </button>
           )}

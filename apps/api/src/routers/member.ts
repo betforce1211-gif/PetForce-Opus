@@ -78,7 +78,7 @@ export const memberRouter = router({
   updateRole: householdProcedure
     .input(
       z.object({
-        memberId: z.string().uuid(),
+        memberId: z.uuid(),
         role: z.enum(["owner", "admin", "member", "sitter"]),
       })
     )
@@ -110,7 +110,7 @@ export const memberRouter = router({
     }),
 
   remove: householdProcedure
-    .input(z.object({ memberId: z.string().uuid() }))
+    .input(z.object({ memberId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       requireAdmin(ctx.membership);
 

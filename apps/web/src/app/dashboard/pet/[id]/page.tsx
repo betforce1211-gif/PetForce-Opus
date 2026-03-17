@@ -18,7 +18,8 @@ export default function PetDetailPage() {
   const petQuery = trpc.pet.getById.useQuery({ id: petId }, { enabled: !!petId });
   const utils = trpc.useContext();
 
-  // Form state
+  // Form state — tracks which pet data snapshot we've initialized from
+  const [initializedFrom, setInitializedFrom] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [species, setSpecies] = useState<string>("dog");
   const [breed, setBreed] = useState("");
@@ -45,10 +46,10 @@ export default function PetDetailPage() {
   }, [photoPreview]);
   const { upload, isUploading } = usePetAvatarUpload();
 
-  // Populate form when pet data loads
-  useEffect(() => {
-    const pet = petQuery.data;
-    if (!pet) return;
+  // Populate form when pet data loads (only once per pet ID)
+  const pet = petQuery.data;
+  if (pet && initializedFrom !== pet.id) {
+    setInitializedFrom(pet.id);
     setName(pet.name);
     setSpecies(pet.species);
     setBreed(pet.breed ?? "");
@@ -61,7 +62,7 @@ export default function PetDetailPage() {
     setRabiesTagNumber(pet.rabiesTagNumber ?? "");
     setMedicalNotes(pet.medicalNotes ?? "");
     setExistingAvatar(pet.avatarUrl ?? null);
-  }, [petQuery.data]);
+  }
 
   const updatePet = trpc.pet.update.useMutation({
     async onSuccess() {

@@ -8,7 +8,9 @@ import { useEffect, useRef } from "react";
  */
 export function useVisibilityRefetch(refetchFns: Array<() => void>) {
   const fnsRef = useRef(refetchFns);
-  fnsRef.current = refetchFns;
+  useEffect(() => {
+    fnsRef.current = refetchFns;
+  });
 
   useEffect(() => {
     function handleVisibilityChange() {

@@ -25,7 +25,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 export const householdProcedure = protectedProcedure
-  .input(z.object({ householdId: z.string().uuid() }))
+  .input(z.object({ householdId: z.uuid() }))
   .use(async ({ ctx, input, next }) => {
     const [membership] = await db
       .select()

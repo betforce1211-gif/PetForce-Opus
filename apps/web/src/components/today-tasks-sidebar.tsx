@@ -177,7 +177,7 @@ function aggregateAndSort(
 // ── Component ──
 
 export function TodayTasksSidebar({ householdId, pets, onOpenHealth, onOpenFeeding }: Props) {
-  const today = new Date().toISOString().split("T")[0];
+  const [today] = useState(() => new Date().toISOString().split("T")[0]);
   const trackEvent = useTrackEvent();
 
   const utils = trpc.useUtils();

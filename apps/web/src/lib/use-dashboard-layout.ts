@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { type TileId, DEFAULT_TILE_ORDER } from "./dashboard-tiles";
 
 const STORAGE_KEY = "petforce_dashboard_layout";
@@ -37,12 +37,7 @@ function loadLayout(): DashboardLayout {
 }
 
 export function useDashboardLayout() {
-  const [layout, setLayout] = useState<DashboardLayout>(DEFAULT_LAYOUT);
-
-  // Load from localStorage on mount (client-side only)
-  useEffect(() => {
-    setLayout(loadLayout());
-  }, []);
+  const [layout, setLayout] = useState<DashboardLayout>(() => loadLayout());
 
   const persist = useCallback((next: DashboardLayout) => {
     setLayout(next);

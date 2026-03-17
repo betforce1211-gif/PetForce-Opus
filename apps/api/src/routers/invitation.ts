@@ -52,7 +52,7 @@ export const invitationRouter = router({
     }),
 
   revoke: householdProcedure
-    .input(z.object({ invitationId: z.string().uuid() }))
+    .input(z.object({ invitationId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       requireAdmin(ctx.membership);
 
