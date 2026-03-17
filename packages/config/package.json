@@ -7,15 +7,17 @@
     "tsconfig.nextjs.json",
     "tsconfig.react-native.json",
     "tsconfig.node.json",
-    "eslint-preset.js"
+    "eslint-preset.js",
+    "eslint-preset.mjs"
   ],
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.57.1",
-    "@typescript-eslint/parser": "^8.57.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-react": "^7.34.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "typescript": "^5.4.0"
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.0.0"
   }
 }

@@ -9,7 +9,7 @@ PetForce is a household-centric pet CRM. Think Salesforce, but for pets. The cor
 | Layer | Technology |
 |-------|-----------|
 | Monorepo | Turborepo + pnpm |
-| Web | Next.js 14 (App Router) |
+| Web | Next.js 16 (App Router) |
 | Mobile | Expo SDK 51+ (React Native) |
 | Cross-platform UI | Tamagui |
 | API | tRPC + Hono |

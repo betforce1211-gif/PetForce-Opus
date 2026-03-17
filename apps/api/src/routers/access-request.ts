@@ -96,7 +96,7 @@ export const accessRequestRouter = router({
     }),
 
   approve: householdProcedure
-    .input(z.object({ requestId: z.string().uuid() }))
+    .input(z.object({ requestId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       requireAdmin(ctx.membership);
 
@@ -140,7 +140,7 @@ export const accessRequestRouter = router({
     }),
 
   deny: householdProcedure
-    .input(z.object({ requestId: z.string().uuid() }))
+    .input(z.object({ requestId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       requireAdmin(ctx.membership);
 

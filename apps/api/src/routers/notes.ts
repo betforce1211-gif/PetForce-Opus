@@ -8,8 +8,9 @@ export const notesRouter = router({
   list: householdProcedure
     .input(
       z.object({
-        petId: z.string().uuid().nullable().optional(),
-      }).merge(paginationInput)
+        petId: z.uuid().nullable().optional(),
+        ...paginationInput.shape,
+      })
     )
     .query(async ({ ctx, input }) => {
       const conditions = [eq(petNotes.householdId, ctx.householdId)];
@@ -93,7 +94,7 @@ export const notesRouter = router({
     }),
 
   delete: householdProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(petNotes)
