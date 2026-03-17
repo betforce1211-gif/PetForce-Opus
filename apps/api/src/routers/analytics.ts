@@ -19,7 +19,7 @@ export const analyticsRouter = router({
   }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await db
         .delete(analyticsEvents)

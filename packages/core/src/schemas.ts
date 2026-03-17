@@ -29,7 +29,7 @@ export const householdThemeSchema = z.object({
   secondaryColor: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex color like #FF5733"),
-  avatar: z.string().url().nullable(),
+  avatar: z.url().nullable(),
 });
 
 export const createHouseholdSchema = z.object({
@@ -90,7 +90,7 @@ export const updateActivitySchema = createActivitySchema.partial();
 export const invitableRoles = ["admin", "member", "sitter"] as const;
 
 export const createInvitationSchema = z.object({
-  email: z.string().email().optional(),
+  email: z.email().optional(),
   role: z.enum(invitableRoles),
 });
 
@@ -105,7 +105,7 @@ export const createAccessRequestSchema = z.object({
 // --- Feeding ---
 
 export const createFeedingScheduleSchema = z.object({
-  petId: z.string().uuid(),
+  petId: z.uuid(),
   label: z.string().min(1).max(50),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:mm format"),
   foodType: z.string().max(100).nullable().optional(),
@@ -114,7 +114,7 @@ export const createFeedingScheduleSchema = z.object({
 });
 
 export const updateFeedingScheduleSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   label: z.string().min(1).max(50).optional(),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:mm format").optional(),
   foodType: z.string().max(100).nullable().optional(),
@@ -124,14 +124,14 @@ export const updateFeedingScheduleSchema = z.object({
 });
 
 export const logFeedingSchema = z.object({
-  feedingScheduleId: z.string().uuid(),
+  feedingScheduleId: z.uuid(),
   feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format"),
   notes: z.string().max(500).nullable().optional(),
   skipped: z.boolean().optional(),
 });
 
 export const snoozeFeedingSchema = z.object({
-  feedingScheduleId: z.string().uuid(),
+  feedingScheduleId: z.uuid(),
   feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format"),
   snoozeDurationMinutes: z.number().int().min(15).max(480).default(120),
 });
@@ -156,7 +156,7 @@ export const healthRecordTypes = [
 ] as const;
 
 export const createHealthRecordSchema = z.object({
-  petId: z.string().uuid(),
+  petId: z.uuid(),
   type: z.enum(healthRecordTypes),
   date: z.coerce.date(),
   vetOrClinic: z.string().max(200).nullable().optional(),
@@ -168,7 +168,7 @@ export const createHealthRecordSchema = z.object({
 });
 
 export const updateHealthRecordSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   type: z.enum(healthRecordTypes).optional(),
   date: z.coerce.date().optional(),
   vetOrClinic: z.string().max(200).nullable().optional(),
@@ -182,7 +182,7 @@ export const updateHealthRecordSchema = z.object({
 // --- Medications ---
 
 export const createMedicationSchema = z.object({
-  petId: z.string().uuid(),
+  petId: z.uuid(),
   name: z.string().min(1).max(200),
   dosage: z.string().max(100).nullable().optional(),
   frequency: z.string().max(100).nullable().optional(),
@@ -193,7 +193,7 @@ export const createMedicationSchema = z.object({
 });
 
 export const updateMedicationSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1).max(200).optional(),
   dosage: z.string().max(100).nullable().optional(),
   frequency: z.string().max(100).nullable().optional(),
@@ -219,7 +219,7 @@ export const expenseCategories = [
 ] as const;
 
 export const createExpenseSchema = z.object({
-  petId: z.string().uuid(),
+  petId: z.uuid(),
   category: z.enum(expenseCategories),
   description: z.string().min(1).max(200),
   amount: z.number().positive(),
@@ -228,7 +228,7 @@ export const createExpenseSchema = z.object({
 });
 
 export const updateExpenseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   category: z.enum(expenseCategories).optional(),
   description: z.string().min(1).max(200).optional(),
   amount: z.number().positive().optional(),
@@ -246,14 +246,14 @@ export const financeSummaryInputSchema = z.object({
 // --- Pet Notes ---
 
 export const createNoteSchema = z.object({
-  petId: z.string().uuid().nullable().optional(),
+  petId: z.uuid().nullable().optional(),
   title: z.string().min(1).max(100),
   content: z.string().min(1).max(51_200),
 });
 
 export const updateNoteSchema = z.object({
-  id: z.string().uuid(),
-  petId: z.string().uuid().nullable().optional(),
+  id: z.uuid(),
+  petId: z.uuid().nullable().optional(),
   title: z.string().min(1).max(100).optional(),
   content: z.string().min(1).max(51_200).optional(),
 });
@@ -268,8 +268,8 @@ export const reportDateRangeSchema = z.object({
 export const reportingCompletionLogSchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  memberId: z.string().uuid().optional(),
-  petId: z.string().uuid().optional(),
+  memberId: z.uuid().optional(),
+  petId: z.uuid().optional(),
   taskType: z.enum(["feeding", "medication", "activity"]).optional(),
   limit: z.number().int().min(1).max(200).optional(),
   offset: z.number().int().min(0).optional(),
@@ -288,9 +288,9 @@ const MAX_METADATA_JSON_LENGTH = 10_240;
 
 export const trackEventSchema = z.object({
   eventName: z.string().min(1).max(100),
-  householdId: z.string().uuid().optional(),
+  householdId: z.uuid().optional(),
   metadata: z
-    .record(z.unknown())
+    .record(z.string(), z.unknown())
     .refine(
       (val) => JSON.stringify(val).length <= MAX_METADATA_JSON_LENGTH,
       { message: `Metadata must be under ${MAX_METADATA_JSON_LENGTH} characters when serialized` },
@@ -301,7 +301,7 @@ export const trackEventSchema = z.object({
 // --- Pet Photos ---
 
 export const updatePetPhotoSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   caption: z.string().max(500).nullable().optional(),
   takenAt: z.coerce.date().nullable().optional(),
 });
