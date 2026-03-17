@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 
 interface HouseholdContextValue {
@@ -18,12 +18,10 @@ const HouseholdContext = createContext<HouseholdContextValue>({
 const STORAGE_KEY = "petforce_household_id";
 
 export function HouseholdProvider({ children }: { children: ReactNode }) {
-  const [householdId, setHouseholdId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setHouseholdId(stored);
-  }, []);
+  const [householdId, setHouseholdId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(STORAGE_KEY);
+  });
 
   const switchHousehold = useCallback((id: string) => {
     setHouseholdId(id);
