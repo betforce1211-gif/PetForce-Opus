@@ -11,7 +11,7 @@ import { z } from "zod";
 /** Database-related env vars (used by @petforce/db and @petforce/api). */
 export const dbEnvSchema = z.object({
   DATABASE_URL: z
-    .string({ required_error: "DATABASE_URL is required" })
+    .string({ error: "DATABASE_URL is required" })
     .min(1, "DATABASE_URL must not be empty")
     .startsWith("postgres", "DATABASE_URL must be a PostgreSQL connection string"),
 
@@ -35,11 +35,9 @@ export const clerkEnvSchema = z
 
 /** Supabase storage env vars. */
 export const supabaseEnvSchema = z.object({
-  SUPABASE_URL: z
-    .string({ required_error: "SUPABASE_URL is required" })
-    .url("SUPABASE_URL must be a valid URL"),
+  SUPABASE_URL: z.url({ error: "SUPABASE_URL must be a valid URL" }),
   SUPABASE_SERVICE_ROLE_KEY: z
-    .string({ required_error: "SUPABASE_SERVICE_ROLE_KEY is required" })
+    .string({ error: "SUPABASE_SERVICE_ROLE_KEY is required" })
     .min(1, "SUPABASE_SERVICE_ROLE_KEY must not be empty"),
 });
 
@@ -61,12 +59,12 @@ export const corsEnvSchema = z.object({
    * Required in production to prevent the CORS origin from silently falling
    * back to localhost. Optional in development (defaults to http://localhost:3000).
    */
-  NEXT_PUBLIC_WEB_URL: z.string().url("NEXT_PUBLIC_WEB_URL must be a valid URL").optional(),
+  NEXT_PUBLIC_WEB_URL: z.url({ error: "NEXT_PUBLIC_WEB_URL must be a valid URL" }).optional(),
 });
 
 /** Rate-limiting env vars (optional — falls back to in-memory limiter). */
 export const rateLimitEnvSchema = z.object({
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_URL: z.url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 });
 
@@ -75,12 +73,12 @@ export const rateLimitEnvSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const apiEnvSchema = dbEnvSchema
-  .merge(supabaseEnvSchema)
-  .merge(serverEnvSchema)
-  .merge(corsEnvSchema)
-  .merge(rateLimitEnvSchema)
-  // Clerk fields need special handling because of the refine()
   .extend({
+    ...supabaseEnvSchema.shape,
+    ...serverEnvSchema.shape,
+    ...corsEnvSchema.shape,
+    ...rateLimitEnvSchema.shape,
+    // Clerk fields need special handling because of the refine()
     CLERK_SECRET_KEY: z.string().min(1).optional(),
     CLERK_JWT_KEY: z.string().min(1).optional(),
   })
@@ -132,5 +130,5 @@ export function validateEnv<T>(
     console.error(message);
     process.exit(1);
   }
-  return result.data;
+  return result.data as T;
 }

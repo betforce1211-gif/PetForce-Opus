@@ -24,7 +24,7 @@ export const activityRouter = router({
     }),
 
   listByPet: householdProcedure
-    .input(z.object({ petId: z.string().uuid() }).merge(paginationInput))
+    .input(z.object({ petId: z.uuid(), ...paginationInput.shape }))
     .query(async ({ ctx, input }) => {
       // Verify the pet belongs to the claimed household
       const [pet] = await db
@@ -70,7 +70,7 @@ export const activityRouter = router({
     }),
 
   update: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }).merge(updateActivitySchema))
+    .input(z.object({ id: z.uuid(), ...updateActivitySchema.shape }))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
@@ -107,7 +107,7 @@ export const activityRouter = router({
     }),
 
   complete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await db
         .select()
@@ -131,7 +131,7 @@ export const activityRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await db
         .select()

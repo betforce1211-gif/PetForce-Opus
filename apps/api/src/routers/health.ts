@@ -28,7 +28,8 @@ export const healthRouter = router({
         type: z
           .enum(["vet_visit", "vaccination", "checkup", "procedure"])
           .optional(),
-      }).merge(paginationInput)
+        ...paginationInput.shape,
+      })
     )
     .query(async ({ ctx, input }) => {
       const where = input.type
@@ -97,7 +98,7 @@ export const healthRouter = router({
     }),
 
   deleteRecord: householdProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(healthRecords)
@@ -113,7 +114,7 @@ export const healthRouter = router({
   // ── Medications ──
 
   listMedications: householdProcedure
-    .input(z.object({ activeOnly: z.boolean().optional() }).merge(paginationInput))
+    .input(z.object({ activeOnly: z.boolean().optional(), ...paginationInput.shape }))
     .query(async ({ ctx, input }) => {
       const where = input.activeOnly
         ? and(eq(medications.householdId, ctx.householdId), eq(medications.isActive, true))
@@ -180,7 +181,7 @@ export const healthRouter = router({
     }),
 
   deleteMedication: householdProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(medications)
@@ -261,7 +262,7 @@ export const healthRouter = router({
 
   logMedicationCompletion: householdProcedure
     .input(z.object({
-      medicationId: z.string().uuid(),
+      medicationId: z.uuid(),
       loggedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       skipped: z.boolean().optional(),
     }))
@@ -280,7 +281,7 @@ export const healthRouter = router({
     }),
 
   undoMedicationLog: householdProcedure
-    .input(z.object({ medicationLogId: z.string().uuid() }))
+    .input(z.object({ medicationLogId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(medicationLogs)
@@ -295,7 +296,7 @@ export const healthRouter = router({
 
   snoozeMedication: householdProcedure
     .input(z.object({
-      medicationId: z.string().uuid(),
+      medicationId: z.uuid(),
       snoozeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       snoozeDurationMinutes: z.number().min(1).max(1440),
     }))
@@ -329,7 +330,7 @@ export const healthRouter = router({
 
   undoMedicationSnooze: householdProcedure
     .input(z.object({
-      medicationId: z.string().uuid(),
+      medicationId: z.uuid(),
       snoozeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .mutation(async ({ ctx, input }) => {
