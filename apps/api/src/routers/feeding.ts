@@ -91,7 +91,7 @@ export const feedingRouter = router({
     }),
 
   deleteSchedule: householdProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(feedingSchedules)
@@ -228,7 +228,7 @@ export const feedingRouter = router({
 
   undoSnooze: householdProcedure
     .input(z.object({
-      feedingScheduleId: z.string().uuid(),
+      feedingScheduleId: z.uuid(),
       feedingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -280,7 +280,7 @@ export const feedingRouter = router({
     }),
 
   undoCompletion: householdProcedure
-    .input(z.object({ feedingLogId: z.string().uuid() }))
+    .input(z.object({ feedingLogId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(feedingLogs)
