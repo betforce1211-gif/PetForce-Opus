@@ -107,6 +107,7 @@ test.describe("Analytics & Gamification API", () => {
   });
 
   test("recalculate updates gamification stats", async ({ request }) => {
+    test.slow(); // recalculate scans all completions and does sequential DB upserts
     const result = await trpcMutation(
       request,
       authToken,
