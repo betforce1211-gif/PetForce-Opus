@@ -113,6 +113,17 @@ export default function DashboardPage() {
     }
   }, [householdsQuery.data, householdsQuery.isFetching, householdId, switchHousehold, clearHousehold, router]);
 
+  // Track dashboard view once per mount
+  useEffect(() => {
+    if (!trackedView.current) {
+      trackedView.current = true;
+      const data = dashboardQuery.data;
+      if (data) {
+        trackEvent("dashboard.viewed", { petCount: data.pets.length, memberCount: data.members.length });
+      }
+    }
+  }, [dashboardQuery.data, trackEvent]);
+
   // --- State 1: Initial query loading ---
   if (householdsQuery.isLoading) {
     return (
@@ -196,12 +207,6 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const { household, members, pets, recentActivities } = data;
-
-  // Track dashboard view once per mount
-  if (!trackedView.current) {
-    trackedView.current = true;
-    trackEvent("dashboard.viewed", { petCount: pets.length, memberCount: members.length });
-  }
 
   // Compute grid columns: 3 cols for 4+ tiles, 2 for 2-3, 1 for 1
   const colCount = visibleTiles.length >= 4 ? 3 : visibleTiles.length >= 2 ? 2 : 1;

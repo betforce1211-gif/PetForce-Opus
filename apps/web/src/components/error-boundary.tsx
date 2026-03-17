@@ -1,7 +1,6 @@
 "use client";
 
-import { Component } from "react";
-import type { ReactNode, ErrorInfo } from "react";
+import { Component, type ReactNode, type ErrorInfo } from "react";
 
 interface Props {
   children: ReactNode;
@@ -13,6 +12,8 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
+  declare readonly refs: Record<string, never>;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
