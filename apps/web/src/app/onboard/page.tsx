@@ -35,7 +35,7 @@ export default function OnboardPage() {
   // Redirect owner who already has a household
   useEffect(() => {
     if (didRouteRef.current) return;
-    if (householdsQuery.isLoading || canCreateQuery.isLoading) return;
+    if (householdsQuery.isPending || canCreateQuery.isPending) return;
 
     const hh = householdsQuery.data ?? [];
     const canCreate = canCreateQuery.data?.canCreate ?? true;
@@ -44,7 +44,7 @@ export default function OnboardPage() {
       didRouteRef.current = true;
       router.push("/dashboard");
     }
-  }, [householdsQuery.isLoading, householdsQuery.data, canCreateQuery.isLoading, canCreateQuery.data, router]);
+  }, [householdsQuery.isPending, householdsQuery.data, canCreateQuery.isPending, canCreateQuery.data, router]);
 
   // ── Create state ──
   const [name, setName] = useState("");
@@ -242,8 +242,8 @@ export default function OnboardPage() {
                   <p style={errorText}>{onboard.error.message}</p>
                 )}
 
-                <button type="submit" disabled={onboard.isLoading} style={{ ...primaryButton, opacity: onboard.isLoading ? 0.7 : 1 }}>
-                  {onboard.isLoading ? "Creating..." : "Create Household"}
+                <button type="submit" disabled={onboard.isPending} style={{ ...primaryButton, opacity: onboard.isPending ? 0.7 : 1 }}>
+                  {onboard.isPending ? "Creating..." : "Create Household"}
                 </button>
               </form>
             </>
@@ -295,10 +295,10 @@ export default function OnboardPage() {
 
                 <button
                   type="submit"
-                  disabled={!joinCode.trim() || !joinDisplayName.trim() || createRequest.isLoading}
+                  disabled={!joinCode.trim() || !joinDisplayName.trim() || createRequest.isPending}
                   style={{ ...primaryButton, opacity: !joinCode.trim() || !joinDisplayName.trim() ? 0.5 : 1 }}
                 >
-                  {createRequest.isLoading ? "Sending..." : "Request Access"}
+                  {createRequest.isPending ? "Sending..." : "Request Access"}
                 </button>
               </form>
             </>

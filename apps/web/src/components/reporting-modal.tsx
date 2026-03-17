@@ -90,7 +90,7 @@ function SummaryTab({ householdId }: { householdId: string }) {
         <button type="button" onClick={goNext} style={arrowBtn}>{"\u25B6"}</button>
       </div>
 
-      {summaryQuery.isLoading && <p style={emptyText}>Loading...</p>}
+      {summaryQuery.isPending && <p style={emptyText}>Loading...</p>}
       {summaryQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load summary</p>}
 
       {data && (
@@ -228,10 +228,10 @@ function ActivityLogTab({ householdId }: { householdId: string }) {
         </div>
       </div>
 
-      {logQuery.isLoading && <p style={emptyText}>Loading...</p>}
+      {logQuery.isPending && <p style={emptyText}>Loading...</p>}
       {logQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load log</p>}
 
-      {!logQuery.isLoading && entries.length === 0 && (
+      {!logQuery.isPending && entries.length === 0 && (
         <p style={emptyText}>No entries match the current filters</p>
       )}
 
@@ -292,10 +292,10 @@ function TrendsTab({ householdId }: { householdId: string }) {
         </button>
       </div>
 
-      {trendsQuery.isLoading && <p style={emptyText}>Loading...</p>}
+      {trendsQuery.isPending && <p style={emptyText}>Loading...</p>}
       {trendsQuery.isError && <p style={{ ...emptyText, color: "var(--pf-error)" }}>Failed to load trends</p>}
 
-      {!trendsQuery.isLoading && points.length === 0 && (
+      {!trendsQuery.isPending && points.length === 0 && (
         <p style={emptyText}>No trend data for this period</p>
       )}
 

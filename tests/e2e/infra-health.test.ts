@@ -34,8 +34,8 @@ test.describe("Infrastructure Health Gate", () => {
       error?.json?.data?.code ??
       error?.data?.code ??
       error?.code;
-    // UNAUTHORIZED or NOT_FOUND are both valid — means the API is healthy
-    expect(["UNAUTHORIZED", "NOT_FOUND"]).toContain(code);
+    // UNAUTHORIZED, NOT_FOUND, or METHOD_NOT_SUPPORTED are all valid — means the API is healthy
+    expect(["UNAUTHORIZED", "NOT_FOUND", "METHOD_NOT_SUPPORTED"]).toContain(code);
   });
 
   test("GET /dashboard returns HTML (not 404)", async ({ request }) => {

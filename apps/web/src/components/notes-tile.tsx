@@ -13,7 +13,7 @@ export function NotesTileContent({ householdId, onManage }: NotesTileContentProp
     { refetchInterval: 30_000 }
   );
 
-  if (recentQuery.isLoading) {
+  if (recentQuery.isPending) {
     return (
       <div style={centered}>
         <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>

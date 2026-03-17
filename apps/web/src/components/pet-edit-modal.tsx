@@ -123,12 +123,12 @@ export function PetEditModal({ petId, onClose }: PetEditModalProps) {
   };
 
   const displayAvatar = photoPreview ?? existingAvatar;
-  const isSaving = updatePet.isLoading || isUploading;
+  const isSaving = updatePet.isPending || isUploading;
 
   // Loading / error states inside modal
   let content: React.ReactNode;
 
-  if (petQuery.isLoading) {
+  if (petQuery.isPending) {
     content = (
       <div style={centeredState}>
         <div style={spinner} />
@@ -277,10 +277,10 @@ export function PetEditModal({ petId, onClose }: PetEditModalProps) {
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "1.25rem" }}>
           <button type="button" onClick={onClose} style={cancelButtonStyle}>Cancel</button>
           <button type="submit" disabled={isSaving} style={submitButtonStyle(isSaving)}>
-            {isUploading ? "Uploading photo..." : updatePet.isLoading ? "Saving..." : "Save Changes"}
+            {isUploading ? "Uploading photo..." : updatePet.isPending ? "Saving..." : "Save Changes"}
           </button>
-          <button type="button" onClick={handleDelete} disabled={deletePet.isLoading} style={deleteButtonStyle}>
-            {deletePet.isLoading ? "Deleting..." : "Delete"}
+          <button type="button" onClick={handleDelete} disabled={deletePet.isPending} style={deleteButtonStyle}>
+            {deletePet.isPending ? "Deleting..." : "Delete"}
           </button>
         </div>
       </form>

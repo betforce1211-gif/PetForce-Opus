@@ -29,7 +29,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (dashboardQuery.isLoading) {
+  if (dashboardQuery.isPending) {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>
@@ -298,10 +298,10 @@ function InvitesTab({ householdId, isAdmin }: { householdId: string; isAdmin: bo
           </div>
           <button
             onClick={() => createInvite.mutate({ householdId, email: email || undefined, role })}
-            disabled={createInvite.isLoading}
+            disabled={createInvite.isPending}
             style={actionButton}
           >
-            {createInvite.isLoading ? "Creating..." : "Create Invite"}
+            {createInvite.isPending ? "Creating..." : "Create Invite"}
           </button>
         </div>
 
@@ -472,10 +472,10 @@ function HouseholdSettingsTab({
                 theme: { primaryColor, secondaryColor },
               })
             }
-            disabled={updateHousehold.isLoading}
+            disabled={updateHousehold.isPending}
             style={actionButton}
           >
-            {updateHousehold.isLoading ? "Saving..." : "Save Changes"}
+            {updateHousehold.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
@@ -518,10 +518,10 @@ function HouseholdSettingsTab({
                   regenerateCode.mutate({ householdId });
                 }
               }}
-              disabled={regenerateCode.isLoading}
+              disabled={regenerateCode.isPending}
               style={outlineButtonSmall}
             >
-              {regenerateCode.isLoading ? "..." : "Regenerate"}
+              {regenerateCode.isPending ? "..." : "Regenerate"}
             </button>
           )}
         </div>
@@ -683,14 +683,14 @@ function LeaveHouseholdSection({ householdId }: { householdId: string }) {
             leaveMutation.mutate({ householdId });
           }
         }}
-        disabled={leaveMutation.isLoading}
+        disabled={leaveMutation.isPending}
         style={{
           ...actionButton,
           background: "linear-gradient(135deg, #F59E0B, #FBBF24)",
           color: "#1a1a1a",
         }}
       >
-        {leaveMutation.isLoading ? "Leaving..." : "Leave Household"}
+        {leaveMutation.isPending ? "Leaving..." : "Leave Household"}
       </button>
     </div>
   );
