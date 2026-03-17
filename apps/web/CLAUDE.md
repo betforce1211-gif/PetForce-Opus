@@ -2,11 +2,11 @@
 
 ## Overview
 
-Next.js 14 web app using the App Router. This is the primary web interface for PetForce.
+Next.js 16 web app using the App Router. This is the primary web interface for PetForce.
 
 ## Tech
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **UI:** Tamagui components from `@petforce/ui`
 - **Data fetching:** tRPC client via `@trpc/react-query`
 - **State:** React Query (via tRPC) for server state

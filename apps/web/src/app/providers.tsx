@@ -2,17 +2,23 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { trpc } from "@/lib/trpc";
 import superjson from "superjson";
 import { HouseholdProvider } from "@/lib/household-context";
 
+// Module-level ref to hold the latest getToken function.
+// This avoids reading a React ref during render while still allowing
+// the tRPC client (created once in a useState initializer) to always
+// call the most recent Clerk getToken.
+let latestGetToken: (() => Promise<string | null>) | null = null;
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const { getToken } = useAuth();
-  // Use a ref so the headers callback always calls the latest getToken
-  const getTokenRef = useRef(getToken);
-  getTokenRef.current = getToken;
+  useEffect(() => {
+    latestGetToken = getToken;
+  });
 
   const [queryClient] = useState(
     () =>
@@ -29,7 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/trpc`,
           async headers() {
-            const token = await getTokenRef.current();
+            const token = latestGetToken ? await latestGetToken() : null;
             return token ? { authorization: `Bearer ${token}` } : {};
           },
         }),

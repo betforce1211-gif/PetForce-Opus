@@ -2,36 +2,36 @@
   "name": "@petforce/web",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "dotenv -e ../../.env.local -- next dev",
     "build": "dotenv -e ../../.env.local -- next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "clean": "rm -rf .next"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",
     "@petforce/core": "workspace:*",
     "@petforce/ui": "workspace:*",
-    "@tamagui/next-plugin": "^1.144.4",
     "@tanstack/react-query": "^4.36.0",
     "@trpc/client": "^10.45.0",
     "@trpc/react-query": "^10.45.0",
     "@trpc/server": "^10.45.0",
-    "next": "^14.2.0",
+    "next": "^16.0.0",
     "next-themes": "^0.4.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "superjson": "^2.2.1",
     "tamagui": "^1.144.4"
   },
   "devDependencies": {
     "@petforce/config": "workspace:*",
     "@types/node": "^20.14.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
     "typescript": "^5.4.0"
   }
 }
