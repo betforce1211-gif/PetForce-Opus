@@ -136,10 +136,10 @@ export function CalendarAddEventModal({
             </button>
             <button
               type="submit"
-              disabled={createMut.isLoading || !petId || !title}
-              style={submitBtn(createMut.isLoading)}
+              disabled={createMut.isPending || !petId || !title}
+              style={submitBtn(createMut.isPending)}
             >
-              {createMut.isLoading ? "Creating..." : "Create Event"}
+              {createMut.isPending ? "Creating..." : "Create Event"}
             </button>
           </div>
         </div>

@@ -247,10 +247,10 @@ export function CalendarModal({ householdId, onClose }: CalendarModalProps) {
                         ) : ev.kind === "activity" ? (
                           <button
                             onClick={() => completeMut.mutate({ id: ev.id })}
-                            disabled={completeMut.isLoading}
+                            disabled={completeMut.isPending}
                             style={completeButtonStyle}
                           >
-                            {completeMut.isLoading ? "..." : "Complete"}
+                            {completeMut.isPending ? "..." : "Complete"}
                           </button>
                         ) : null}
                       </div>

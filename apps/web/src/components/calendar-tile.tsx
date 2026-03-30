@@ -14,7 +14,7 @@ export function CalendarTileContent({ householdId, onAddEvent }: CalendarTileCon
     { refetchInterval: 15_000 }
   );
 
-  if (upcomingQuery.isLoading) {
+  if (upcomingQuery.isPending) {
     return (
       <div style={centered}>
         <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>

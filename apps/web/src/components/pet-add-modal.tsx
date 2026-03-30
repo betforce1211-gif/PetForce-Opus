@@ -91,7 +91,7 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
     });
   };
 
-  const isSaving = createPet.isLoading || isUploading;
+  const isSaving = createPet.isPending || isUploading;
 
   return (
     <Modal open onClose={onClose}>
@@ -217,7 +217,7 @@ export function PetAddModal({ onClose }: PetAddModalProps) {
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "1.25rem" }}>
           <button type="button" onClick={onClose} style={cancelButtonStyle}>Cancel</button>
           <button type="submit" disabled={isSaving} style={submitButtonStyle(isSaving)}>
-            {isUploading ? "Uploading photo..." : createPet.isLoading ? "Adding..." : "Add Pet"}
+            {isUploading ? "Uploading photo..." : createPet.isPending ? "Adding..." : "Add Pet"}
           </button>
         </div>
       </form>

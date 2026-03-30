@@ -16,7 +16,7 @@ export function HealthTileContent({ householdId, onManage }: HealthTileContentPr
   );
   useVisibilityRefetch([() => summaryQuery.refetch()]);
 
-  if (summaryQuery.isLoading) {
+  if (summaryQuery.isPending) {
     return (
       <div style={centered}>
         <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
