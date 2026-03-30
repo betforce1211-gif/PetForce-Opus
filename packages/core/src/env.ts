@@ -33,12 +33,13 @@ export const clerkEnvSchema = z
       "At least one of CLERK_SECRET_KEY or CLERK_JWT_KEY must be set for authentication",
   });
 
-/** Supabase storage env vars. */
+/** Supabase storage env vars (optional — storage features degrade gracefully without them). */
 export const supabaseEnvSchema = z.object({
-  SUPABASE_URL: z.url({ error: "SUPABASE_URL must be a valid URL" }),
+  SUPABASE_URL: z.url({ error: "SUPABASE_URL must be a valid URL" }).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z
-    .string({ error: "SUPABASE_SERVICE_ROLE_KEY is required" })
-    .min(1, "SUPABASE_SERVICE_ROLE_KEY must not be empty"),
+    .string()
+    .min(1, "SUPABASE_SERVICE_ROLE_KEY must not be empty")
+    .optional(),
 });
 
 /** Server / networking env vars. */

@@ -62,6 +62,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: lint-and-build
+    # Local Postgres service container — replaces Supabase-hosted DB for CI.
+    # See docs/dev/ci-local-postgres.md for switchback instructions.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: petforce_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
     # Run E2E when:
     #   1. Nightly scheduled run (safety net for main)
     #   2. PR has the 'run-e2e' label (manual override)
@@ -80,14 +96,12 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'core')
       ))
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petforce_test
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       CLERK_JWT_KEY: ${{ secrets.CLERK_JWT_KEY }}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
       NEXT_PUBLIC_WEB_URL: http://localhost:3000
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       CLERK_TEST_CODE: "424242"
@@ -107,24 +121,13 @@ jobs:
       - name: Install Playwright browsers
         run: cd tests && npx playwright install --with-deps chromium
 
-      - name: Use Supabase pooler for IPv4 connectivity
-        run: |
-          # GHA runners can't route IPv6, and Supabase direct DB hostnames
-          # (db.xxx.supabase.co) are IPv6-only. Use the pooler URL which supports IPv4.
-          echo "Using DATABASE_POOLER_URL secret for IPv4-only pooler connection"
-          echo "DATABASE_URL=$DATABASE_POOLER_URL" >> "$GITHUB_ENV"
-        env:
-          DATABASE_POOLER_URL: ${{ secrets.DATABASE_POOLER_URL }}
-
       - name: Run database migrations
         run: pnpm --filter=@petforce/db db:migrate
-        env:
-          NODE_OPTIONS: "--dns-result-order=ipv4first"
 
       - name: Start API server
         run: |
           cd apps/api
-          node --dns-result-order=ipv4first dist/index.js > /tmp/api.log 2>&1 &
+          node dist/index.js > /tmp/api.log 2>&1 &
           echo $! > /tmp/api.pid
           # Wait for API to be ready (up to 30s)
           for i in $(seq 1 30); do
