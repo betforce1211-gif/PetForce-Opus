@@ -17,7 +17,7 @@
     "@petforce/core": "workspace:*",
     "@petforce/db": "workspace:*",
     "@supabase/supabase-js": "^2.99.1",
-    "@trpc/server": "^11.13.4",
+    "@trpc/server": "^11.16.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "drizzle-orm": "^0.45.1",
