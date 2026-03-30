@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Nightly E2E safety net — runs at 3 AM UTC every day
+    - cron: "0 3 * * *"
   workflow_dispatch:
   workflow_call:
 
@@ -59,7 +62,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: lint-and-build
-    if: ${{ vars.E2E_ENABLED == 'true' }}
+    # Run E2E when:
+    #   1. Nightly scheduled run (safety net for main)
+    #   2. PR has the 'run-e2e' label (manual override)
+    #   3. PR touches code paths that affect E2E behavior
+    #   4. Push to main (post-merge validation)
+    #   5. Manual workflow dispatch
+    # Skip for docs-only, mobile-only, and infra-only PRs unless labeled
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.labels.*.name, 'run-e2e') ||
+        contains(github.event.pull_request.labels.*.name, 'backend') ||
+        contains(github.event.pull_request.labels.*.name, 'frontend') ||
+        contains(github.event.pull_request.labels.*.name, 'core')
+      ))
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}

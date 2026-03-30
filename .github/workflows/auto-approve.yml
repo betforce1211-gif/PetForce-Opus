@@ -58,14 +58,17 @@ jobs:
               pull_number: prNumber,
             });
 
-            const alreadyApproved = reviews.some(
-              r => r.user.login === 'github-actions[bot]' && r.state === 'APPROVED'
-            );
+            // Find the most recent review by the bot
+            const botReviews = reviews
+              .filter(r => r.user.login === 'github-actions[bot]')
+              .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
 
-            if (alreadyApproved) {
+            if (botReviews.length > 0 && botReviews[0].state === 'APPROVED') {
               core.info(`PR #${prNumber} already approved by github-actions[bot]`);
               return;
             }
+            // If the last bot review was REQUEST_CHANGES, we'll re-review
+            // (the author pushed a fix and CI passed again)
 
             // ─── Fetch PR details and files for review ───────────────────
             const { data: pr } = await github.rest.pulls.get({
@@ -190,41 +193,72 @@ jobs:
               warnings.push('**Schema/migration changes detected** without docs update — make sure API docs reflect any model changes.');
             }
 
+            // ─── Classify checks as blocking vs informational ─────────
+            // Blocking checks require human review before merge
+            const blocking = [];
+            const advisory = [];
+
+            for (const w of warnings) {
+              // These are serious enough to block auto-approval
+              if (
+                w.startsWith('**Console statements found**') ||
+                w.startsWith('**Schema/migration changes detected**') ||
+                w.startsWith('**Thin PR description**')
+              ) {
+                blocking.push(w);
+              } else {
+                advisory.push(w);
+              }
+            }
+            // All notes are informational
+            advisory.push(...notes);
+
             // ─── Build review body ───────────────────────────────────────
             const sections = ['## 🔍 Review Notes\n'];
 
-            if (warnings.length === 0 && notes.length === 0) {
+            if (blocking.length === 0 && advisory.length === 0) {
               sections.push('Everything looks good! Clean PR.\n');
             }
 
-            if (warnings.length > 0) {
-              sections.push('### Warnings\n');
-              for (const w of warnings) {
-                sections.push(`- ⚠️ ${w}\n`);
+            if (blocking.length > 0) {
+              sections.push('### Blocking — fix before merge\n');
+              for (const b of blocking) {
+                sections.push(`- 🚫 ${b}\n`);
               }
+              sections.push('\n> These issues must be resolved before this PR can be approved. Push a fix and the bot will re-review automatically.\n');
             }
 
-            if (notes.length > 0) {
-              sections.push('### Notes\n');
-              for (const n of notes) {
-                sections.push(`- 📝 ${n}\n`);
+            if (advisory.length > 0) {
+              sections.push('### Advisory\n');
+              for (const a of advisory) {
+                sections.push(`- 📝 ${a}\n`);
               }
             }
 
             // Summary stats
             sections.push(`\n---\n`);
-            sections.push(`**Files:** ${paths.length} | **Lines:** +${pr.additions} / -${pr.deletions} | **Checks:** ${warnings.length} warning(s), ${notes.length} note(s)\n`);
+            sections.push(`**Files:** ${paths.length} | **Lines:** +${pr.additions} / -${pr.deletions} | **Checks:** ${blocking.length} blocking, ${advisory.length} advisory\n`);
 
             const reviewBody = sections.join('\n');
 
             // ─── Submit review ───────────────────────────────────────────
-            // Always approve (CI passed), but include review notes
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-              event: 'APPROVE',
-              body: `${reviewBody}\n✅ All CI checks passed — auto-approved by PetForce review bot.`,
-            });
-
-            core.info(`Approved PR #${prNumber} with ${warnings.length} warnings and ${notes.length} notes`);
+            // Block merge if there are blocking issues, otherwise approve
+            if (blocking.length > 0) {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                event: 'REQUEST_CHANGES',
+                body: `${reviewBody}\n❌ ${blocking.length} blocking issue(s) found — please fix and push again.`,
+              });
+              core.info(`Requested changes on PR #${prNumber}: ${blocking.length} blocking issues`);
+            } else {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                event: 'APPROVE',
+                body: `${reviewBody}\n✅ All CI checks passed — auto-approved by PetForce review bot.`,
+              });
+              core.info(`Approved PR #${prNumber} with ${advisory.length} advisory notes`);
+            }
