@@ -38,7 +38,7 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
     }
   };
 
-  if (statusQuery.isLoading) {
+  if (statusQuery.isPending) {
     return (
       <div style={centered}>
         <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>
@@ -99,7 +99,7 @@ export function FeedingTileContent({ householdId, onManage }: FeedingTileContent
                     key={s.schedule.id}
                     type="button"
                     onClick={() => handleToggle(s)}
-                    disabled={logMut.isLoading || undoMut.isLoading}
+                    disabled={logMut.isPending || undoMut.isPending}
                     style={chip(done)}
                     title={done ? "Click to undo" : "Click to mark done"}
                   >

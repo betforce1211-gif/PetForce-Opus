@@ -140,10 +140,10 @@ export function NotesModal({ householdId, onClose }: NotesModalProps) {
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <button
               type="submit"
-              disabled={createMut.isLoading || !title || !content}
-              style={addBtn(createMut.isLoading)}
+              disabled={createMut.isPending || !title || !content}
+              style={addBtn(createMut.isPending)}
             >
-              {createMut.isLoading ? "Adding..." : "Add"}
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -226,8 +226,8 @@ export function NotesModal({ householdId, onClose }: NotesModalProps) {
                     </label>
                   </div>
                   <div style={editActions}>
-                    <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>
-                      {updateMut.isLoading ? "..." : "Save"}
+                    <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>
+                      {updateMut.isPending ? "..." : "Save"}
                     </button>
                     <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                   </div>
@@ -246,7 +246,7 @@ export function NotesModal({ householdId, onClose }: NotesModalProps) {
                   <p style={noteContent}>{n.content}</p>
                   <div style={cardActions}>
                     <button type="button" onClick={() => startEdit(n)} style={editBtnStyle}>Edit</button>
-                    <button type="button" onClick={() => handleDelete(n.id)} disabled={deleteMut.isLoading} style={deleteBtnStyle}>Delete</button>
+                    <button type="button" onClick={() => handleDelete(n.id)} disabled={deleteMut.isPending} style={deleteBtnStyle}>Delete</button>
                   </div>
                 </div>
               )

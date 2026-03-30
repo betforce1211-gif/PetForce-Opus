@@ -30,9 +30,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
   const [trpcClient] = useState(() =>
     trpc.createClient({
-      transformer: superjson,
       links: [
         httpBatchLink({
+          transformer: superjson,
           url: `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/trpc`,
           async headers() {
             const token = latestGetToken ? await latestGetToken() : null;

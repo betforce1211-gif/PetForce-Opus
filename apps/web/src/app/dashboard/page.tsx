@@ -125,7 +125,7 @@ export default function DashboardPage() {
   }, [dashboardQuery.data, trackEvent]);
 
   // --- State 1: Initial query loading ---
-  if (householdsQuery.isLoading) {
+  if (householdsQuery.isPending) {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>
@@ -171,7 +171,7 @@ export default function DashboardPage() {
   }
 
   // --- State 4: Dashboard data loading ---
-  if (dashboardQuery.isLoading) {
+  if (dashboardQuery.isPending) {
     return (
       <main style={pageShell}>
         <div style={centeredMessage}>

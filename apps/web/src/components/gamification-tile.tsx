@@ -19,7 +19,7 @@ export function GamificationTileContent({ householdId, onManage }: GamificationT
     { refetchInterval: 60_000 }
   );
 
-  if (statsQuery.isLoading) {
+  if (statsQuery.isPending) {
     return (
       <div style={centered}>
         <span style={{ color: "var(--pf-text-secondary)", fontSize: "0.8rem" }}>Loading...</span>

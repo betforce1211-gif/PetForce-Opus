@@ -200,10 +200,10 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <button
               type="submit"
-              disabled={createMut.isLoading || !effectivePetId || !label || !time}
-              style={addBtn(createMut.isLoading)}
+              disabled={createMut.isPending || !effectivePetId || !label || !time}
+              style={addBtn(createMut.isPending)}
             >
-              {createMut.isLoading ? "Adding..." : "Add"}
+              {createMut.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -236,8 +236,8 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
                         <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} style={inputStyle} />
                         <input value={editFoodType} onChange={(e) => setEditFoodType(e.target.value)} placeholder="Food" style={{ ...inputStyle, width: 80 }} />
                         <input value={editAmount} onChange={(e) => setEditAmount(e.target.value)} placeholder="Amount" style={{ ...inputStyle, width: 70 }} />
-                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isLoading} style={saveBtn}>
-                          {updateMut.isLoading ? "..." : "Save"}
+                        <button type="button" onClick={handleSaveEdit} disabled={updateMut.isPending} style={saveBtn}>
+                          {updateMut.isPending ? "..." : "Save"}
                         </button>
                         <button type="button" onClick={() => setEditId(null)} style={cancelBtn}>Cancel</button>
                       </div>
@@ -253,7 +253,7 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
                         <button
                           type="button"
                           onClick={() => handleDelete(s.id)}
-                          disabled={deleteMut.isLoading}
+                          disabled={deleteMut.isPending}
                           style={deleteBtn}
                         >
                           Delete
