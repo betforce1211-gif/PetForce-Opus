@@ -5,10 +5,18 @@ const BUCKET = "pet-avatars";
 
 let _supabase: SupabaseClient | null = null;
 
+/** Returns true if Supabase Storage credentials are configured. */
+export function isStorageConfigured(): boolean {
+  return Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    // env.SUPABASE_URL and env.SUPABASE_SERVICE_ROLE_KEY are guaranteed to
-    // be present — they are validated at startup by the env schema.
+    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error(
+        "Supabase storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to enable file uploads."
+      );
+    }
     _supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   }
   return _supabase;

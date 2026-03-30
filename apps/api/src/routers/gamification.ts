@@ -126,12 +126,14 @@ export const gamificationRouter = router({
     const today = new Date().toISOString().split("T")[0];
 
     // Pre-fetch lookup data and existing stats in parallel
-    const [householdMembers, petRows, schedules, meds, existingMemberStats] = await Promise.all([
+    const [householdMembers, petRows, schedules, meds, existingMemberStats, existingHouseholdStats, existingPetStats] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
       db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
       db.select().from(medications).where(eq(medications.householdId, ctx.householdId)),
       db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
+      db.select().from(householdGameStats).where(eq(householdGameStats.householdId, ctx.householdId)),
+      db.select().from(petGameStats).where(eq(petGameStats.householdId, ctx.householdId)),
     ]);
 
     // Use lastActiveDate to bound the fetch instead of scanning from 2000-01-01.
@@ -216,7 +218,9 @@ export const gamificationRouter = router({
       activeMemberIds.add(r.completedById);
     }
 
-    // --- Upsert member stats ---
+    // --- Upsert member stats (use pre-fetched existingMemberStats) ---
+    const memberStatsMap = new Map(existingMemberStats.map((s) => [s.memberId, s]));
+    const memberUpserts: Promise<unknown>[] = [];
     for (const [memberId, data] of memberData) {
       const level = levelFromXp(data.totalXp);
       const { currentStreak, longestStreak, lastDay } = computeStreaks(data.activeDays, today);
@@ -230,39 +234,38 @@ export const gamificationRouter = router({
         level,
       });
 
-      const existing = await db
-        .select()
-        .from(memberGameStats)
-        .where(eq(memberGameStats.memberId, memberId));
-
-      if (existing.length > 0) {
-        await db
-          .update(memberGameStats)
-          .set({
+      if (memberStatsMap.has(memberId)) {
+        memberUpserts.push(
+          db.update(memberGameStats)
+            .set({
+              totalXp: data.totalXp,
+              level,
+              currentStreak,
+              longestStreak,
+              lastActiveDate: lastDay,
+              unlockedBadgeIds: badgeIds,
+              updatedAt: new Date(),
+            })
+            .where(eq(memberGameStats.memberId, memberId))
+        );
+      } else {
+        memberUpserts.push(
+          db.insert(memberGameStats).values({
+            memberId,
+            householdId: ctx.householdId,
             totalXp: data.totalXp,
             level,
             currentStreak,
             longestStreak,
             lastActiveDate: lastDay,
             unlockedBadgeIds: badgeIds,
-            updatedAt: new Date(),
           })
-          .where(eq(memberGameStats.memberId, memberId));
-      } else {
-        await db.insert(memberGameStats).values({
-          memberId,
-          householdId: ctx.householdId,
-          totalXp: data.totalXp,
-          level,
-          currentStreak,
-          longestStreak,
-          lastActiveDate: lastDay,
-          unlockedBadgeIds: badgeIds,
-        });
+        );
       }
     }
 
-    // --- Upsert household stats ---
+    // --- Upsert household stats (use pre-fetched existingHouseholdStats) ---
+    const householdUpserts: Promise<unknown>[] = [];
     {
       const level = levelFromXp(householdAcc.totalXp);
       const { currentStreak, longestStreak, lastDay } = computeStreaks(householdAcc.activeDays, today);
@@ -277,38 +280,38 @@ export const gamificationRouter = router({
         activeMemberCount: activeMemberIds.size,
       });
 
-      const existing = await db
-        .select()
-        .from(householdGameStats)
-        .where(eq(householdGameStats.householdId, ctx.householdId));
-
-      if (existing.length > 0) {
-        await db
-          .update(householdGameStats)
-          .set({
+      if (existingHouseholdStats.length > 0) {
+        householdUpserts.push(
+          db.update(householdGameStats)
+            .set({
+              totalXp: householdAcc.totalXp,
+              level,
+              currentStreak,
+              longestStreak,
+              lastActiveDate: lastDay,
+              unlockedBadgeIds: badgeIds,
+              updatedAt: new Date(),
+            })
+            .where(eq(householdGameStats.householdId, ctx.householdId))
+        );
+      } else {
+        householdUpserts.push(
+          db.insert(householdGameStats).values({
+            householdId: ctx.householdId,
             totalXp: householdAcc.totalXp,
             level,
             currentStreak,
             longestStreak,
             lastActiveDate: lastDay,
             unlockedBadgeIds: badgeIds,
-            updatedAt: new Date(),
           })
-          .where(eq(householdGameStats.householdId, ctx.householdId));
-      } else {
-        await db.insert(householdGameStats).values({
-          householdId: ctx.householdId,
-          totalXp: householdAcc.totalXp,
-          level,
-          currentStreak,
-          longestStreak,
-          lastActiveDate: lastDay,
-          unlockedBadgeIds: badgeIds,
-        });
+        );
       }
     }
 
-    // --- Upsert pet stats ---
+    // --- Upsert pet stats (use pre-fetched existingPetStats) ---
+    const petStatsMap = new Map(existingPetStats.map((s) => [s.petId, s]));
+    const petUpserts: Promise<unknown>[] = [];
     for (const [petId, data] of petData) {
       const level = levelFromXp(data.totalXp);
       const { currentStreak, longestStreak, lastDay } = computeStreaks(data.activeDays, today);
@@ -322,37 +325,38 @@ export const gamificationRouter = router({
         level,
       });
 
-      const existing = await db
-        .select()
-        .from(petGameStats)
-        .where(eq(petGameStats.petId, petId));
-
-      if (existing.length > 0) {
-        await db
-          .update(petGameStats)
-          .set({
+      if (petStatsMap.has(petId)) {
+        petUpserts.push(
+          db.update(petGameStats)
+            .set({
+              totalXp: data.totalXp,
+              level,
+              currentStreak,
+              longestStreak,
+              lastActiveDate: lastDay,
+              unlockedBadgeIds: badgeIds,
+              updatedAt: new Date(),
+            })
+            .where(eq(petGameStats.petId, petId))
+        );
+      } else {
+        petUpserts.push(
+          db.insert(petGameStats).values({
+            petId,
+            householdId: ctx.householdId,
             totalXp: data.totalXp,
             level,
             currentStreak,
             longestStreak,
             lastActiveDate: lastDay,
             unlockedBadgeIds: badgeIds,
-            updatedAt: new Date(),
           })
-          .where(eq(petGameStats.petId, petId));
-      } else {
-        await db.insert(petGameStats).values({
-          petId,
-          householdId: ctx.householdId,
-          totalXp: data.totalXp,
-          level,
-          currentStreak,
-          longestStreak,
-          lastActiveDate: lastDay,
-          unlockedBadgeIds: badgeIds,
-        });
+        );
       }
     }
+
+    // Execute all upserts in parallel
+    await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts]);
 
     return { success: true };
   }),
