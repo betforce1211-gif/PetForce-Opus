@@ -77,6 +77,32 @@ setup("sign in with Clerk test mode", async ({ page }) => {
         );
         if (Array.isArray(households) && households.length > 0) {
           householdId = households[0].id;
+        } else if (Array.isArray(households) && households.length === 0) {
+          // Fresh database — create a household via the onboard endpoint
+          console.log("No households found, creating one via dashboard.onboard...");
+          try {
+            const onboardRes = await fetch(`${API_BASE}/trpc/dashboard.onboard`, {
+              method: "POST",
+              headers: {
+                authorization: `Bearer ${token}`,
+                "content-type": "application/json",
+              },
+              body: JSON.stringify({
+                json: { name: "Test Household", displayName: "Test User" },
+              }),
+            });
+            const onboardBody = await onboardRes.json();
+            const onboardItem = Array.isArray(onboardBody) ? onboardBody[0] : onboardBody;
+            const created = onboardItem?.result?.data?.json ?? onboardItem?.result?.data;
+            if (created?.id) {
+              householdId = created.id;
+              console.log("Household created via onboard:", householdId);
+            } else {
+              console.log("Onboard response:", JSON.stringify(onboardBody).substring(0, 300));
+            }
+          } catch (err: any) {
+            console.log("Onboard API call failed:", err.message);
+          }
         }
       } catch (err: any) {
         console.log("Node.js fetch to API failed:", err.message);
