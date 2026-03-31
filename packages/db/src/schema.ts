@@ -91,6 +91,7 @@ export const petPhotos = pgTable("pet_photos", {
   url: text("url").notNull(),
   caption: text("caption"),
   takenAt: timestamp("taken_at", { withTimezone: true }),
+  activityId: uuid("activity_id").references(() => activities.id, { onDelete: "set null" }),
   uploadedBy: uuid("uploaded_by")
     .notNull()
     .references(() => members.id, { onDelete: "cascade" }),
@@ -99,6 +100,7 @@ export const petPhotos = pgTable("pet_photos", {
   petIdx: index("pet_photos_pet_idx").on(table.petId),
   householdIdx: index("pet_photos_household_idx").on(table.householdId),
   uploadedByIdx: index("pet_photos_uploaded_by_idx").on(table.uploadedBy),
+  activityIdx: index("pet_photos_activity_idx").on(table.activityId),
 }));
 
 // --- Activities ---
