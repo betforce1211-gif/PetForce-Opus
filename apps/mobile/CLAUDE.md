@@ -24,11 +24,29 @@ Builds are handled via EAS (Expo Application Services).
 
 ```
 src/
-├── app/              # Expo Router screens
-│   ├── _layout.tsx   # Root layout with navigation + TamaguiProvider
-│   └── index.tsx     # Home screen
-├── lib/              # Mobile-specific utilities
-└── components/       # Mobile-specific components
+├── app/
+│   ├── _layout.tsx           # Root layout (Stack nav + providers)
+│   ├── (tabs)/
+│   │   ├── _layout.tsx       # Tab navigator (Home, Pets, Activity, Settings)
+│   │   ├── index.tsx         # Home/Dashboard
+│   │   ├── pets.tsx          # Pet list
+│   │   ├── activity.tsx      # Activity feed
+│   │   └── settings.tsx      # Household settings + members
+│   ├── pet/[id].tsx          # Pet detail
+│   ├── activity/new.tsx      # Log new activity
+│   ├── feeding/index.tsx     # Feeding schedules + daily status
+│   ├── health/[petId].tsx    # Health records per pet
+│   ├── medication/[petId].tsx # Medications per pet
+│   ├── auth/sign-in.tsx      # Sign in (Clerk integration TODO)
+│   ├── auth/sign-up.tsx      # Sign up (Clerk integration TODO)
+│   ├── onboard.tsx           # Create household
+│   └── join.tsx              # Join household via code
+├── lib/
+│   ├── trpc.ts               # tRPC client setup
+│   ├── auth.ts               # Auth context (wire to Clerk)
+│   ├── household.ts          # Household selection context
+│   └── providers.tsx         # Combined providers wrapper
+└── components/               # Mobile-specific components
 ```
 
 ## Conventions
