@@ -1,0 +1,41 @@
+appId: com.petforce.app
+tags:
+  - activities
+---
+# Activity: log a walk
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to activity logging
+- tapOn:
+    id: "tab-activity"
+    optional: true
+- tapOn:
+    text: ".*(?:Log Activity|\\+|Add).*"
+    regex: true
+
+# Fill activity form
+- tapOn:
+    id: "select-pet"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- tapOn:
+    id: "select-activity-type"
+    optional: true
+- tapOn: "Walk"
+- inputText:
+    id: "input-title"
+    text: "Morning walk at the park"
+- inputText:
+    id: "input-notes"
+    text: "30 minutes, met other dogs"
+
+# Submit
+- tapOn:
+    text: ".*(?:Save|Log|Add).*"
+    regex: true
+
+# Verify activity appears
+- assertVisible: "Morning walk at the park"
+- assertVisible: "Walk"
+- takeScreenshot: activities-log-walk

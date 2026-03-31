@@ -1,0 +1,43 @@
+appId: com.petforce.app
+tags:
+  - feeding
+---
+# Feeding: create a schedule
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to feeding section (via dashboard tile or tab)
+- tapOn:
+    text: ".*(?:Feeding|Meals).*"
+    regex: true
+- tapOn:
+    text: ".*(?:Add Schedule|\\+|New).*"
+    regex: true
+
+# Fill schedule form
+- tapOn:
+    id: "select-pet"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- inputText:
+    id: "input-label"
+    text: "Breakfast"
+- inputText:
+    id: "input-time"
+    text: "08:00"
+- inputText:
+    id: "input-food-type"
+    text: "Dry kibble"
+- inputText:
+    id: "input-amount"
+    text: "1 cup"
+
+# Save
+- tapOn:
+    text: ".*(?:Save|Create|Add).*"
+    regex: true
+
+# Verify schedule appears
+- assertVisible: "Breakfast"
+- assertVisible: "08:00"
+- takeScreenshot: feeding-create-schedule

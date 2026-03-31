@@ -1,0 +1,33 @@
+appId: com.petforce.app
+tags:
+  - pets
+---
+# Pet CRUD: delete a pet
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to pets and select one
+- tapOn:
+    id: "tab-pets"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+
+# Open edit/settings and delete
+- tapOn:
+    text: ".*(?:Edit|Settings|⚙️).*"
+    regex: true
+- tapOn:
+    text: ".*(?:Delete|Remove).*"
+    regex: true
+
+# Confirm deletion dialog
+- assertVisible:
+    text: ".*(?:Are you sure|Confirm|Delete).*"
+    regex: true
+- tapOn:
+    text: ".*(?:Confirm|Delete|Yes).*"
+    regex: true
+
+# Verify pet is gone from list
+- assertNotVisible: "${TEST_PET_NAME}"
+- takeScreenshot: pets-delete-complete

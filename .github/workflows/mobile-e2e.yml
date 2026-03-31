@@ -1,0 +1,147 @@
+name: Mobile E2E Tests (Maestro)
+
+on:
+  push:
+    paths:
+      - "apps/mobile/**"
+      - "tests/mobile/**"
+      - "packages/core/**"
+      - "packages/ui/**"
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "tests/mobile/**"
+  schedule:
+    - cron: "0 6 * * 1" # Weekly on Monday at 06:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  maestro-ios:
+    name: Maestro E2E (iOS Simulator)
+    runs-on: macos-14
+    timeout-minutes: 45
+    env:
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Build Expo app for iOS simulator
+        working-directory: apps/mobile
+        run: |
+          npx expo prebuild --platform ios --clean
+          npx expo run:ios --no-install --configuration Release
+
+      - name: Boot iOS Simulator
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | sed 's/.*(\(.*\)).*/\1/')
+          xcrun simctl boot "$DEVICE" || true
+          echo "SIMULATOR_UDID=$DEVICE" >> $GITHUB_ENV
+
+      - name: Install app on simulator
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -path "*Release*" | head -1)
+          xcrun simctl install booted "$APP_PATH"
+
+      - name: Run smoke tests
+        run: maestro test --tags smoke tests/mobile/
+
+      - name: Run full E2E suite
+        if: github.event_name != 'push' || github.ref == 'refs/heads/main'
+        env:
+          TEST_EMAIL: ${{ secrets.QA_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.QA_TEST_PASSWORD }}
+          TEST_HOUSEHOLD: "CI Test Household"
+          TEST_PET_NAME: "CI Test Dog"
+          API_URL: ${{ secrets.API_URL || 'http://localhost:3100' }}
+        run: maestro test tests/mobile/
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-screenshots
+          path: ~/.maestro/tests/
+          retention-days: 14
+
+  maestro-android:
+    name: Maestro E2E (Android Emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build Expo app for Android
+        working-directory: apps/mobile
+        run: |
+          npx expo prebuild --platform android --clean
+          cd android && ./gradlew assembleRelease
+
+      - name: Run Android E2E tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb install apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+            maestro test --tags smoke tests/mobile/
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-screenshots-android
+          path: ~/.maestro/tests/
+          retention-days: 14

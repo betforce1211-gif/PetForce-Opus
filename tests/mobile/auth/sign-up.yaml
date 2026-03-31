@@ -1,0 +1,23 @@
+appId: com.petforce.app
+tags:
+  - auth
+---
+# Auth: sign-up flow via Clerk
+- launchApp
+- assertVisible: "Sign up"
+- tapOn: "Sign up"
+- assertVisible: "Email"
+- inputText:
+    id: "input-email"
+    text: "qa+signup-${timestamp}@petforce.test"
+- tapOn: "Continue"
+- assertVisible: "Password"
+- inputText:
+    id: "input-password"
+    text: "TestPassword123!"
+- tapOn: "Sign up"
+# After sign-up, should see onboarding
+- assertVisible:
+    text: ".*(?:Onboard|Create.*Household|Welcome).*"
+    regex: true
+- takeScreenshot: auth-sign-up-complete

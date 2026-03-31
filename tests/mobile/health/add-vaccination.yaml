@@ -1,0 +1,44 @@
+appId: com.petforce.app
+tags:
+  - health
+---
+# Health: add a vaccination record
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to pet detail > health
+- tapOn:
+    id: "tab-pets"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- tapOn:
+    text: ".*(?:Health|Medical|Records).*"
+    regex: true
+- tapOn:
+    text: ".*(?:Add Record|\\+|New).*"
+    regex: true
+
+# Fill vaccination form
+- tapOn:
+    id: "select-record-type"
+    optional: true
+- tapOn: "Vaccination"
+- inputText:
+    id: "input-vaccine-name"
+    text: "Rabies"
+- inputText:
+    id: "input-vet"
+    text: "Dr. Smith, Happy Paws Clinic"
+- inputText:
+    id: "input-notes"
+    text: "Annual rabies booster, no adverse reactions"
+
+# Save
+- tapOn:
+    text: ".*(?:Save|Add|Create).*"
+    regex: true
+
+# Verify record
+- assertVisible: "Rabies"
+- assertVisible: "Vaccination"
+- takeScreenshot: health-add-vaccination

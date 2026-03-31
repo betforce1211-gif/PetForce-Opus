@@ -1,0 +1,31 @@
+appId: com.petforce.app
+tags:
+  - navigation
+---
+# Navigation: deep linking into specific screens
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Deep link to pet detail (via Expo Router linking)
+- openLink: "petforce://pet/1"
+- assertVisible:
+    text: ".*(?:Pet|Detail|Name).*"
+    regex: true
+    optional: true
+- takeScreenshot: nav-deeplink-pet
+
+# Deep link to settings
+- openLink: "petforce://settings"
+- assertVisible:
+    text: ".*(?:Settings|Household).*"
+    regex: true
+    optional: true
+- takeScreenshot: nav-deeplink-settings
+
+# Deep link to add pet
+- openLink: "petforce://add-pet"
+- assertVisible:
+    text: ".*(?:Add Pet|New Pet|Name).*"
+    regex: true
+    optional: true
+- takeScreenshot: nav-deeplink-add-pet

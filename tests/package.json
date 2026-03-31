@@ -7,7 +7,13 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:screenshots": "playwright test --config=playwright.config.ts --reporter=list && echo '\nScreenshots saved to tests/test-results/screenshots/'",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:mobile": "maestro test tests/mobile/",
+    "test:mobile:smoke": "maestro test --tags smoke tests/mobile/",
+    "test:mobile:auth": "maestro test --tags auth tests/mobile/",
+    "test:mobile:pets": "maestro test --tags pets tests/mobile/",
+    "test:mobile:feeding": "maestro test --tags feeding tests/mobile/",
+    "test:mobile:health": "maestro test --tags health tests/mobile/"
   },
   "devDependencies": {
     "@petforce/core": "workspace:*",

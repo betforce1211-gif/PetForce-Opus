@@ -1,0 +1,38 @@
+appId: com.petforce.app
+tags:
+  - pets
+---
+# Pet CRUD: edit an existing pet
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to pets and select one
+- tapOn:
+    id: "tab-pets"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+
+# Open edit
+- tapOn:
+    text: ".*(?:Edit|✏️).*"
+    regex: true
+
+# Update breed
+- clearText:
+    id: "input-breed"
+- inputText:
+    id: "input-breed"
+    text: "Labrador Retriever"
+- inputText:
+    id: "input-medical-notes"
+    text: "Allergic to chicken"
+
+# Save
+- tapOn:
+    text: ".*(?:Save|Update).*"
+    regex: true
+
+# Verify updated
+- assertVisible: "Labrador Retriever"
+- assertVisible: "Allergic to chicken"
+- takeScreenshot: pets-edit-complete

@@ -1,0 +1,23 @@
+appId: com.petforce.app
+tags:
+  - auth
+---
+# Auth: sign-in flow via Clerk
+- launchApp
+- assertVisible: "Sign in"
+- tapOn: "Sign in"
+- assertVisible: "Email"
+- inputText:
+    id: "input-email"
+    text: "${TEST_EMAIL}"
+- tapOn: "Continue"
+- assertVisible: "Password"
+- inputText:
+    id: "input-password"
+    text: "${TEST_PASSWORD}"
+- tapOn: "Sign in"
+# After sign-in, should see dashboard or onboarding
+- assertVisible:
+    text: ".*(?:Dashboard|Welcome|Onboard).*"
+    regex: true
+- takeScreenshot: auth-sign-in-complete

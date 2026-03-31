@@ -1,0 +1,36 @@
+appId: com.petforce.app
+tags:
+  - activities
+---
+# Activity: log a feeding
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+- tapOn:
+    id: "tab-activity"
+    optional: true
+- tapOn:
+    text: ".*(?:Log Activity|\\+|Add).*"
+    regex: true
+
+- tapOn:
+    id: "select-pet"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- tapOn:
+    id: "select-activity-type"
+    optional: true
+- tapOn: "Feeding"
+- inputText:
+    id: "input-title"
+    text: "Breakfast — dry kibble"
+- inputText:
+    id: "input-notes"
+    text: "1 cup of dry food + water"
+
+- tapOn:
+    text: ".*(?:Save|Log|Add).*"
+    regex: true
+
+- assertVisible: "Breakfast — dry kibble"
+- takeScreenshot: activities-log-feeding

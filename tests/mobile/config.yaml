@@ -1,0 +1,24 @@
+# Maestro E2E test configuration for PetForce mobile app
+# Requires: Maestro CLI (https://maestro.mobile.dev)
+# Usage: maestro test tests/mobile/
+
+appId: com.petforce.app
+name: PetForce Mobile E2E
+
+tags:
+  smoke: Quick sanity check (app launch + home screen)
+  auth: Authentication flows (sign-in, sign-up, onboard)
+  pets: Pet CRUD operations
+  activities: Activity logging
+  feeding: Feeding schedules and completion
+  health: Health records and medications
+  navigation: Tab switching and deep linking
+  theming: Household theme application
+  notifications: Push notification registration
+
+env:
+  TEST_EMAIL: "qa+maestro@petforce.test"
+  TEST_PASSWORD: "TestPassword123!"
+  TEST_HOUSEHOLD: "QA Test Household"
+  TEST_PET_NAME: "Maestro Test Dog"
+  API_URL: "http://localhost:3100"

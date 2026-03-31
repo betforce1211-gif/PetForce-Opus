@@ -1,0 +1,36 @@
+appId: com.petforce.app
+tags:
+  - activities
+---
+# Activity: log a vet visit
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+- tapOn:
+    id: "tab-activity"
+    optional: true
+- tapOn:
+    text: ".*(?:Log Activity|\\+|Add).*"
+    regex: true
+
+- tapOn:
+    id: "select-pet"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- tapOn:
+    id: "select-activity-type"
+    optional: true
+- tapOn: "Vet Visit"
+- inputText:
+    id: "input-title"
+    text: "Annual checkup"
+- inputText:
+    id: "input-notes"
+    text: "All clear, weight healthy, vaccinations up to date"
+
+- tapOn:
+    text: ".*(?:Save|Log|Add).*"
+    regex: true
+
+- assertVisible: "Annual checkup"
+- takeScreenshot: activities-log-vet-visit

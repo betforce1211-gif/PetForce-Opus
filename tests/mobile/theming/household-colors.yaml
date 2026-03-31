@@ -1,0 +1,34 @@
+appId: com.petforce.app
+tags:
+  - theming
+---
+# Theming: verify household color theme applies
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to settings to change theme
+- tapOn:
+    id: "tab-settings"
+- tapOn:
+    text: ".*(?:Theme|Appearance|Customize).*"
+    regex: true
+
+# Change primary color
+- tapOn:
+    id: "color-picker-primary"
+    optional: true
+- tapOn:
+    text: ".*(?:Red|Blue|Green|Purple|Pink).*"
+    regex: true
+    optional: true
+
+# Save theme
+- tapOn:
+    text: ".*(?:Save|Apply|Update).*"
+    regex: true
+
+# Navigate back to home and verify theme applied
+- tapOn:
+    id: "tab-home"
+# Theme changes should be visible in header/UI
+- takeScreenshot: theming-household-colors

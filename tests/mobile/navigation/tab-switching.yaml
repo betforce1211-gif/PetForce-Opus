@@ -1,0 +1,39 @@
+appId: com.petforce.app
+tags:
+  - navigation
+---
+# Navigation: verify tab switching works
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Home tab
+- tapOn:
+    id: "tab-home"
+- assertVisible:
+    text: ".*(?:Dashboard|Home|Recent).*"
+    regex: true
+- takeScreenshot: nav-tab-home
+
+# Pets tab
+- tapOn:
+    id: "tab-pets"
+- assertVisible:
+    text: ".*(?:Pets|My Pets).*"
+    regex: true
+- takeScreenshot: nav-tab-pets
+
+# Activity tab
+- tapOn:
+    id: "tab-activity"
+- assertVisible:
+    text: ".*(?:Activity|Log).*"
+    regex: true
+- takeScreenshot: nav-tab-activity
+
+# Settings tab
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    text: ".*(?:Settings|Household).*"
+    regex: true
+- takeScreenshot: nav-tab-settings
