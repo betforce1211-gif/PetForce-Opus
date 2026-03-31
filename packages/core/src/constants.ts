@@ -67,6 +67,42 @@ export const FEEDING_TIME_PRESETS: Record<string, string> = {
   Snack: "15:00",
 };
 
+// --- Feeding Schedule Templates by Species ---
+
+export interface FeedingTemplateEntry {
+  label: string;
+  time: string;
+  foodType: string;
+  amount: string;
+}
+
+export const FEEDING_SCHEDULE_TEMPLATES: Record<string, FeedingTemplateEntry[]> = {
+  dog: [
+    { label: "Breakfast", time: "07:30", foodType: "Kibble", amount: "1 cup" },
+    { label: "Dinner", time: "17:30", foodType: "Kibble", amount: "1 cup" },
+  ],
+  cat: [
+    { label: "Morning", time: "07:00", foodType: "Wet food", amount: "1/2 can" },
+    { label: "Evening", time: "18:00", foodType: "Wet food", amount: "1/2 can" },
+    { label: "Kibble top-up", time: "12:00", foodType: "Dry food", amount: "1/4 cup" },
+  ],
+  bird: [
+    { label: "Morning seed", time: "08:00", foodType: "Seed mix", amount: "2 tbsp" },
+    { label: "Afternoon fresh", time: "14:00", foodType: "Fresh fruits/veggies", amount: "1 tbsp" },
+  ],
+  fish: [
+    { label: "Morning feed", time: "08:00", foodType: "Flakes", amount: "Pinch" },
+    { label: "Evening feed", time: "18:00", foodType: "Flakes", amount: "Pinch" },
+  ],
+  reptile: [
+    { label: "Feeding", time: "10:00", foodType: "Live insects / greens", amount: "Species-appropriate" },
+  ],
+  other: [
+    { label: "Breakfast", time: "08:00", foodType: "", amount: "" },
+    { label: "Dinner", time: "18:00", foodType: "", amount: "" },
+  ],
+};
+
 // --- Calendar ---
 
 export const ACTIVITY_TYPE_ICONS: Record<string, string> = {
