@@ -1,6 +1,8 @@
-import { ScrollView, Alert } from "react-native";
+import { ScrollView, Alert, Pressable } from "react-native";
 import { YStack, XStack, Text, Spinner, Input } from "tamagui";
 import { useState } from "react";
+import { useClerk } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
 import { Card, MemberRow, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
@@ -8,6 +10,8 @@ import { MEMBER_ROLE_LABELS } from "@petforce/core";
 
 export default function SettingsScreen() {
   const { householdId } = useHousehold();
+  const { signOut } = useClerk();
+  const router = useRouter();
 
   const dashboardQuery = trpc.dashboard.get.useQuery(
     { householdId: householdId! },
@@ -104,6 +108,27 @@ export default function SettingsScreen() {
             </Card>
           )
         )}
+
+        {/* Sign out */}
+        <Pressable
+          onPress={() => {
+            Alert.alert("Sign Out", "Are you sure?", [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Sign Out",
+                style: "destructive",
+                onPress: async () => {
+                  await signOut();
+                  router.replace("/auth/sign-in");
+                },
+              },
+            ]);
+          }}
+        >
+          <Card padding="$4" alignItems="center">
+            <Text color="red" fontWeight="bold" fontSize="$4">Sign Out</Text>
+          </Card>
+        </Pressable>
       </YStack>
     </ScrollView>
   );

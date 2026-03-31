@@ -1,13 +1,41 @@
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { TamaguiProvider } from "tamagui";
 import { tamaguiConfig } from "@petforce/ui";
+import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 import superjson from "superjson";
 import { trpc } from "./trpc";
-import { AuthContext, type AuthState } from "./auth";
 import { HouseholdContext } from "./household";
 import { Platform } from "react-native";
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+
+// Clerk token cache backed by expo-secure-store
+const tokenCache = {
+  async getToken(key: string): Promise<string | null> {
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(key, value);
+    } catch {
+      // Silently fail — worst case the user re-authenticates
+    }
+  },
+  async clearToken(key: string): Promise<void> {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch {
+      // noop
+    }
+  },
+};
 
 // On Android emulator, localhost maps to 10.0.2.2; on iOS sim, use 127.0.0.1
 const API_HOST = Platform.select({
@@ -19,18 +47,12 @@ const API_URL = `http://${API_HOST}:3001/trpc`;
 // Module-level ref for latest getToken (same pattern as web)
 let latestGetToken: (() => Promise<string | null>) | null = null;
 
-export function AppProviders({ children }: { children: ReactNode }) {
-  // TODO: Replace with Clerk auth when @clerk/clerk-expo is added
-  const [auth] = useState<AuthState>({
-    isSignedIn: false,
-    userId: null,
-    getToken: async () => null,
-  });
-
+function InnerProviders({ children }: { children: ReactNode }) {
+  const { getToken } = useAuth();
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
   useEffect(() => {
-    latestGetToken = auth.getToken;
+    latestGetToken = getToken;
   });
 
   const [queryClient] = useState(
@@ -58,16 +80,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={auth}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <TamaguiProvider config={tamaguiConfig as any}>
-            <HouseholdContext.Provider value={{ householdId, setHouseholdId }}>
-              {children}
-            </HouseholdContext.Provider>
-          </TamaguiProvider>
-        </QueryClientProvider>
-      </trpc.Provider>
-    </AuthContext.Provider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <TamaguiProvider config={tamaguiConfig as any}>
+          <HouseholdContext.Provider value={{ householdId, setHouseholdId }}>
+            {children}
+          </HouseholdContext.Provider>
+        </TamaguiProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+}
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <InnerProviders>{children}</InnerProviders>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

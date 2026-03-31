@@ -10,6 +10,7 @@ Expo React Native app (iOS + Android) using Expo Router for file-based navigatio
 - **Navigation:** Expo Router (file-based)
 - **UI:** Tamagui components from `@petforce/ui`
 - **Data fetching:** tRPC client via `@trpc/react-query`
+- **Auth:** `@clerk/clerk-expo` with `expo-secure-store` token cache
 - **Types/validation:** Consumed from `@petforce/core`
 
 ## Commands
@@ -37,13 +38,13 @@ src/
 │   ├── feeding/index.tsx     # Feeding schedules + daily status
 │   ├── health/[petId].tsx    # Health records per pet
 │   ├── medication/[petId].tsx # Medications per pet
-│   ├── auth/sign-in.tsx      # Sign in (Clerk integration TODO)
-│   ├── auth/sign-up.tsx      # Sign up (Clerk integration TODO)
+│   ├── auth/sign-in.tsx      # Sign in (Clerk useSignIn)
+│   ├── auth/sign-up.tsx      # Sign up (Clerk useSignUp)
 │   ├── onboard.tsx           # Create household
 │   └── join.tsx              # Join household via code
 ├── lib/
 │   ├── trpc.ts               # tRPC client setup
-│   ├── auth.ts               # Auth context (wire to Clerk)
+│   ├── auth.ts               # Auth hook (wraps @clerk/clerk-expo useAuth)
 │   ├── household.ts          # Household selection context
 │   └── providers.tsx         # Combined providers wrapper
 └── components/               # Mobile-specific components
