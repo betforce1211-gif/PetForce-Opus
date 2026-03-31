@@ -2,6 +2,13 @@ import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { AppProviders } from "../lib/providers";
+import { usePushNotifications } from "../lib/notifications";
+
+/** Registers for push notifications when the user is signed in. Renders nothing. */
+function NotificationRegistrar() {
+  usePushNotifications();
+  return null;
+}
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -20,7 +27,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isSignedIn, isLoaded, segments, router]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {isSignedIn && <NotificationRegistrar />}
+      {children}
+    </>
+  );
 }
 
 export default function RootLayout() {

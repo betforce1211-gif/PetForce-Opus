@@ -1,17 +1,19 @@
-import { ScrollView, Alert, Pressable } from "react-native";
-import { YStack, XStack, Text, Spinner, Input } from "tamagui";
+import { ScrollView, Alert, Pressable, Linking } from "react-native";
+import { YStack, XStack, Text, Spinner, Button } from "tamagui";
 import { useState } from "react";
 import { useClerk } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { Card, MemberRow, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
+import { usePushNotifications } from "../../lib/notifications";
 import { MEMBER_ROLE_LABELS } from "@petforce/core";
 
 export default function SettingsScreen() {
   const { householdId } = useHousehold();
   const { signOut } = useClerk();
   const router = useRouter();
+  const { expoPushToken, permissionStatus, register, unregister } = usePushNotifications();
 
   const dashboardQuery = trpc.dashboard.get.useQuery(
     { householdId: householdId! },
@@ -109,6 +111,36 @@ export default function SettingsScreen() {
           )
         )}
 
+        {/* Notifications */}
+        <Card padding="$4">
+          <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Notifications</Text>
+          <YStack gap="$2">
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text color="$petforceTextMuted">Push Notifications</Text>
+              <Text fontSize="$3" color={expoPushToken ? "#22C55E" : "$petforceTextMuted"}>
+                {expoPushToken ? "Enabled" : "Disabled"}
+              </Text>
+            </XStack>
+            {permissionStatus === "denied" ? (
+              <Button
+                size="$3"
+                theme="active"
+                onPress={() => Linking.openSettings()}
+              >
+                Open Settings to Enable
+              </Button>
+            ) : !expoPushToken ? (
+              <Button
+                size="$3"
+                theme="active"
+                onPress={register}
+              >
+                Enable Push Notifications
+              </Button>
+            ) : null}
+          </YStack>
+        </Card>
+
         {/* Sign out */}
         <Pressable
           onPress={() => {
@@ -118,6 +150,7 @@ export default function SettingsScreen() {
                 text: "Sign Out",
                 style: "destructive",
                 onPress: async () => {
+                  await unregister();
                   await signOut();
                   router.replace("/auth/sign-in");
                 },
