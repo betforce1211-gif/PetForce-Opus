@@ -24,6 +24,10 @@ export const db = drizzle(client, { schema });
 
 export type Database = typeof db;
 
+/** The raw postgres client — exposed so consumers can attach a custom Drizzle
+ *  logger (e.g. for OTel tracing) without duplicating the connection pool. */
+export { client as pgClient };
+
 /** Close the database connection pool. Call during graceful shutdown. */
 export async function closeConnection() {
   await client.end({ timeout: 5 });

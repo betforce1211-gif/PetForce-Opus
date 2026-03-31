@@ -1,3 +1,7 @@
+// Initialize OpenTelemetry before any other imports that might be instrumented.
+import { initTelemetry, shutdownTelemetry } from "./lib/telemetry.js";
+initTelemetry();
+
 import { env } from "./lib/env.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -44,15 +48,38 @@ app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);
 });
 
-// --- Request logging ---
+// --- Request logging + HTTP-level tracing ---
+import { tracer } from "./lib/telemetry.js";
+import { SpanStatusCode } from "@opentelemetry/api";
+
 app.use("/*", async (c, next) => {
   const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  logger.info(
-    { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms },
-    "request"
-  );
+
+  await tracer.startActiveSpan(`HTTP ${c.req.method} ${c.req.path}`, async (span) => {
+    span.setAttribute("http.method", c.req.method);
+    span.setAttribute("http.target", c.req.path);
+
+    try {
+      await next();
+    } finally {
+      const ms = Date.now() - start;
+
+      span.setAttribute("http.status_code", c.res.status);
+      span.setAttribute("http.response_time_ms", ms);
+
+      if (c.res.status >= 500) {
+        span.setStatus({ code: SpanStatusCode.ERROR });
+      } else {
+        span.setStatus({ code: SpanStatusCode.OK });
+      }
+      span.end();
+
+      logger.info(
+        { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms },
+        "request"
+      );
+    }
+  });
 });
 
 // In production, NEXT_PUBLIC_WEB_URL is required by the env schema — no
@@ -137,6 +164,13 @@ async function shutdown(signal: string) {
     logger.info("Database connection pool closed.");
   } catch (err) {
     logger.error({ err }, "Error closing database connection");
+  }
+
+  try {
+    await shutdownTelemetry();
+    logger.info("Telemetry shut down — pending spans/metrics flushed.");
+  } catch (err) {
+    logger.error({ err }, "Error shutting down telemetry");
   }
 
   process.exit(0);
