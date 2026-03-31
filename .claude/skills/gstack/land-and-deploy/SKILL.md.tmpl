@@ -825,6 +825,30 @@ After a successful revert: Tell the user "Revert pushed to {base}. The deploy sh
 
 ---
 
+## Step 8.5: Paperclip Completion
+
+After a successful merge (not reverted), mark any linked Paperclip issue as done.
+
+1. **Read the PR body** for a Paperclip reference:
+```bash
+PR_BODY=$(gh pr view --json body --jq .body 2>/dev/null || echo "")
+PET_ID=$(echo "$PR_BODY" | grep -oE 'PET-[0-9]+' | head -1)
+```
+
+2. **If a PET-xx identifier was found**, mark it done in Paperclip:
+```bash
+eval "$(~/.claude/skills/gstack/bin/gstack-paperclip-sync done $PET_ID 2>/dev/null)"
+```
+
+3. **Report the result:**
+   - If `PAPERCLIP_SYNC_RESULT="done"`: Print "Paperclip: $PET_ID marked as done."
+   - If `PAPERCLIP_SYNC_RESULT="api_error_*"`: Print "Paperclip: Could not mark $PET_ID done (API returned $HTTP_CODE). You may need to update it manually."
+   - If no PET-xx found: Continue silently.
+
+This step is automatic — never ask for confirmation. Failure does not block the deploy report.
+
+---
+
 ## Step 9: Deploy report
 
 Create the deploy report directory:
