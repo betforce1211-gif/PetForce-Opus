@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# gstack-paperclip-sync — sync a Paperclip issue to GitHub and/or mark done
+# Usage:
+#   gstack-paperclip-sync github PET-42    → create/find matching GitHub issue
+#   gstack-paperclip-sync done PET-42      → mark Paperclip issue as done
+#   gstack-paperclip-sync link PET-42 #123 → add cross-reference comment
+#
+# Reads ~/.paperclip/context.json for API config.
+# Exit 0 always — never blocks the caller.
+set -euo pipefail
+
+ACTION="${1:-}"
+PET_ID="${2:-}"
+EXTRA="${3:-}"
+
+if [ -z "$ACTION" ] || [ -z "$PET_ID" ]; then
+  echo "Usage: gstack-paperclip-sync {github|done|link} PET-XX [extra]"
+  exit 0
+fi
+
+# Load Paperclip config
+CONTEXT_FILE="$HOME/.paperclip/context.json"
+if [ ! -f "$CONTEXT_FILE" ]; then
+  echo "PAPERCLIP_SYNC_RESULT=\"no_config\""
+  exit 0
+fi
+
+API_BASE=$(python3 -c "import json; c=json.load(open('$CONTEXT_FILE')); p=c.get('currentProfile','default'); print(c['profiles'][p].get('apiBase',''))" 2>/dev/null || true)
+COMPANY_ID=$(python3 -c "import json; c=json.load(open('$CONTEXT_FILE')); p=c.get('currentProfile','default'); print(c['profiles'][p].get('companyId',''))" 2>/dev/null || true)
+
+if [ -z "$API_BASE" ] || [ -z "$COMPANY_ID" ]; then
+  echo "PAPERCLIP_SYNC_RESULT=\"no_config\""
+  exit 0
+fi
+
+case "$ACTION" in
+  github)
+    # Create or find a GitHub issue matching this Paperclip issue
+    # First, check if one already exists
+    EXISTING=$(gh issue list --label paperclip --search "$PET_ID" --json number,title --jq ".[0].number" 2>/dev/null || echo "")
+
+    if [ -n "$EXISTING" ]; then
+      echo "PAPERCLIP_SYNC_RESULT=\"exists\""
+      echo "GITHUB_ISSUE_NUMBER=\"$EXISTING\""
+      exit 0
+    fi
+
+    # Fetch Paperclip issue details
+    TMPFILE=$(mktemp /tmp/gstack-paperclip-sync.XXXXXX)
+    trap 'rm -f "$TMPFILE"' EXIT
+    curl -sf "$API_BASE/api/companies/$COMPANY_ID/issues?limit=100" > "$TMPFILE" 2>/dev/null || echo "[]" > "$TMPFILE"
+
+    ISSUE_DATA=$(python3 - "$TMPFILE" "$PET_ID" << 'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    issues = json.load(f)
+pet_id = sys.argv[2]
+for i in issues:
+    if i.get('identifier') == pet_id:
+        title = i.get('title', '')
+        desc = i.get('description', '') or ''
+        priority = i.get('priority', 'medium')
+        status = i.get('status', 'todo')
+        # Truncate description for GH issue body
+        if len(desc) > 2000:
+            desc = desc[:2000] + '\n\n...(truncated)'
+        print(f'TITLE={pet_id}: {title}')
+        print(f'PRIORITY={priority}')
+        print(f'STATUS={status}')
+        # Write body to a temp file to avoid shell quoting issues
+        import tempfile, os
+        body_file = tempfile.mktemp(suffix='.md')
+        with open(body_file, 'w') as bf:
+            bf.write(f'> Synced from Paperclip issue **{pet_id}**\n\n')
+            bf.write(f'**Priority:** {priority}\n')
+            bf.write(f'**Status:** {status}\n\n')
+            bf.write('---\n\n')
+            bf.write(desc)
+        print(f'BODY_FILE={body_file}')
+        sys.exit(0)
+print('NOT_FOUND=true')
+PYEOF
+    )
+
+    if echo "$ISSUE_DATA" | grep -q "NOT_FOUND"; then
+      echo "PAPERCLIP_SYNC_RESULT=\"not_found\""
+      exit 0
+    fi
+
+    eval "$ISSUE_DATA"
+
+    # Create GitHub issue
+    LABELS="paperclip"
+    case "$PRIORITY" in
+      critical) LABELS="paperclip,priority:critical" ;;
+      high)     LABELS="paperclip,priority:high" ;;
+      medium)   LABELS="paperclip,priority:medium" ;;
+      low)      LABELS="paperclip,priority:low" ;;
+    esac
+
+    GH_NUMBER=$(gh issue create --title "$TITLE" --label "$LABELS" --body-file "$BODY_FILE" 2>/dev/null | grep -oE '[0-9]+$' || echo "")
+    rm -f "$BODY_FILE" 2>/dev/null
+
+    if [ -n "$GH_NUMBER" ]; then
+      echo "PAPERCLIP_SYNC_RESULT=\"created\""
+      echo "GITHUB_ISSUE_NUMBER=\"$GH_NUMBER\""
+    else
+      echo "PAPERCLIP_SYNC_RESULT=\"failed\""
+    fi
+    ;;
+
+  done)
+    # Mark a Paperclip issue as done via API
+    # First find the issue UUID
+    TMPFILE=$(mktemp /tmp/gstack-paperclip-sync.XXXXXX)
+    trap 'rm -f "$TMPFILE"' EXIT
+    curl -sf "$API_BASE/api/companies/$COMPANY_ID/issues?limit=100" > "$TMPFILE" 2>/dev/null || echo "[]" > "$TMPFILE"
+
+    ISSUE_UUID=$(python3 -c "
+import json, sys
+with open('$TMPFILE') as f:
+    issues = json.load(f)
+for i in issues:
+    if i.get('identifier') == '$PET_ID':
+        print(i.get('id', ''))
+        sys.exit(0)
+print('')
+" 2>/dev/null || echo "")
+
+    if [ -z "$ISSUE_UUID" ]; then
+      echo "PAPERCLIP_SYNC_RESULT=\"not_found\""
+      exit 0
+    fi
+
+    # Try to mark done via PATCH
+    HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" \
+      -X PATCH "$API_BASE/api/companies/$COMPANY_ID/issues/$ISSUE_UUID" \
+      -H "Content-Type: application/json" \
+      -d '{"status":"done"}' 2>/dev/null || echo "000")
+
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
+      echo "PAPERCLIP_SYNC_RESULT=\"done\""
+    else
+      echo "PAPERCLIP_SYNC_RESULT=\"api_error_$HTTP_CODE\""
+    fi
+    ;;
+
+  link)
+    # Add a cross-reference comment on a GitHub issue
+    GH_NUMBER="${EXTRA/#\#/}"  # Strip leading #
+    if [ -n "$GH_NUMBER" ]; then
+      gh issue comment "$GH_NUMBER" --body "Linked to Paperclip issue **$PET_ID**. PR merged — closing." 2>/dev/null
+      echo "PAPERCLIP_SYNC_RESULT=\"linked\""
+    else
+      echo "PAPERCLIP_SYNC_RESULT=\"no_gh_number\""
+    fi
+    ;;
+
+  *)
+    echo "Unknown action: $ACTION"
+    echo "Usage: gstack-paperclip-sync {github|done|link} PET-XX [extra]"
+    ;;
+esac

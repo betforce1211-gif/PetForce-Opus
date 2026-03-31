@@ -44,7 +44,16 @@ Before reviewing code quality, check: **did they build what was requested — no
 1. Read `TODOS.md` (if it exists). Read PR description (`gh pr view --json body --jq .body 2>/dev/null || true`).
    Read commit messages (`git log origin/<base>..HEAD --oneline`).
    **If no PR exists:** rely on commit messages and TODOS.md for stated intent — this is the common case since /review runs before /ship creates the PR.
-2. Identify the **stated intent** — what was this branch supposed to accomplish?
+
+   **Paperclip context:** Query Paperclip for the assigned task to supplement stated intent:
+   ```bash
+   eval "$(~/.claude/skills/gstack/bin/gstack-paperclip 2>/dev/null)"
+   ```
+   If `PAPERCLIP_ISSUE_ID` is non-empty, include the Paperclip task title and description
+   as additional "stated intent" for scope drift detection. Print:
+   "Paperclip context: $PAPERCLIP_ISSUE_ID — $PAPERCLIP_ISSUE_TITLE"
+
+2. Identify the **stated intent** — what was this branch supposed to accomplish? Include the Paperclip task description if available — it often contains the most detailed acceptance criteria.
 3. Run `git diff origin/<base>...HEAD --stat` and compare the files changed against the stated intent.
 
 {{PLAN_COMPLETION_AUDIT_REVIEW}}

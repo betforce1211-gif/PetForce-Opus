@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# gstack-paperclip — query Paperclip for the current agent's active task
+# Usage: eval "$(gstack-paperclip)"  → sets PAPERCLIP_* variables
+# Or:    gstack-paperclip            → prints PAPERCLIP_*=... lines
+#
+# Reads ~/.paperclip/context.json for API base and company ID.
+# Matches current branch/workspace against Paperclip issues.
+# Outputs shell-eval-safe variables (sanitized to prevent injection).
+#
+# Exit 0 always — never blocks the caller. Empty vars if no match.
+set -euo pipefail
+
+emit_empty() {
+  echo 'PAPERCLIP_ISSUE_ID=""'
+  echo 'PAPERCLIP_ISSUE_TITLE=""'
+  echo 'PAPERCLIP_ISSUE_STATUS=""'
+  echo 'PAPERCLIP_ISSUE_PRIORITY=""'
+  echo 'PAPERCLIP_ISSUE_DESCRIPTION=""'
+  echo "PAPERCLIP_COMPANY_ID=\"${COMPANY_ID:-}\""
+  echo "PAPERCLIP_API_BASE=\"${API_BASE:-}\""
+}
+
+# --- Load Paperclip config ---
+CONTEXT_FILE="$HOME/.paperclip/context.json"
+if [ ! -f "$CONTEXT_FILE" ]; then
+  emit_empty
+  exit 0
+fi
+
+API_BASE=$(python3 -c "import json; c=json.load(open('$CONTEXT_FILE')); p=c.get('currentProfile','default'); print(c['profiles'][p].get('apiBase',''))" 2>/dev/null || true)
+COMPANY_ID=$(python3 -c "import json; c=json.load(open('$CONTEXT_FILE')); p=c.get('currentProfile','default'); print(c['profiles'][p].get('companyId',''))" 2>/dev/null || true)
+
+if [ -z "$API_BASE" ] || [ -z "$COMPANY_ID" ]; then
+  emit_empty
+  exit 0
+fi
+
+# --- Fetch issues to a temp file (avoids shell quoting issues with JSON) ---
+TMPFILE=$(mktemp /tmp/gstack-paperclip.XXXXXX)
+trap 'rm -f "$TMPFILE"' EXIT
+
+curl -sf "$API_BASE/api/companies/$COMPANY_ID/issues?limit=100" > "$TMPFILE" 2>/dev/null || echo "[]" > "$TMPFILE"
+
+# --- Determine current branch ---
+RAW_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+
+# --- Match and output via a single python script ---
+AGENT_ID="${PAPERCLIP_AGENT_ID:-}"
+
+python3 - "$TMPFILE" "$RAW_BRANCH" "$AGENT_ID" "$COMPANY_ID" "$API_BASE" << 'PYEOF'
+import json, sys, os, re
+
+issues_file, branch, agent_id, company_id, api_base = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+
+def sanitize(s):
+    """Strip chars that could break shell eval"""
+    return re.sub(r'[^a-zA-Z0-9 _.:\-/()\#,\n]', '', s)
+
+def emit_empty(active_hint=""):
+    print('PAPERCLIP_ISSUE_ID=""')
+    print('PAPERCLIP_ISSUE_TITLE=""')
+    print('PAPERCLIP_ISSUE_STATUS=""')
+    print('PAPERCLIP_ISSUE_PRIORITY=""')
+    print('PAPERCLIP_ISSUE_DESCRIPTION=""')
+    print(f'PAPERCLIP_COMPANY_ID="{company_id}"')
+    print(f'PAPERCLIP_API_BASE="{api_base}"')
+    if active_hint:
+        print(f'PAPERCLIP_ACTIVE_ISSUES="{sanitize(active_hint)}"')
+
+def emit_match(issue):
+    print(f'PAPERCLIP_ISSUE_ID="{sanitize(issue.get("identifier",""))}"')
+    print(f'PAPERCLIP_ISSUE_TITLE="{sanitize(issue.get("title",""))}"')
+    print(f'PAPERCLIP_ISSUE_STATUS="{sanitize(issue.get("status",""))}"')
+    print(f'PAPERCLIP_ISSUE_PRIORITY="{sanitize(issue.get("priority",""))}"')
+    print(f'PAPERCLIP_ISSUE_UUID="{issue.get("id","")}"')
+    desc = issue.get("description","") or ""
+    print(f'PAPERCLIP_ISSUE_DESCRIPTION="{sanitize(desc[:200])}"')
+    print(f'PAPERCLIP_COMPANY_ID="{company_id}"')
+    print(f'PAPERCLIP_API_BASE="{api_base}"')
+
+try:
+    with open(issues_file) as f:
+        issues = json.load(f)
+except:
+    emit_empty()
+    sys.exit(0)
+
+# Filter to actionable issues
+active = [i for i in issues if i.get('status') in ('in_progress', 'todo', 'pending')]
+
+if not active:
+    emit_empty()
+    sys.exit(0)
+
+# Strategy 1: explicit agent ID
+if agent_id:
+    matches = [i for i in active if i.get('assigneeAgentId') == agent_id]
+    if matches:
+        in_prog = [i for i in matches if i.get('status') == 'in_progress']
+        emit_match((in_prog or matches)[0])
+        sys.exit(0)
+
+# Strategy 2: branch name matching
+branch_clean = re.sub(r'^[^/]+/', '', branch).lower().replace('-', ' ').replace('_', ' ')
+branch_words = set(branch_clean.split())
+branch_words -= {'the', 'a', 'an', 'and', 'or', 'for', 'to', 'in', 'on', 'of', 'is', 'add', 'fix', 'update', 'check'}
+
+if branch_words:
+    scored = []
+    for i in active:
+        title = (i.get('title') or '').lower()
+        desc = (i.get('description') or '')[:500].lower()
+        text = title + ' ' + desc
+        score = sum(1 for w in branch_words if len(w) > 2 and w in text)
+        if score > 0:
+            scored.append((score, i))
+    scored.sort(key=lambda x: -x[0])
+    if scored and scored[0][0] >= 2:
+        emit_match(scored[0][1])
+        sys.exit(0)
+
+# No match — output active issues as hint
+lines = []
+for i in active[:10]:
+    ident = i.get('identifier','')
+    title = (i.get('title') or '')[:60]
+    status = i.get('status','')
+    lines.append(f'{ident}: {title} [{status}]')
+emit_empty('\n'.join(lines))
+PYEOF
