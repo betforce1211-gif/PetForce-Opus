@@ -12,6 +12,10 @@ import { SpanStatusCode } from "@opentelemetry/api";
 import { TRPCError } from "@trpc/server";
 import { tracer, meter } from "./telemetry.js";
 
+// Default per-procedure timeout (30s). Long enough for complex queries,
+// short enough to catch runaway handlers before they hold connections open.
+const PROCEDURE_TIMEOUT_MS = 30_000;
+
 // ── Metrics instruments ──────────────────────────────────────────────
 const requestDuration = meter.createHistogram("trpc.request.duration", {
   description: "Duration of tRPC procedure calls in milliseconds",
@@ -46,7 +50,15 @@ export function telemetryMiddleware(opts: {
     span.setAttribute("rpc.type", type);
 
     try {
-      const result = await next();
+      const result = await Promise.race([
+        next(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new TRPCError({ code: "TIMEOUT", message: `Procedure ${path} timed out after ${PROCEDURE_TIMEOUT_MS}ms` })),
+            PROCEDURE_TIMEOUT_MS,
+          ),
+        ),
+      ]);
       const durationMs = performance.now() - start;
 
       span.setStatus({ code: SpanStatusCode.OK });

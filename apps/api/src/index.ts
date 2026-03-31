@@ -5,19 +5,31 @@ initTelemetry();
 import { env } from "./lib/env.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { compress } from "hono/compress";
 import { HTTPException } from "hono/http-exception";
 import { serve } from "@hono/node-server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./router.js";
 import { verifyClerkToken } from "./lib/clerk-auth.js";
 import { rateLimitMiddleware } from "./lib/rate-limit.js";
+import { requestIdMiddleware } from "./lib/request-id.js";
 import uploadApp from "./routes/upload.js";
 import { logger } from "./lib/logger.js";
 import type { Context } from "./trpc.js";
 
 const isProd = process.env.NODE_ENV === "production";
+const API_VERSION = "v1";
+const SERVICE_VERSION = process.env.npm_package_version ?? "0.0.0";
 
-const app = new Hono();
+// Declare custom context variables for type safety
+type AppEnv = {
+  Variables: {
+    requestId: string;
+    userId: string;
+  };
+};
+
+const app = new Hono<AppEnv>();
 
 // --- Global error handler ---
 app.onError((err, c) => {
@@ -48,16 +60,32 @@ app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);
 });
 
+// --- API version header (every response) ---
+app.use("/*", async (c, next) => {
+  c.header("X-API-Version", API_VERSION);
+  await next();
+});
+
+// --- Request ID (first — everything downstream can reference it) ---
+app.use("/*", requestIdMiddleware);
+
+// --- Response compression ---
+app.use("/*", compress());
+
 // --- Request logging + HTTP-level tracing ---
 import { tracer } from "./lib/telemetry.js";
 import { SpanStatusCode } from "@opentelemetry/api";
 
 app.use("/*", async (c, next) => {
   const start = Date.now();
+  const requestId = c.get("requestId") as string | undefined;
 
   await tracer.startActiveSpan(`HTTP ${c.req.method} ${c.req.path}`, async (span) => {
     span.setAttribute("http.method", c.req.method);
     span.setAttribute("http.target", c.req.path);
+    if (requestId) {
+      span.setAttribute("http.request_id", requestId);
+    }
 
     try {
       await next();
@@ -75,7 +103,7 @@ app.use("/*", async (c, next) => {
       span.end();
 
       logger.info(
-        { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms },
+        { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms, requestId },
         "request"
       );
     }
@@ -94,7 +122,14 @@ app.use(
   })
 );
 
-// Rate limiting
+// --- Auth extraction (runs before rate limiter so userId is available) ---
+app.use("/trpc/*", async (c, next) => {
+  const userId = await verifyClerkToken(c.req.header("authorization"));
+  if (userId) c.set("userId", userId);
+  await next();
+});
+
+// Rate limiting (uses userId when available, falls back to IP)
 app.use("/trpc/*", rateLimitMiddleware);
 app.use("/upload/*", rateLimitMiddleware);
 
@@ -102,7 +137,7 @@ app.use("/upload/*", rateLimitMiddleware);
 app.route("/upload", uploadApp);
 
 app.use("/trpc/*", async (c) => {
-  const userId = await verifyClerkToken(c.req.header("authorization"));
+  const userId = c.get("userId") ?? null;
 
   const response = await fetchRequestHandler({
     endpoint: "/trpc",
@@ -159,7 +194,13 @@ app.get("/health", async (c) => {
 
   // Always return 200 — this is a liveness endpoint used by CI and load
   // balancers. The `status` field in the body communicates dependency health.
-  return c.json({ status, checks });
+  return c.json({
+    status,
+    version: SERVICE_VERSION,
+    apiVersion: API_VERSION,
+    uptime: Math.floor(process.uptime()),
+    checks,
+  });
 });
 
 const port = env.PORT ?? env.API_PORT ?? 3001;
