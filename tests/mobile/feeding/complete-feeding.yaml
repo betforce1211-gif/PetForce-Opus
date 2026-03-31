@@ -1,0 +1,24 @@
+appId: com.petforce.app
+tags:
+  - feeding
+---
+# Feeding: mark a feeding as complete
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to feeding
+- tapOn:
+    text: ".*(?:Feeding|Meals).*"
+    regex: true
+
+# Complete the feeding
+- tapOn: "Breakfast"
+- tapOn:
+    text: ".*(?:Complete|Done|✓|Mark.*Done).*"
+    regex: true
+
+# Verify completion indicator
+- assertVisible:
+    text: ".*(?:Completed|Done|✓).*"
+    regex: true
+- takeScreenshot: feeding-complete

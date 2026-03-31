@@ -1,0 +1,46 @@
+appId: com.petforce.app
+tags:
+  - health
+---
+# Health: add a medication
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to pet detail > health > medications
+- tapOn:
+    id: "tab-pets"
+    optional: true
+- tapOn: "${TEST_PET_NAME}"
+- tapOn:
+    text: ".*(?:Health|Medical|Medications).*"
+    regex: true
+- tapOn:
+    text: ".*(?:Add Medication|\\+|New).*"
+    regex: true
+
+# Fill medication form
+- inputText:
+    id: "input-medication-name"
+    text: "Heartgard Plus"
+- inputText:
+    id: "input-dosage"
+    text: "1 chewable tablet"
+- inputText:
+    id: "input-frequency"
+    text: "Monthly"
+- inputText:
+    id: "input-prescribed-by"
+    text: "Dr. Smith"
+- inputText:
+    id: "input-notes"
+    text: "Give with food, 1st of every month"
+
+# Save
+- tapOn:
+    text: ".*(?:Save|Add|Create).*"
+    regex: true
+
+# Verify medication
+- assertVisible: "Heartgard Plus"
+- assertVisible: "Monthly"
+- takeScreenshot: health-add-medication

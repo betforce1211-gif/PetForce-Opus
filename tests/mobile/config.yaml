@@ -1,5 +1,6 @@
 # Maestro E2E Test Configuration for PetForce Mobile
 # https://maestro.mobile.dev/
+# Usage: maestro test tests/mobile/
 
 # Flow execution settings
 flows:
@@ -7,6 +8,19 @@ flows:
 
 # App configuration
 appId: com.petforce.app
+name: PetForce Mobile E2E
+
+# Tags for selective test execution
+tags:
+  smoke: Quick sanity check (app launch + home screen)
+  auth: Authentication flows (sign-in, sign-up, onboard)
+  pets: Pet CRUD operations
+  activities: Activity logging
+  feeding: Feeding schedules and completion
+  health: Health records and medications
+  navigation: Tab switching and deep linking
+  theming: Household theme application
+  notifications: Push notification registration
 
 # Environment variables available to all flows
 env:
@@ -14,15 +28,7 @@ env:
   TEST_USER_EMAIL: ${TEST_USER_EMAIL}
   TEST_USER_PASSWORD: ${TEST_USER_PASSWORD}
   API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
-
-# Tags for selective test execution
-tags:
-  smoke: "Quick health check — app launches and home screen renders"
-  auth: "Authentication flows — sign-in, sign-up, onboarding"
-  pets: "Pet CRUD — add, edit, delete pets"
-  activities: "Activity logging — walks, feedings, vet visits"
-  feeding: "Feeding schedules — create, snooze, complete"
-  health: "Health records — vaccinations, medications"
-  navigation: "Navigation — tab switching, deep linking"
-  theming: "Household theming — color application"
-  notifications: "Push notifications — token registration"
+  TEST_EMAIL: "qa+maestro@petforce.test"
+  TEST_PASSWORD: "TestPassword123!"
+  TEST_HOUSEHOLD: "QA Test Household"
+  TEST_PET_NAME: "Maestro Test Dog"

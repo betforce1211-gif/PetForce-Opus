@@ -1,0 +1,35 @@
+appId: com.petforce.app
+tags:
+  - auth
+---
+# Auth: onboarding flow — create household after sign-up
+- launchApp
+# Sign in with test account
+- tapOn: "Sign in"
+- inputText:
+    id: "input-email"
+    text: "${TEST_EMAIL}"
+- tapOn: "Continue"
+- inputText:
+    id: "input-password"
+    text: "${TEST_PASSWORD}"
+- tapOn: "Sign in"
+
+# Onboarding: create household
+- assertVisible:
+    text: ".*(?:Create.*Household|Onboard|Get Started).*"
+    regex: true
+- inputText:
+    id: "input-household-name"
+    text: "${TEST_HOUSEHOLD}"
+- inputText:
+    id: "input-display-name"
+    text: "QA Tester"
+- tapOn:
+    text: ".*(?:Create|Get Started|Continue).*"
+    regex: true
+# Should land on dashboard
+- assertVisible:
+    text: ".*(?:Dashboard|${TEST_HOUSEHOLD}).*"
+    regex: true
+- takeScreenshot: auth-onboard-complete

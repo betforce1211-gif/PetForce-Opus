@@ -15,13 +15,13 @@
   },
   "dependencies": {
     "@petforce/core": "workspace:*",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.4"
   },
   "devDependencies": {
     "@petforce/config": "workspace:*",
     "@types/node": "^20.14.0",
-    "drizzle-kit": "^0.31.9",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.16.0",
     "typescript": "^5.4.0"
   }

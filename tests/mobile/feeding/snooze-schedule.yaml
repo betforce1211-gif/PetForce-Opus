@@ -1,0 +1,24 @@
+appId: com.petforce.app
+tags:
+  - feeding
+---
+# Feeding: snooze a scheduled feeding
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to feeding
+- tapOn:
+    text: ".*(?:Feeding|Meals).*"
+    regex: true
+
+# Find the schedule and snooze it
+- tapOn: "Breakfast"
+- tapOn:
+    text: ".*(?:Snooze|⏰|Later).*"
+    regex: true
+
+# Verify snooze indicator
+- assertVisible:
+    text: ".*(?:Snoozed|Snooze).*"
+    regex: true
+- takeScreenshot: feeding-snooze-schedule

@@ -1,0 +1,45 @@
+appId: com.petforce.app
+tags:
+  - pets
+---
+# Pet CRUD: add a new pet
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to add pet
+- tapOn:
+    id: "tab-pets"
+    optional: true
+- tapOn:
+    text: ".*(?:Add Pet|\\+).*"
+    regex: true
+
+# Fill pet form
+- assertVisible: "Name"
+- inputText:
+    id: "input-pet-name"
+    text: "${TEST_PET_NAME}"
+- tapOn:
+    id: "select-species"
+    optional: true
+- tapOn: "Dog"
+- inputText:
+    id: "input-breed"
+    text: "Golden Retriever"
+- tapOn:
+    id: "select-sex"
+    optional: true
+- tapOn: "Male"
+- inputText:
+    id: "input-weight"
+    text: "30"
+
+# Submit
+- tapOn:
+    text: ".*(?:Save|Add|Create).*"
+    regex: true
+
+# Verify pet appears in list
+- assertVisible: "${TEST_PET_NAME}"
+- assertVisible: "Golden Retriever"
+- takeScreenshot: pets-add-complete

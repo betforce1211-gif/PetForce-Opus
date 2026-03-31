@@ -9,7 +9,11 @@
     "test:e2e:screenshots": "playwright test --config=playwright.config.ts --reporter=list && echo '\nScreenshots saved to tests/test-results/screenshots/'",
     "test:coverage": "vitest run --coverage",
     "test:mobile": "cd mobile && maestro test flows/",
-    "test:mobile:smoke": "cd mobile && maestro test --tags smoke flows/"
+    "test:mobile:smoke": "cd mobile && maestro test --tags smoke flows/",
+    "test:mobile:auth": "maestro test --tags auth tests/mobile/",
+    "test:mobile:pets": "maestro test --tags pets tests/mobile/",
+    "test:mobile:feeding": "maestro test --tags feeding tests/mobile/",
+    "test:mobile:health": "maestro test --tags health tests/mobile/"
   },
   "devDependencies": {
     "@petforce/core": "workspace:*",

@@ -1,0 +1,11 @@
+appId: com.petforce.app
+tags:
+  - smoke
+---
+# Smoke test: verify app launches and renders home screen
+- launchApp
+- assertVisible: "PetForce"
+- assertVisible:
+    id: "tab-home"
+    optional: true
+- takeScreenshot: smoke-app-launch

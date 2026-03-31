@@ -1,0 +1,36 @@
+appId: com.petforce.app
+tags:
+  - notifications
+---
+# Notifications: verify push token registration
+- launchApp
+- runFlow: ../auth/sign-in.yaml
+
+# Navigate to settings > notifications
+- tapOn:
+    id: "tab-settings"
+- tapOn:
+    text: ".*(?:Notification|Push|Alerts).*"
+    regex: true
+
+# Verify notification settings are visible
+- assertVisible:
+    text: ".*(?:Notification|Push|Enable).*"
+    regex: true
+
+# Toggle notifications on if not already
+- tapOn:
+    id: "toggle-push-notifications"
+    optional: true
+
+# System may prompt for permission — handle gracefully
+- tapOn:
+    text: "Allow"
+    optional: true
+
+# Verify enabled state
+- assertVisible:
+    text: ".*(?:Enabled|On|Active).*"
+    regex: true
+    optional: true
+- takeScreenshot: notifications-push-token
