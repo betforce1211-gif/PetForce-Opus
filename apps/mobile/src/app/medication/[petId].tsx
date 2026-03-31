@@ -1,11 +1,12 @@
 import { ScrollView, Alert, Pressable } from "react-native";
 import { YStack, XStack, Text, Spinner } from "tamagui";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
 
 export default function MedicationScreen() {
+  const router = useRouter();
   const { petId } = useLocalSearchParams<{ petId: string }>();
   const { householdId } = useHousehold();
 
@@ -51,8 +52,20 @@ export default function MedicationScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
       <YStack padding="$4" gap="$4">
+        {/* Add medication button */}
+        <Pressable onPress={() => router.push(`/medication/new?petId=${petId}`)}>
+          <Card
+            borderWidth={2}
+            borderColor="$petforcePrimary"
+            padding="$3"
+            alignItems="center"
+          >
+            <Text color="$petforcePrimary" fontWeight="bold">+ Add Medication</Text>
+          </Card>
+        </Pressable>
+
         {medications.length === 0 ? (
-          <EmptyState icon="💊" title="No medications" description="Medications will appear here." />
+          <EmptyState icon="💊" title="No medications" description="Tap above to add your pet's first medication." />
         ) : (
           <>
             {activeMeds.length > 0 && (

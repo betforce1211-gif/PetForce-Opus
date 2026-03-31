@@ -61,7 +61,7 @@ function createRedisCache(): CacheClient {
             match: `${prefix}*`,
             count: 100,
           });
-          cursor = nextCursor;
+          cursor = Number(nextCursor);
           if (keys.length > 0) {
             await redis.del(...keys);
           }

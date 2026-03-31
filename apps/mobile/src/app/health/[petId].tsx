@@ -1,11 +1,12 @@
-import { ScrollView } from "react-native";
+import { ScrollView, Pressable } from "react-native";
 import { YStack, XStack, Text, Spinner } from "tamagui";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
 
 export default function HealthRecordsScreen() {
+  const router = useRouter();
   const { petId } = useLocalSearchParams<{ petId: string }>();
   const { householdId } = useHousehold();
 
@@ -43,8 +44,20 @@ export default function HealthRecordsScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
       <YStack padding="$4" gap="$3">
+        {/* Add record button */}
+        <Pressable onPress={() => router.push(`/health/new?petId=${petId}`)}>
+          <Card
+            borderWidth={2}
+            borderColor="$petforcePrimary"
+            padding="$3"
+            alignItems="center"
+          >
+            <Text color="$petforcePrimary" fontWeight="bold">+ Add Health Record</Text>
+          </Card>
+        </Pressable>
+
         {records.length === 0 ? (
-          <EmptyState icon="🏥" title="No health records" description="Health records will appear here." />
+          <EmptyState icon="🏥" title="No health records" description="Tap above to add your pet's first health record." />
         ) : (
           records.map((record) => (
             <Card key={record.id} padding="$4">

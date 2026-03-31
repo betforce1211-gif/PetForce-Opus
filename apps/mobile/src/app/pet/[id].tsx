@@ -14,6 +14,12 @@ export default function PetDetailScreen() {
   const router = useRouter();
 
   const petQuery = trpc.pet.getById.useQuery({ id: id! }, { enabled: !!id });
+  const householdId = petQuery.data?.householdId;
+
+  const healthSummary = trpc.health.summary.useQuery(
+    { householdId: householdId! },
+    { enabled: !!householdId }
+  );
 
   if (petQuery.isLoading) {
     return (
@@ -84,36 +90,76 @@ export default function PetDetailScreen() {
           </Card>
         </Pressable>
 
+        {/* Health summary */}
+        {healthSummary.data && (
+          <Card padding="$4">
+            <Text fontSize="$5" fontWeight="bold" marginBottom="$3">Health Overview</Text>
+            <XStack gap="$3">
+              <YStack flex={1} alignItems="center">
+                <Text fontSize="$7" fontWeight="bold">
+                  {healthSummary.data.activeMedicationCount}
+                </Text>
+                <Text fontSize="$2" color="$petforceTextMuted">Active Meds</Text>
+              </YStack>
+              <YStack flex={1} alignItems="center">
+                <Text
+                  fontSize="$7"
+                  fontWeight="bold"
+                  color={healthSummary.data.overdueVaccinationCount > 0 ? "red" : undefined}
+                >
+                  {healthSummary.data.overdueVaccinationCount}
+                </Text>
+                <Text fontSize="$2" color="$petforceTextMuted">Overdue Vaccines</Text>
+              </YStack>
+            </XStack>
+            {healthSummary.data.nextAppointment && (
+              <YStack marginTop="$3" padding="$2" backgroundColor="$petforceBg" borderRadius="$2">
+                <Text fontSize="$2" color="$petforceTextMuted">Next Appointment</Text>
+                <Text fontWeight="bold">
+                  {new Date(healthSummary.data.nextAppointment.date).toLocaleDateString()}
+                  {healthSummary.data.nextAppointment.vetOrClinic
+                    ? ` — ${healthSummary.data.nextAppointment.vetOrClinic}`
+                    : ""}
+                </Text>
+              </YStack>
+            )}
+          </Card>
+        )}
+
         {/* Quick actions */}
         <XStack gap="$3">
           <Pressable style={{ flex: 1 }} onPress={() => router.push(`/feeding/index?petId=${pet.id}&householdId=${pet.householdId}`)}>
-            <Card
-              flex={1}
-              padding="$3"
-              alignItems="center"
-            >
+            <Card flex={1} padding="$3" alignItems="center">
               <Text fontSize={24}>🍽️</Text>
               <Text fontSize="$2" fontWeight="bold" marginTop="$1">Feeding</Text>
             </Card>
           </Pressable>
           <Pressable style={{ flex: 1 }} onPress={() => router.push(`/health/${pet.id}`)}>
-            <Card
-              flex={1}
-              padding="$3"
-              alignItems="center"
-            >
+            <Card flex={1} padding="$3" alignItems="center">
               <Text fontSize={24}>🏥</Text>
               <Text fontSize="$2" fontWeight="bold" marginTop="$1">Health</Text>
             </Card>
           </Pressable>
           <Pressable style={{ flex: 1 }} onPress={() => router.push(`/medication/${pet.id}`)}>
-            <Card
-              flex={1}
-              padding="$3"
-              alignItems="center"
-            >
+            <Card flex={1} padding="$3" alignItems="center">
               <Text fontSize={24}>💊</Text>
               <Text fontSize="$2" fontWeight="bold" marginTop="$1">Meds</Text>
+            </Card>
+          </Pressable>
+        </XStack>
+
+        {/* More health actions */}
+        <XStack gap="$3">
+          <Pressable style={{ flex: 1 }} onPress={() => router.push("/health/vaccinations")}>
+            <Card flex={1} padding="$3" alignItems="center">
+              <Text fontSize={24}>💉</Text>
+              <Text fontSize="$2" fontWeight="bold" marginTop="$1">Vaccines</Text>
+            </Card>
+          </Pressable>
+          <Pressable style={{ flex: 1 }} onPress={() => router.push("/medication/daily")}>
+            <Card flex={1} padding="$3" alignItems="center">
+              <Text fontSize={24}>📋</Text>
+              <Text fontSize="$2" fontWeight="bold" marginTop="$1">Daily Meds</Text>
             </Card>
           </Pressable>
         </XStack>

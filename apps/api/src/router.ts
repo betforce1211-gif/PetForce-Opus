@@ -17,6 +17,7 @@ import { gamificationRouter } from "./routers/gamification.js";
 import { petPhotoRouter } from "./routers/pet-photo.js";
 import { exportRouter } from "./routers/export.js";
 import { searchRouter } from "./routers/search.js";
+import { notificationRouter } from "./routers/notification.js";
 
 export const appRouter = router({
   household: householdRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   petPhoto: petPhotoRouter,
   export: exportRouter,
   search: searchRouter,
+  notification: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

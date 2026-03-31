@@ -20,6 +20,20 @@ export default function HomeScreen() {
     { enabled: !!householdId }
   );
 
+  const today = new Date().toISOString().slice(0, 10);
+  const feedingStatus = trpc.feeding.todayStatus.useQuery(
+    { householdId: householdId!, date: today },
+    { enabled: !!householdId }
+  );
+  const medStatus = trpc.health.todayMedicationStatus.useQuery(
+    { householdId: householdId!, date: today },
+    { enabled: !!householdId }
+  );
+  const healthSummary = trpc.health.summary.useQuery(
+    { householdId: householdId! },
+    { enabled: !!householdId }
+  );
+
   if (householdsQuery.isLoading) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center">
@@ -80,6 +94,42 @@ export default function HomeScreen() {
             <Text fontSize="$2" color="$petforceTextMuted">Activities</Text>
             <Text fontSize="$7" fontWeight="bold">{dashboard?.recentActivities.length ?? 0}</Text>
           </Card>
+        </XStack>
+
+        {/* Today's care status */}
+        <XStack gap="$3">
+          <Pressable style={{ flex: 1 }} onPress={() => router.push("/feeding/index")}>
+            <Card flex={1} padding="$3">
+              <Text fontSize="$2" color="$petforceTextMuted">Feedings</Text>
+              <Text fontSize="$6" fontWeight="bold">
+                {feedingStatus.data
+                  ? `${feedingStatus.data.totalCompleted}/${feedingStatus.data.totalScheduled}`
+                  : "—"}
+              </Text>
+            </Card>
+          </Pressable>
+          <Pressable style={{ flex: 1 }} onPress={() => router.push("/medication/daily")}>
+            <Card flex={1} padding="$3">
+              <Text fontSize="$2" color="$petforceTextMuted">Medications</Text>
+              <Text fontSize="$6" fontWeight="bold">
+                {medStatus.data
+                  ? `${medStatus.data.totalLogged}/${medStatus.data.totalActive}`
+                  : "—"}
+              </Text>
+            </Card>
+          </Pressable>
+          <Pressable style={{ flex: 1 }} onPress={() => router.push("/health/vaccinations")}>
+            <Card flex={1} padding="$3">
+              <Text fontSize="$2" color="$petforceTextMuted">Overdue</Text>
+              <Text
+                fontSize="$6"
+                fontWeight="bold"
+                color={healthSummary.data?.overdueVaccinationCount ? "red" : undefined}
+              >
+                {healthSummary.data?.overdueVaccinationCount ?? "—"}
+              </Text>
+            </Card>
+          </Pressable>
         </XStack>
 
         {/* Pets section */}

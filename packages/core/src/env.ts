@@ -75,6 +75,16 @@ export const queueEnvSchema = z.object({
   REDIS_URL: z.string().min(1).optional(),
 });
 
+/** Notification env vars (optional — email and push degrade gracefully without them). */
+export const notificationEnvSchema = z.object({
+  /** Resend API key for transactional email delivery. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Resend "from" address (e.g. "PetForce <notifications@petforce.app>"). */
+  RESEND_FROM_EMAIL: z.string().min(1).optional(),
+  /** Expo push notification access token (optional — required for push delivery). */
+  EXPO_PUSH_ACCESS_TOKEN: z.string().min(1).optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Composite schema for the API server (validates everything at once)
 // ---------------------------------------------------------------------------
@@ -86,6 +96,7 @@ export const apiEnvSchema = dbEnvSchema
     ...corsEnvSchema.shape,
     ...rateLimitEnvSchema.shape,
     ...queueEnvSchema.shape,
+    ...notificationEnvSchema.shape,
     // Clerk fields need special handling because of the refine()
     CLERK_SECRET_KEY: z.string().min(1).optional(),
     CLERK_JWT_KEY: z.string().min(1).optional(),

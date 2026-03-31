@@ -1,11 +1,12 @@
 import { ScrollView, Alert, Pressable } from "react-native";
 import { YStack, XStack, Text, Spinner } from "tamagui";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
 
 export default function FeedingScreen() {
+  const router = useRouter();
   const params = useLocalSearchParams<{ petId?: string; householdId?: string }>();
   const { householdId: contextHouseholdId } = useHousehold();
   const householdId = params.householdId ?? contextHouseholdId;
@@ -61,16 +62,23 @@ export default function FeedingScreen() {
       <YStack padding="$4" gap="$4">
         {/* Summary */}
         <Card padding="$3">
-          <XStack justifyContent="space-between">
+          <XStack justifyContent="space-between" alignItems="center">
             <Text fontWeight="bold">Today's Feedings</Text>
-            <Text color="$petforceTextMuted">
-              {data.totalCompleted}/{data.totalScheduled} done
-            </Text>
+            <XStack gap="$3" alignItems="center">
+              <Text color="$petforceTextMuted">
+                {data.totalCompleted}/{data.totalScheduled} done
+              </Text>
+              <Pressable onPress={() => router.push("/feeding/new")}>
+                <Card backgroundColor="$petforcePrimary" padding="$1" paddingHorizontal="$2">
+                  <Text color="white" fontSize="$2" fontWeight="bold">+ Add</Text>
+                </Card>
+              </Pressable>
+            </XStack>
           </XStack>
         </Card>
 
         {pets.length === 0 && (
-          <EmptyState icon="🍽️" title="No feeding schedules" description="Set up feeding schedules for your pets." />
+          <EmptyState icon="🍽️" title="No feeding schedules" description="Tap + Add above to set up feeding schedules." />
         )}
 
         {pets.map((petStatus) => (
@@ -96,8 +104,10 @@ export default function FeedingScreen() {
                         )}
                       </YStack>
                       <XStack gap="$2">
-                        {isDone ? (
+                        {isDone && !schedule.log?.skipped ? (
                           <Text color="green" fontWeight="bold">Done</Text>
+                        ) : isDone && schedule.log?.skipped ? (
+                          <Text color="$petforceTextMuted" fontWeight="bold">Skipped</Text>
                         ) : isSnoozed ? (
                           <Text color="orange" fontWeight="bold">Snoozed</Text>
                         ) : (
@@ -117,6 +127,25 @@ export default function FeedingScreen() {
                                 paddingHorizontal="$2"
                               >
                                 <Text color="white" fontSize="$2">Done</Text>
+                              </Card>
+                            </Pressable>
+                            <Pressable
+                              onPress={() =>
+                                logMutation.mutate({
+                                  householdId: householdId!,
+                                  feedingScheduleId: schedule.schedule.id,
+                                  feedingDate: today,
+                                  skipped: true,
+                                })
+                              }
+                            >
+                              <Card
+                                padding="$1"
+                                paddingHorizontal="$2"
+                                borderWidth={1}
+                                borderColor="$pfBorder"
+                              >
+                                <Text fontSize="$2" color="$petforceTextMuted">Skip</Text>
                               </Card>
                             </Pressable>
                             <Pressable

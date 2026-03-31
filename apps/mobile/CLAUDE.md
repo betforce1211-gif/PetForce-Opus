@@ -36,8 +36,13 @@ src/
 │   ├── pet/[id].tsx          # Pet detail
 │   ├── activity/new.tsx      # Log new activity
 │   ├── feeding/index.tsx     # Feeding schedules + daily status
+│   ├── feeding/new.tsx       # Add feeding schedule form
 │   ├── health/[petId].tsx    # Health records per pet
+│   ├── health/new.tsx        # Add health record form
+│   ├── health/vaccinations.tsx # Vaccination tracker with overdue alerts
 │   ├── medication/[petId].tsx # Medications per pet
+│   ├── medication/new.tsx    # Add medication form
+│   ├── medication/daily.tsx  # Daily medication status + logging
 │   ├── auth/sign-in.tsx      # Sign in (Clerk useSignIn)
 │   ├── auth/sign-up.tsx      # Sign up (Clerk useSignUp)
 │   ├── onboard.tsx           # Create household

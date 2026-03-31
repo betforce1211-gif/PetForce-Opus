@@ -39,6 +39,8 @@ export const members = pgTable("members", {
   role: text("role", { enum: ["owner", "admin", "member", "sitter"] }).notNull(),
   displayName: text("display_name").notNull(),
   avatarUrl: text("avatar_url"),
+  expoPushToken: text("expo_push_token"),
+  email: text("email"),
   joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   householdUserUnique: uniqueIndex("members_household_user_idx").on(table.householdId, table.userId),
@@ -66,6 +68,8 @@ export const pets = pgTable("pets", {
   rabiesTagNumber: text("rabies_tag_number"),
   medicalNotes: text("medical_notes"),
   avatarUrl: text("avatar_url"),
+  expoPushToken: text("expo_push_token"),
+  email: text("email"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({

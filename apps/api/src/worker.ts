@@ -8,9 +8,11 @@
  * Requires REDIS_URL to be set. Exits immediately if not configured.
  */
 
-import { Worker } from "bullmq";
+import { Worker, Queue } from "bullmq";
 import { logger } from "./lib/logger.js";
 import { QUEUE_NAMES, getQueueConnection } from "./lib/queue.js";
+import { processNotificationJob } from "./lib/notifications.js";
+import { runAllNotificationTriggers } from "./lib/notification-triggers.js";
 import type {
   ImageProcessingJob,
   NotificationJob,
@@ -40,17 +42,6 @@ async function processImageJob(job: ImageProcessingJob): Promise<void> {
   // 3. Upload resized image to Supabase Storage
   // 4. Update entity record with new URL
   logger.info({ jobType: job.type, entityId: job.entityId }, "Image job completed");
-}
-
-async function processNotificationJob(job: NotificationJob): Promise<void> {
-  logger.info(
-    { jobType: job.type, recipient: job.recipientUserId, template: job.template },
-    "Processing notification job"
-  );
-  // TODO: Implement notification sending
-  // Email: integrate with Resend/SendGrid
-  // Push: integrate with Expo push notifications
-  logger.info({ jobType: job.type, recipient: job.recipientUserId }, "Notification job completed");
 }
 
 async function processExportJob(job: ExportJob): Promise<void> {
@@ -108,6 +99,33 @@ const gamificationWorker = new Worker(
   { connection, concurrency: 1 }
 );
 workers.push(gamificationWorker);
+
+// ---------------------------------------------------------------------------
+// Notification trigger scheduler — runs every 15 minutes to scan for events
+// that should generate notifications (overdue meds, upcoming vet visits, etc.)
+// ---------------------------------------------------------------------------
+
+const SCHEDULER_QUEUE_NAME = "notification-scheduler";
+
+const schedulerQueue = new Queue(SCHEDULER_QUEUE_NAME, { connection });
+
+// Register a repeatable job that fires every 15 minutes
+schedulerQueue.upsertJobScheduler(
+  "notification-trigger-scan",
+  { every: 15 * 60 * 1000 },
+  { name: "trigger-scan" },
+).catch((err) => {
+  logger.error({ err }, "Failed to register notification scheduler");
+});
+
+const schedulerWorker = new Worker(
+  SCHEDULER_QUEUE_NAME,
+  async () => {
+    await runAllNotificationTriggers();
+  },
+  { connection, concurrency: 1 },
+);
+workers.push(schedulerWorker);
 
 // ---------------------------------------------------------------------------
 // Error handling

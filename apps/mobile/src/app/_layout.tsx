@@ -40,8 +40,13 @@ export default function RootLayout() {
           <Stack.Screen name="pet/edit/[id]" options={{ title: "Edit Pet" }} />
           <Stack.Screen name="activity/new" options={{ title: "Log Activity" }} />
           <Stack.Screen name="feeding/index" options={{ title: "Feeding Schedules" }} />
+          <Stack.Screen name="feeding/new" options={{ title: "Add Feeding Schedule" }} />
           <Stack.Screen name="health/[petId]" options={{ title: "Health Records" }} />
+          <Stack.Screen name="health/new" options={{ title: "Add Health Record" }} />
+          <Stack.Screen name="health/vaccinations" options={{ title: "Vaccination Tracker" }} />
           <Stack.Screen name="medication/[petId]" options={{ title: "Medications" }} />
+          <Stack.Screen name="medication/new" options={{ title: "Add Medication" }} />
+          <Stack.Screen name="medication/daily" options={{ title: "Daily Medications" }} />
           <Stack.Screen name="auth/sign-in" options={{ title: "Sign In", headerShown: false }} />
           <Stack.Screen name="auth/sign-up" options={{ title: "Sign Up", headerShown: false }} />
           <Stack.Screen name="onboard" options={{ title: "Set Up Household" }} />
