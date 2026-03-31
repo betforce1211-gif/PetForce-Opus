@@ -81,12 +81,14 @@ function createInMemoryCache(): CacheClient {
   const store = new Map<string, { value: unknown; expiresAt: number }>();
 
   // Evict expired entries every 60s
-  setInterval(() => {
+  const timer = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store) {
       if (now > entry.expiresAt) store.delete(key);
     }
-  }, 60_000).unref();
+  }, 60_000);
+  // Prevent timer from keeping Node.js process alive
+  if (typeof timer === "object" && "unref" in timer) timer.unref();
 
   return {
     async get<T>(key: string): Promise<T | null> {
