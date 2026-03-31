@@ -1,0 +1,30 @@
+# Auth: Sign-in flow
+# Tags: auth
+# Prerequisite: User account exists with TEST_USER_EMAIL / TEST_USER_PASSWORD
+appId: com.petforce.app
+
+---
+
+- launchApp:
+    clearState: true
+
+# Navigate to sign-in screen
+- assertVisible: "Sign in"
+- tapOn: "Sign in"
+
+# Enter credentials (Clerk UI)
+- tapOn:
+    id: "email-input"
+- inputText: ${TEST_USER_EMAIL}
+
+- tapOn: "Continue"
+
+- tapOn:
+    id: "password-input"
+- inputText: ${TEST_USER_PASSWORD}
+
+- tapOn: "Sign in"
+
+# Verify successful sign-in — lands on household dashboard
+- assertVisible: "My Household"
+- takeScreenshot: auth-sign-in-success

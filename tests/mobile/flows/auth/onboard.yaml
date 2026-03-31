@@ -1,0 +1,43 @@
+# Auth: Onboarding flow
+# Tags: auth
+# Prerequisite: Freshly signed-up user on onboarding screen
+# Depends on: sign-up.yaml (run after sign-up to complete onboarding)
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Create household
+- assertVisible: "Create your household"
+- tapOn:
+    id: "household-name-input"
+- inputText: "Test Family"
+
+# Pick a theme color
+- tapOn:
+    id: "color-picker"
+- tapOn: "Indigo"
+
+- tapOn: "Continue"
+
+# Add first pet
+- assertVisible: "Add your first pet"
+- tapOn:
+    id: "pet-name-input"
+- inputText: "Buddy"
+
+- tapOn:
+    id: "species-select"
+- tapOn: "Dog"
+
+- tapOn:
+    id: "breed-input"
+- inputText: "Golden Retriever"
+
+- tapOn: "Done"
+
+# Verify lands on household dashboard with pet
+- assertVisible: "Test Family"
+- assertVisible: "Buddy"
+- takeScreenshot: auth-onboard-complete

@@ -7,7 +7,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:screenshots": "playwright test --config=playwright.config.ts --reporter=list && echo '\nScreenshots saved to tests/test-results/screenshots/'",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:mobile": "cd mobile && maestro test flows/",
+    "test:mobile:smoke": "cd mobile && maestro test --tags smoke flows/"
   },
   "devDependencies": {
     "@petforce/core": "workspace:*",

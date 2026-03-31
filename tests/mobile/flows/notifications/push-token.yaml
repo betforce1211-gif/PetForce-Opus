@@ -1,0 +1,27 @@
+# Notifications: Verify push token registration
+# Tags: notifications
+# Prerequisite: Authenticated user (token registration happens post-auth)
+# Note: This test verifies the UI shows notification settings, not actual push delivery
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to settings
+- tapOn: "Settings"
+
+# Open notification settings
+- tapOn: "Notifications"
+
+# Verify notification settings screen renders
+- assertVisible: "Push Notifications"
+
+# Verify toggle exists and is accessible
+- assertVisible:
+    id: "push-notifications-toggle"
+
+# Verify token registration status indicator
+- assertVisible: "Registered"
+
+- takeScreenshot: notifications-settings

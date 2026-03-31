@@ -1,0 +1,24 @@
+# Navigation: Deep linking
+# Tags: navigation
+# Prerequisite: Authenticated user with household and pets
+# Tests the petforce:// URL scheme
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Deep link to pets screen
+- openLink: "petforce://pets"
+- assertVisible: "My Pets"
+- takeScreenshot: deeplink-pets
+
+# Deep link to activities
+- openLink: "petforce://activities"
+- assertVisible: "Recent Activities"
+- takeScreenshot: deeplink-activities
+
+# Deep link to settings
+- openLink: "petforce://settings"
+- assertVisible: "Settings"
+- takeScreenshot: deeplink-settings

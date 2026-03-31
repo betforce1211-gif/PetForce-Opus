@@ -1,0 +1,37 @@
+# Auth: Sign-up flow
+# Tags: auth
+# Creates a new test account and verifies onboarding entry
+appId: com.petforce.app
+
+---
+
+- launchApp:
+    clearState: true
+
+# Navigate to sign-up screen
+- assertVisible: "Sign up"
+- tapOn: "Sign up"
+
+# Enter new account details (Clerk UI)
+- tapOn:
+    id: "email-input"
+- inputText: "test+signup@petforce.test"
+
+- tapOn: "Continue"
+
+- tapOn:
+    id: "password-input"
+- inputText: "TestPassword123!"
+
+- tapOn: "Sign up"
+
+# OTP verification (Clerk test mode uses 424242)
+- tapOn:
+    id: "otp-input"
+- inputText: "424242"
+
+- tapOn: "Verify"
+
+# Verify lands on onboarding
+- assertVisible: "Welcome to PetForce"
+- takeScreenshot: auth-sign-up-success

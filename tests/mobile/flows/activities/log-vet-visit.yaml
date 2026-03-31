@@ -1,0 +1,44 @@
+# Activity: Log a vet visit
+# Tags: activities
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to activities
+- tapOn: "Activities"
+
+# Start new activity
+- tapOn:
+    id: "log-activity-button"
+
+# Select activity type
+- tapOn: "Vet Visit"
+
+# Select pet
+- tapOn: "Buddy"
+
+# Add vet name
+- tapOn:
+    id: "vet-name-input"
+- inputText: "Dr. Smith"
+
+# Add reason
+- tapOn:
+    id: "reason-input"
+- inputText: "Annual checkup"
+
+# Add notes
+- tapOn:
+    id: "notes-input"
+- inputText: "All clear, next visit in 12 months"
+
+# Save
+- tapOn: "Save"
+
+# Verify activity appears
+- assertVisible: "Vet Visit"
+- assertVisible: "Dr. Smith"
+- takeScreenshot: activities-vet-visit-logged

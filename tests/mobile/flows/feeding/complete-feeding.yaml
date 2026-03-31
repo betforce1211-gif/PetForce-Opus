@@ -1,0 +1,21 @@
+# Feeding: Mark a feeding as complete
+# Tags: feeding
+# Prerequisite: Existing feeding schedule with active/snoozed reminder
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to feeding schedules
+- tapOn: "Feeding"
+
+# Find the feeding entry
+- assertVisible: "Breakfast"
+
+# Mark as complete
+- tapOn: "Complete"
+
+# Verify completion
+- assertVisible: "Completed"
+- takeScreenshot: feeding-completed

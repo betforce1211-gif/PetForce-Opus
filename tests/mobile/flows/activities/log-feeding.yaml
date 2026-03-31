@@ -1,0 +1,39 @@
+# Activity: Log a feeding
+# Tags: activities
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to activities
+- tapOn: "Activities"
+
+# Start new activity
+- tapOn:
+    id: "log-activity-button"
+
+# Select activity type
+- tapOn: "Feeding"
+
+# Select pet
+- tapOn: "Buddy"
+
+# Select food type
+- tapOn:
+    id: "food-type-select"
+- tapOn: "Dry food"
+
+# Add amount
+- tapOn:
+    id: "amount-input"
+- inputText: "2 cups"
+
+# Save
+- tapOn: "Save"
+
+# Verify activity appears
+- assertVisible: "Feeding"
+- assertVisible: "Buddy"
+- takeScreenshot: activities-feeding-logged

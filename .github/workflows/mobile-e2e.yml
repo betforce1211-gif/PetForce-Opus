@@ -1,0 +1,129 @@
+name: Mobile E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "tests/mobile/**"
+      - "packages/ui/**"
+      - "packages/core/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "tests/mobile/**"
+      - "packages/ui/**"
+      - "packages/core/**"
+  schedule:
+    # Weekly on Sunday at 4 AM UTC
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+jobs:
+  mobile-e2e:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    # Run when:
+    #   1. Weekly schedule (safety net)
+    #   2. PR touches mobile/UI code or has 'run-mobile-e2e' label
+    #   3. Push to main with mobile changes
+    #   4. Manual dispatch
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.labels.*.name, 'run-mobile-e2e') ||
+        contains(github.event.pull_request.labels.*.name, 'mobile')
+      ))
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: petforce_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petforce_test
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      CLERK_JWT_KEY: ${{ secrets.CLERK_JWT_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      CLERK_TEST_CODE: "424242"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run database migrations
+        run: pnpm --filter=@petforce/db db:migrate
+
+      - name: Start API server
+        run: |
+          cd apps/api
+          node dist/index.js > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -f http://localhost:3001/health || { echo "API failed to start:"; cat /tmp/api.log; exit 1; }
+
+      - name: Build Expo development client
+        run: |
+          cd apps/mobile
+          npx expo prebuild --platform ios --clean
+          npx expo run:ios --configuration Release --no-install 2>&1 | tee /tmp/expo-build.log
+
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 16" || true
+          xcrun simctl install booted apps/mobile/ios/build/Build/Products/Release-iphonesimulator/PetForce.app
+
+      - name: Run Maestro smoke tests
+        run: |
+          cd tests/mobile
+          maestro test --tags smoke flows/ 2>&1 | tee /tmp/maestro-smoke.log
+
+      - name: Run Maestro full suite
+        run: |
+          cd tests/mobile
+          maestro test flows/ 2>&1 | tee /tmp/maestro-full.log
+
+      - name: Upload Maestro results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-e2e-results
+          path: |
+            ~/.maestro/tests/
+            /tmp/maestro-*.log
+            /tmp/api.log
+            /tmp/expo-build.log
+          retention-days: 7
+          if-no-files-found: ignore
