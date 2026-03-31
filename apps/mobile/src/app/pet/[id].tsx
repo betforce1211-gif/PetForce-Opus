@@ -72,6 +72,18 @@ export default function PetDetailScreen() {
           </Card>
         )}
 
+        {/* Edit button */}
+        <Pressable onPress={() => router.push(`/pet/edit/${pet.id}`)}>
+          <Card
+            borderWidth={2}
+            borderColor="$petforcePrimary"
+            padding="$3"
+            alignItems="center"
+          >
+            <Text color="$petforcePrimary" fontWeight="bold" fontSize="$4">Edit Pet</Text>
+          </Card>
+        </Pressable>
+
         {/* Quick actions */}
         <XStack gap="$3">
           <Pressable style={{ flex: 1 }} onPress={() => router.push(`/feeding/index?petId=${pet.id}&householdId=${pet.householdId}`)}>

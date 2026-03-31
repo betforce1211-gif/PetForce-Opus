@@ -13,6 +13,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="pet/[id]" options={{ title: "Pet Details" }} />
+        <Stack.Screen name="pet/new" options={{ title: "Add Pet" }} />
+        <Stack.Screen name="pet/edit/[id]" options={{ title: "Edit Pet" }} />
         <Stack.Screen name="activity/new" options={{ title: "Log Activity" }} />
         <Stack.Screen name="feeding/index" options={{ title: "Feeding Schedules" }} />
         <Stack.Screen name="health/[petId]" options={{ title: "Health Records" }} />

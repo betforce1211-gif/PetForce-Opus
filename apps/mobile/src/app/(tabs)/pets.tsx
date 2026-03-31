@@ -1,7 +1,7 @@
 import { ScrollView, Pressable } from "react-native";
 import { YStack, Text, Spinner } from "tamagui";
 import { useRouter } from "expo-router";
-import { PetCard, EmptyState } from "@petforce/ui";
+import { PetCard, EmptyState, Card } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
 
@@ -35,6 +35,16 @@ export default function PetsScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
       <YStack padding="$4" gap="$3">
+        <Pressable onPress={() => router.push("/pet/new")}>
+          <Card
+            backgroundColor="$petforcePrimary"
+            padding="$3"
+            alignItems="center"
+          >
+            <Text color="white" fontWeight="bold" fontSize="$4">+ Add Pet</Text>
+          </Card>
+        </Pressable>
+
         {pets.length === 0 ? (
           <EmptyState icon="🐾" title="No pets yet" description="Add your first pet to get started!" />
         ) : (
