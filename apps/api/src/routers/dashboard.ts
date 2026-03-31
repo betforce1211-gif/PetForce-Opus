@@ -5,9 +5,15 @@ import { db, households, members, pets, activities, invitations, accessRequests 
 import { onboardHouseholdSchema } from "@petforce/core";
 import type { HouseholdSummary } from "@petforce/core";
 import { generateJoinCode } from "../utils/join-code.js";
+import { cache, cacheKey, CACHE_TTL, invalidateHousehold } from "../lib/cache.js";
 
 export const dashboardRouter = router({
   myHouseholds: protectedProcedure.query(async ({ ctx }) => {
+    // Cache: user's household summary list
+    const key = cacheKey.myHouseholds(ctx.userId);
+    const cached = await cache.get<HouseholdSummary[]>(key);
+    if (cached) return cached;
+
     const userMemberships = await db
       .select()
       .from(members)
@@ -50,6 +56,7 @@ export const dashboardRouter = router({
       });
     }
 
+    await cache.set(key, summaries, CACHE_TTL.myHouseholds);
     return summaries;
   }),
 
@@ -149,6 +156,9 @@ export const dashboardRouter = router({
         role: "owner",
         displayName: input.displayName,
       });
+
+      // Bust the user's household list cache
+      await cache.del(cacheKey.myHouseholds(ctx.userId));
 
       return household;
     }),

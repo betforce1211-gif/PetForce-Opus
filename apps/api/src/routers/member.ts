@@ -5,6 +5,7 @@ import { householdProcedure, router, requireAdmin } from "../trpc.js";
 import { db, members } from "@petforce/db";
 import { paginationInput } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
+import { invalidateMembers } from "../lib/cache.js";
 
 export const memberRouter = router({
   listByHousehold: householdProcedure
@@ -72,6 +73,7 @@ export const memberRouter = router({
         metadata: { role: input.role, targetUserId: input.userId },
       });
 
+      await invalidateMembers(ctx.householdId);
       return member;
     }),
 
@@ -106,6 +108,7 @@ export const memberRouter = router({
         metadata: { newRole: input.role },
       });
 
+      await invalidateMembers(ctx.householdId);
       return member;
     }),
 
@@ -165,6 +168,7 @@ export const memberRouter = router({
         performedBy: ctx.membership.id,
       });
 
+      await invalidateMembers(ctx.householdId);
       return { success: true };
     }),
 
@@ -207,6 +211,7 @@ export const memberRouter = router({
       performedBy: ctx.membership.id,
     });
 
+    await invalidateMembers(ctx.householdId);
     return { success: true };
   }),
 });

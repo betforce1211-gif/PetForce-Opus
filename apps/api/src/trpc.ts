@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { db, members } from "@petforce/db";
 import superjson from "superjson";
 import { telemetryMiddleware } from "./lib/trpc-telemetry.js";
+import { cache, cacheKey, CACHE_TTL } from "./lib/cache.js";
 
 export interface Context {
   userId: string | null;
@@ -33,15 +34,27 @@ export const protectedProcedure = instrumentedProcedure.use(({ ctx, next }) => {
 export const householdProcedure = protectedProcedure
   .input(z.object({ householdId: z.uuid() }))
   .use(async ({ ctx, input, next }) => {
-    const [membership] = await db
-      .select()
-      .from(members)
-      .where(
-        and(
-          eq(members.householdId, input.householdId),
-          eq(members.userId, ctx.userId)
-        )
-      );
+    const key = cacheKey.membership(input.householdId, ctx.userId);
+
+    // Try cache first — membership checks run on every household request
+    let membership = await cache.get<MembershipRecord>(key);
+
+    if (!membership) {
+      const [row] = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, input.householdId),
+            eq(members.userId, ctx.userId)
+          )
+        );
+      membership = row ?? null;
+
+      if (membership) {
+        await cache.set(key, membership, CACHE_TTL.membership);
+      }
+    }
 
     if (!membership) {
       throw new TRPCError({

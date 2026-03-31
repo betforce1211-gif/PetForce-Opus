@@ -23,6 +23,7 @@ import type {
 } from "@petforce/core";
 import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
 import { levelFromXp, buildLevelView, computeStreaks } from "../lib/gamification-helpers.js";
+import { cache, cacheKey, CACHE_TTL } from "../lib/cache.js";
 
 interface AccumulatorData {
   totalXp: number;
@@ -38,6 +39,11 @@ function emptyAccumulator(): AccumulatorData {
 
 export const gamificationRouter = router({
   getStats: householdProcedure.query(async ({ ctx }) => {
+    // Cache: gamification stats are expensive (5+ queries)
+    const key = cacheKey.gamificationStats(ctx.householdId);
+    const cached = await cache.get<GamificationFullStats>(key);
+    if (cached) return { ...cached, currentUserId: ctx.userId };
+
     const [householdMembers, householdRows, gameStats, petRows, petStatsRows] =
       await Promise.all([
         db.select().from(members).where(eq(members.householdId, ctx.householdId)),
@@ -119,6 +125,7 @@ export const gamificationRouter = router({
       pets: petViews,
       currentUserId: ctx.userId,
     };
+    await cache.set(key, result, CACHE_TTL.gamificationStats);
     return result;
   }),
 
@@ -357,6 +364,9 @@ export const gamificationRouter = router({
 
     // Execute all upserts in parallel
     await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts]);
+
+    // Bust gamification cache after recalculation
+    await cache.del(cacheKey.gamificationStats(ctx.householdId));
 
     return { success: true };
   }),

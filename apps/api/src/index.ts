@@ -114,7 +114,7 @@ app.use("/trpc/*", async (c) => {
 });
 
 app.get("/health", async (c) => {
-  const checks: Record<string, "ok" | "error"> = {};
+  const checks: Record<string, "ok" | "error" | "not_configured"> = {};
 
   // Database connectivity check
   try {
@@ -136,7 +136,25 @@ app.get("/health", async (c) => {
     checks.auth = "error";
   }
 
-  const allOk = Object.values(checks).every((v) => v === "ok");
+  // Redis cache check (optional — only if configured)
+  try {
+    const { cache } = await import("./lib/cache.js");
+    await cache.set("health:ping", "pong", 10);
+    const val = await cache.get<string>("health:ping");
+    checks.cache = val === "pong" ? "ok" : "error";
+  } catch {
+    checks.cache = "error";
+  }
+
+  // Job queue check (optional — only if REDIS_URL configured)
+  try {
+    const { isQueueAvailable } = await import("./lib/queue.js");
+    checks.queue = isQueueAvailable() ? "ok" : "not_configured";
+  } catch {
+    checks.queue = "error";
+  }
+
+  const allOk = Object.values(checks).every((v) => v === "ok" || v === "not_configured");
   const status = allOk ? "ok" : "degraded";
 
   // Always return 200 — this is a liveness endpoint used by CI and load
@@ -164,6 +182,14 @@ async function shutdown(signal: string) {
     logger.info("Database connection pool closed.");
   } catch (err) {
     logger.error({ err }, "Error closing database connection");
+  }
+
+  try {
+    const { closeQueues } = await import("./lib/queue.js");
+    await closeQueues();
+    logger.info("Job queues closed.");
+  } catch (err) {
+    logger.error({ err }, "Error closing job queues");
   }
 
   try {

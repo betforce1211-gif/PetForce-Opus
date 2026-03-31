@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, householdProcedure, router, verifyMembership, requireAdmin } from "../trpc.js";
 import { db, pets } from "@petforce/db";
 import { createPetSchema, updatePetSchema, paginationInput } from "@petforce/core";
+import { invalidatePets } from "../lib/cache.js";
 
 export const petRouter = router({
   listByHousehold: householdProcedure
@@ -44,6 +45,7 @@ export const petRouter = router({
         .insert(pets)
         .values({ ...input, householdId: ctx.householdId })
         .returning();
+      await invalidatePets(ctx.householdId);
       return pet;
     }),
 
@@ -64,6 +66,7 @@ export const petRouter = router({
         .set({ ...data, updatedAt: new Date() })
         .where(eq(pets.id, id))
         .returning();
+      await invalidatePets(pet.householdId);
       return updated;
     }),
 
@@ -79,6 +82,7 @@ export const petRouter = router({
       requireAdmin(membership);
 
       await db.delete(pets).where(eq(pets.id, input.id));
+      await invalidatePets(pet.householdId);
       return { success: true };
     }),
 });
