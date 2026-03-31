@@ -1,0 +1,44 @@
+# Pet CRUD: Add a new pet
+# Tags: pets
+# Prerequisite: Authenticated user with an existing household
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to pets section
+- tapOn: "Pets"
+
+# Tap add pet button
+- tapOn:
+    id: "add-pet-button"
+
+# Fill pet details
+- tapOn:
+    id: "pet-name-input"
+- inputText: "Luna"
+
+- tapOn:
+    id: "species-select"
+- tapOn: "Cat"
+
+- tapOn:
+    id: "breed-input"
+- inputText: "Siamese"
+
+- tapOn:
+    id: "weight-input"
+- inputText: "4.5"
+
+- tapOn:
+    id: "birthday-input"
+- inputText: "2023-06-15"
+
+# Save
+- tapOn: "Save"
+
+# Verify pet appears in list
+- assertVisible: "Luna"
+- assertVisible: "Siamese"
+- takeScreenshot: pets-add-success

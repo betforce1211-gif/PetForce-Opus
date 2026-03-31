@@ -1,0 +1,25 @@
+# Pet CRUD: Delete a pet
+# Tags: pets
+# Prerequisite: Authenticated user with at least one pet (not "Buddy" — use a disposable pet)
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to pets section
+- tapOn: "Pets"
+
+# Tap on disposable pet
+- tapOn: "Luna"
+
+# Tap delete
+- tapOn: "Delete"
+
+# Confirm deletion dialog
+- assertVisible: "Are you sure"
+- tapOn: "Delete"
+
+# Verify pet removed from list
+- assertNotVisible: "Luna"
+- takeScreenshot: pets-delete-success

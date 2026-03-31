@@ -1,0 +1,43 @@
+# Health: Add a vaccination record
+# Tags: health
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to pet's health records
+- tapOn: "Pets"
+- tapOn: "Buddy"
+- tapOn: "Health"
+
+# Add vaccination
+- tapOn:
+    id: "add-record-button"
+- tapOn: "Vaccination"
+
+# Fill details
+- tapOn:
+    id: "vaccine-name-input"
+- inputText: "Rabies"
+
+- tapOn:
+    id: "date-input"
+- inputText: "2026-03-15"
+
+- tapOn:
+    id: "vet-input"
+- inputText: "Dr. Smith"
+
+- tapOn:
+    id: "next-due-input"
+- inputText: "2027-03-15"
+
+# Save
+- tapOn: "Save"
+
+# Verify record appears
+- assertVisible: "Rabies"
+- assertVisible: "2026-03-15"
+- takeScreenshot: health-vaccination-added

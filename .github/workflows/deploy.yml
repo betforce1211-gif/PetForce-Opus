@@ -1,23 +1,58 @@
-name: Deploy
+name: Deploy to Production
 
 on:
-  push:
-    branches: [main]
+  # Manual trigger — promote staging to production
+  workflow_dispatch:
+    inputs:
+      skip_staging_check:
+        description: "Skip staging health check (emergency deploy)"
+        required: false
+        default: "false"
+        type: boolean
 
-# Prevent concurrent deploys to the same environment
+# Prevent concurrent production deploys
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
-  # Gate: only deploy if CI passes
-  ci:
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
+  # Verify staging is healthy before promoting
+  verify-staging:
+    runs-on: ubuntu-latest
+    if: inputs.skip_staging_check != true
+    steps:
+      - name: Check staging health
+        run: |
+          if curl -sf "${{ vars.API_STAGING_URL }}/health"; then
+            echo "Staging is healthy — safe to promote"
+          else
+            echo "::error::Staging is unhealthy. Fix staging first or use 'skip_staging_check' for emergencies."
+            exit 1
+          fi
+
+  notify-start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack (deploy starting)
+        run: |
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Production deploy starting\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*Production Deploy Starting*\\n*Triggered by:* ${{ github.actor }}\\n*Commit:* \`${GITHUB_SHA::8}\`\\n*Action:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Watch progress>\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed"
 
   deploy-api:
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [verify-staging, notify-start]
+    # Run even if verify-staging was skipped
+    if: always() && (needs.verify-staging.result == 'success' || needs.verify-staging.result == 'skipped')
     environment: production
     steps:
       - uses: actions/checkout@v6
@@ -40,17 +75,18 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NODE_OPTIONS: "--dns-result-order=ipv4first"
 
-      # Deploy API to Railway
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
       - name: Deploy to Railway
+        id: deploy
         run: railway up --service petforce-api --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       # Verify deployment health
       - name: Health check
+        id: health_check
         run: |
           sleep 15
           for i in 1 2 3 4 5; do
@@ -64,9 +100,48 @@ jobs:
           echo "Health check failed after 5 attempts"
           exit 1
 
+      # Rollback on health check failure
+      - name: Rollback deploy
+        if: failure() && steps.health_check.outcome == 'failure'
+        run: |
+          echo "::error::Health check failed — rolling back to previous deployment"
+          railway rollback --service petforce-api --yes 2>&1 || echo "::warning::Rollback command failed — manual intervention required"
+          sleep 15
+          if curl -sf "${{ vars.API_PRODUCTION_URL }}/health"; then
+            echo "Rollback health check passed"
+          else
+            echo "::error::Rollback health check also failed — manual intervention required"
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Notify Slack (API deploy result)
+        if: always()
+        run: |
+          if [ "${{ steps.health_check.outcome }}" = "success" ]; then
+            STATUS="Deployed"
+            EMOJI=":white_check_mark:"
+          else
+            STATUS="FAILED (rollback attempted)"
+            EMOJI=":rotating_light:"
+          fi
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Production API deploy: $STATUS\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"$EMOJI *Production Deploy* — API\\n*Status:* $STATUS\\n*Commit:* \`${GITHUB_SHA::8}\`\\n*URL:* ${{ vars.API_PRODUCTION_URL }}\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed"
+
   deploy-web:
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [verify-staging, notify-start]
+    if: always() && (needs.verify-staging.result == 'success' || needs.verify-staging.result == 'skipped')
     environment: production
     steps:
       - uses: actions/checkout@v6
@@ -79,18 +154,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Deploy web to Vercel via CLI (deploy from repo root for monorepo support)
       - name: Install Vercel CLI
         run: npm install -g vercel
 
       - name: Configure Vercel project
         run: |
-          # Ensure root directory is set for monorepo
           curl -sf -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID" \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"rootDirectory":"apps/web"}'
-          # Link project at repo root
           mkdir -p .vercel
           echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
         env:
@@ -99,7 +171,33 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Deploy to Vercel
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        id: vercel_deploy
+        run: |
+          URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production_url=$URL" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Notify Slack (Web deploy result)
+        if: always()
+        run: |
+          if [ "${{ steps.vercel_deploy.outcome }}" = "success" ]; then
+            STATUS="Deployed"
+            EMOJI=":white_check_mark:"
+          else
+            STATUS="FAILED"
+            EMOJI=":rotating_light:"
+          fi
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Production Web deploy: $STATUS\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"$EMOJI *Production Deploy* — Web\\n*Status:* $STATUS\\n*URL:* ${{ steps.vercel_deploy.outputs.production_url }}\\n*Commit:* \`${GITHUB_SHA::8}\`\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed"

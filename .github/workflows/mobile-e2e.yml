@@ -2,15 +2,19 @@ name: Mobile E2E Tests (Maestro)
 
 on:
   push:
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - "tests/mobile/**"
-      - "packages/core/**"
       - "packages/ui/**"
+      - "packages/core/**"
   pull_request:
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - "tests/mobile/**"
+      - "packages/ui/**"
+      - "packages/core/**"
   schedule:
     - cron: "0 6 * * 1" # Weekly on Monday at 06:00 UTC
   workflow_dispatch:
@@ -24,7 +28,37 @@ jobs:
     name: Maestro E2E (iOS Simulator)
     runs-on: macos-14
     timeout-minutes: 45
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.labels.*.name, 'run-mobile-e2e') ||
+        contains(github.event.pull_request.labels.*.name, 'mobile')
+      ))
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: petforce_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
     env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petforce_test
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      CLERK_JWT_KEY: ${{ secrets.CLERK_JWT_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      CLERK_TEST_CODE: "424242"
       EXPO_NO_TELEMETRY: 1
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +78,26 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run database migrations
+        run: pnpm --filter=@petforce/db db:migrate
+
+      - name: Start API server
+        run: |
+          cd apps/api
+          node dist/index.js > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          curl -f http://localhost:3001/health || { echo "API failed to start:"; cat /tmp/api.log; exit 1; }
+
       - name: Build Expo app for iOS simulator
         working-directory: apps/mobile
         run: |
@@ -61,8 +115,10 @@ jobs:
           APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -path "*Release*" | head -1)
           xcrun simctl install booted "$APP_PATH"
 
-      - name: Run smoke tests
-        run: maestro test --tags smoke tests/mobile/
+      - name: Run Maestro smoke tests
+        run: |
+          cd tests/mobile
+          maestro test --tags smoke flows/ 2>&1 | tee /tmp/maestro-smoke.log
 
       - name: Run full E2E suite
         if: github.event_name != 'push' || github.ref == 'refs/heads/main'
@@ -72,15 +128,21 @@ jobs:
           TEST_HOUSEHOLD: "CI Test Household"
           TEST_PET_NAME: "CI Test Dog"
           API_URL: ${{ secrets.API_URL || 'http://localhost:3100' }}
-        run: maestro test tests/mobile/
+        run: |
+          cd tests/mobile
+          maestro test flows/ 2>&1 | tee /tmp/maestro-full.log
 
-      - name: Upload screenshots
+      - name: Upload Maestro results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: maestro-screenshots
-          path: ~/.maestro/tests/
+          path: |
+            ~/.maestro/tests/
+            /tmp/maestro-*.log
+            /tmp/api.log
           retention-days: 14
+          if-no-files-found: ignore
 
   maestro-android:
     name: Maestro E2E (Android Emulator)

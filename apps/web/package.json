@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",
+    "@petforce/api": "workspace:*",
     "@petforce/core": "workspace:*",
     "@petforce/ui": "workspace:*",
     "@tamagui/next-plugin": "^1.144.4",

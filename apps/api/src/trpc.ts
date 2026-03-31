@@ -3,6 +3,8 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { db, members } from "@petforce/db";
 import superjson from "superjson";
+import { telemetryMiddleware } from "./lib/trpc-telemetry.js";
+import { cache, cacheKey, CACHE_TTL } from "./lib/cache.js";
 
 export interface Context {
   userId: string | null;
@@ -16,8 +18,13 @@ const t = initTRPC.context<Context>().create({
 });
 
 export const router = t.router;
-export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+
+// Base procedure with telemetry — all procedures inherit tracing + metrics.
+// @ts-expect-error — telemetryMiddleware uses a loose opts type for portability
+const instrumentedProcedure = t.procedure.use(telemetryMiddleware);
+
+export const publicProcedure = instrumentedProcedure;
+export const protectedProcedure = instrumentedProcedure.use(({ ctx, next }) => {
   if (!ctx.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -27,15 +34,27 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 export const householdProcedure = protectedProcedure
   .input(z.object({ householdId: z.uuid() }))
   .use(async ({ ctx, input, next }) => {
-    const [membership] = await db
-      .select()
-      .from(members)
-      .where(
-        and(
-          eq(members.householdId, input.householdId),
-          eq(members.userId, ctx.userId)
-        )
-      );
+    const key = cacheKey.membership(input.householdId, ctx.userId);
+
+    // Try cache first — membership checks run on every household request
+    let membership = await cache.get<MembershipRecord>(key);
+
+    if (!membership) {
+      const [row] = await db
+        .select()
+        .from(members)
+        .where(
+          and(
+            eq(members.householdId, input.householdId),
+            eq(members.userId, ctx.userId)
+          )
+        );
+      membership = row ?? null;
+
+      if (membership) {
+        await cache.set(key, membership, CACHE_TTL.membership);
+      }
+    }
 
     if (!membership) {
       throw new TRPCError({

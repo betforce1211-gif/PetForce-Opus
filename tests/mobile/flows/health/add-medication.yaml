@@ -1,0 +1,43 @@
+# Health: Add a medication record
+# Tags: health
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to pet's health records
+- tapOn: "Pets"
+- tapOn: "Buddy"
+- tapOn: "Health"
+
+# Add medication
+- tapOn:
+    id: "add-record-button"
+- tapOn: "Medication"
+
+# Fill details
+- tapOn:
+    id: "medication-name-input"
+- inputText: "Heartgard"
+
+- tapOn:
+    id: "dosage-input"
+- inputText: "1 chewable tablet"
+
+- tapOn:
+    id: "frequency-select"
+- tapOn: "Monthly"
+
+- tapOn:
+    id: "start-date-input"
+- inputText: "2026-03-01"
+
+# Save
+- tapOn: "Save"
+
+# Verify record appears
+- assertVisible: "Heartgard"
+- assertVisible: "Monthly"
+- takeScreenshot: health-medication-added

@@ -1,0 +1,40 @@
+# Activity: Log a walk
+# Tags: activities
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to activities
+- tapOn: "Activities"
+
+# Start new activity
+- tapOn:
+    id: "log-activity-button"
+
+# Select activity type
+- tapOn: "Walk"
+
+# Select pet
+- tapOn: "Buddy"
+
+# Add duration
+- tapOn:
+    id: "duration-input"
+- inputText: "30"
+
+# Add notes
+- tapOn:
+    id: "notes-input"
+- inputText: "Morning walk around the park"
+
+# Save
+- tapOn: "Save"
+
+# Verify activity appears in feed
+- assertVisible: "Walk"
+- assertVisible: "30 min"
+- assertVisible: "Buddy"
+- takeScreenshot: activities-walk-logged

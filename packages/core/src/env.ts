@@ -69,6 +69,22 @@ export const rateLimitEnvSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 });
 
+/** Background job queue env vars (optional — BullMQ requires a standard Redis connection). */
+export const queueEnvSchema = z.object({
+  /** Standard Redis URL for BullMQ (e.g. redis://localhost:6379 or Upstash Redis endpoint). */
+  REDIS_URL: z.string().min(1).optional(),
+});
+
+/** Notification env vars (optional — email and push degrade gracefully without them). */
+export const notificationEnvSchema = z.object({
+  /** Resend API key for transactional email delivery. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Resend "from" address (e.g. "PetForce <notifications@petforce.app>"). */
+  RESEND_FROM_EMAIL: z.string().min(1).optional(),
+  /** Expo push notification access token (optional — required for push delivery). */
+  EXPO_PUSH_ACCESS_TOKEN: z.string().min(1).optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Composite schema for the API server (validates everything at once)
 // ---------------------------------------------------------------------------
@@ -79,6 +95,8 @@ export const apiEnvSchema = dbEnvSchema
     ...serverEnvSchema.shape,
     ...corsEnvSchema.shape,
     ...rateLimitEnvSchema.shape,
+    ...queueEnvSchema.shape,
+    ...notificationEnvSchema.shape,
     // Clerk fields need special handling because of the refine()
     CLERK_SECRET_KEY: z.string().min(1).optional(),
     CLERK_JWT_KEY: z.string().min(1).optional(),

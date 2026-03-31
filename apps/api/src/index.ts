@@ -1,3 +1,7 @@
+// Initialize OpenTelemetry before any other imports that might be instrumented.
+import { initTelemetry, shutdownTelemetry } from "./lib/telemetry.js";
+initTelemetry();
+
 import { env } from "./lib/env.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -44,15 +48,38 @@ app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);
 });
 
-// --- Request logging ---
+// --- Request logging + HTTP-level tracing ---
+import { tracer } from "./lib/telemetry.js";
+import { SpanStatusCode } from "@opentelemetry/api";
+
 app.use("/*", async (c, next) => {
   const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  logger.info(
-    { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms },
-    "request"
-  );
+
+  await tracer.startActiveSpan(`HTTP ${c.req.method} ${c.req.path}`, async (span) => {
+    span.setAttribute("http.method", c.req.method);
+    span.setAttribute("http.target", c.req.path);
+
+    try {
+      await next();
+    } finally {
+      const ms = Date.now() - start;
+
+      span.setAttribute("http.status_code", c.res.status);
+      span.setAttribute("http.response_time_ms", ms);
+
+      if (c.res.status >= 500) {
+        span.setStatus({ code: SpanStatusCode.ERROR });
+      } else {
+        span.setStatus({ code: SpanStatusCode.OK });
+      }
+      span.end();
+
+      logger.info(
+        { method: c.req.method, path: c.req.path, status: c.res.status, responseTime: ms },
+        "request"
+      );
+    }
+  });
 });
 
 // In production, NEXT_PUBLIC_WEB_URL is required by the env schema — no
@@ -87,7 +114,7 @@ app.use("/trpc/*", async (c) => {
 });
 
 app.get("/health", async (c) => {
-  const checks: Record<string, "ok" | "error"> = {};
+  const checks: Record<string, "ok" | "error" | "not_configured"> = {};
 
   // Database connectivity check
   try {
@@ -109,7 +136,25 @@ app.get("/health", async (c) => {
     checks.auth = "error";
   }
 
-  const allOk = Object.values(checks).every((v) => v === "ok");
+  // Redis cache check (optional — only if configured)
+  try {
+    const { cache } = await import("./lib/cache.js");
+    await cache.set("health:ping", "pong", 10);
+    const val = await cache.get<string>("health:ping");
+    checks.cache = val === "pong" ? "ok" : "error";
+  } catch {
+    checks.cache = "error";
+  }
+
+  // Job queue check (optional — only if REDIS_URL configured)
+  try {
+    const { isQueueAvailable } = await import("./lib/queue.js");
+    checks.queue = isQueueAvailable() ? "ok" : "not_configured";
+  } catch {
+    checks.queue = "error";
+  }
+
+  const allOk = Object.values(checks).every((v) => v === "ok" || v === "not_configured");
   const status = allOk ? "ok" : "degraded";
 
   // Always return 200 — this is a liveness endpoint used by CI and load
@@ -137,6 +182,21 @@ async function shutdown(signal: string) {
     logger.info("Database connection pool closed.");
   } catch (err) {
     logger.error({ err }, "Error closing database connection");
+  }
+
+  try {
+    const { closeQueues } = await import("./lib/queue.js");
+    await closeQueues();
+    logger.info("Job queues closed.");
+  } catch (err) {
+    logger.error({ err }, "Error closing job queues");
+  }
+
+  try {
+    await shutdownTelemetry();
+    logger.info("Telemetry shut down — pending spans/metrics flushed.");
+  } catch (err) {
+    logger.error({ err }, "Error shutting down telemetry");
   }
 
   process.exit(0);

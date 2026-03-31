@@ -5,6 +5,7 @@ import { db, households, members } from "@petforce/db";
 import { createHouseholdSchema, updateHouseholdSchema } from "@petforce/core";
 import { generateJoinCode } from "../utils/join-code.js";
 import { logActivity } from "../lib/audit.js";
+import { invalidateHousehold, cache, cacheKey } from "../lib/cache.js";
 
 export const householdRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -70,6 +71,7 @@ export const householdRouter = router({
         displayName: "Owner",
       });
 
+      await cache.del(cacheKey.myHouseholds(ctx.userId));
       return household;
     }),
 
@@ -107,6 +109,7 @@ export const householdRouter = router({
         metadata: { changedFields: Object.keys(input) },
       });
 
+      await invalidateHousehold(ctx.householdId);
       return household;
     }),
 
@@ -114,6 +117,7 @@ export const householdRouter = router({
     requireOwner(ctx.membership);
 
     await db.delete(households).where(eq(households.id, ctx.householdId));
+    await invalidateHousehold(ctx.householdId);
     return { success: true };
   }),
 

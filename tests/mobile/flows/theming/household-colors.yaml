@@ -1,0 +1,34 @@
+# Theming: Verify household colors apply
+# Tags: theming
+# Prerequisite: Authenticated user with household that has custom theme colors
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to settings to change theme
+- tapOn: "Settings"
+- tapOn: "Household Theme"
+
+# Change primary color
+- tapOn:
+    id: "primary-color-picker"
+- tapOn: "Emerald"
+
+- tapOn: "Save"
+
+# Navigate back to home and verify theme applied
+- tapOn: "Home"
+
+# Take screenshot to visually verify theme colors
+- takeScreenshot: theming-emerald-applied
+
+# Change back to default
+- tapOn: "Settings"
+- tapOn: "Household Theme"
+- tapOn:
+    id: "primary-color-picker"
+- tapOn: "Indigo"
+- tapOn: "Save"
+- takeScreenshot: theming-indigo-restored

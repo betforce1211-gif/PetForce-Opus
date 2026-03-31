@@ -10,6 +10,7 @@ Expo React Native app (iOS + Android) using Expo Router for file-based navigatio
 - **Navigation:** Expo Router (file-based)
 - **UI:** Tamagui components from `@petforce/ui`
 - **Data fetching:** tRPC client via `@trpc/react-query`
+- **Auth:** `@clerk/clerk-expo` with `expo-secure-store` token cache
 - **Types/validation:** Consumed from `@petforce/core`
 
 ## Commands
@@ -24,11 +25,34 @@ Builds are handled via EAS (Expo Application Services).
 
 ```
 src/
-├── app/              # Expo Router screens
-│   ├── _layout.tsx   # Root layout with navigation + TamaguiProvider
-│   └── index.tsx     # Home screen
-├── lib/              # Mobile-specific utilities
-└── components/       # Mobile-specific components
+├── app/
+│   ├── _layout.tsx           # Root layout (Stack nav + providers)
+│   ├── (tabs)/
+│   │   ├── _layout.tsx       # Tab navigator (Home, Pets, Activity, Settings)
+│   │   ├── index.tsx         # Home/Dashboard
+│   │   ├── pets.tsx          # Pet list
+│   │   ├── activity.tsx      # Activity feed
+│   │   └── settings.tsx      # Household settings + members
+│   ├── pet/[id].tsx          # Pet detail
+│   ├── activity/new.tsx      # Log new activity
+│   ├── feeding/index.tsx     # Feeding schedules + daily status
+│   ├── feeding/new.tsx       # Add feeding schedule form
+│   ├── health/[petId].tsx    # Health records per pet
+│   ├── health/new.tsx        # Add health record form
+│   ├── health/vaccinations.tsx # Vaccination tracker with overdue alerts
+│   ├── medication/[petId].tsx # Medications per pet
+│   ├── medication/new.tsx    # Add medication form
+│   ├── medication/daily.tsx  # Daily medication status + logging
+│   ├── auth/sign-in.tsx      # Sign in (Clerk useSignIn)
+│   ├── auth/sign-up.tsx      # Sign up (Clerk useSignUp)
+│   ├── onboard.tsx           # Create household
+│   └── join.tsx              # Join household via code
+├── lib/
+│   ├── trpc.ts               # tRPC client setup
+│   ├── auth.ts               # Auth hook (wraps @clerk/clerk-expo useAuth)
+│   ├── household.ts          # Household selection context
+│   └── providers.tsx         # Combined providers wrapper
+└── components/               # Mobile-specific components
 ```
 
 ## Conventions

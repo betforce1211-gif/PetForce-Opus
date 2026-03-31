@@ -1,0 +1,36 @@
+# Pet CRUD: Edit an existing pet
+# Tags: pets
+# Prerequisite: Authenticated user with at least one pet in household
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to pets section
+- tapOn: "Pets"
+
+# Tap on existing pet
+- tapOn: "Buddy"
+
+# Tap edit
+- tapOn: "Edit"
+
+# Update weight
+- tapOn:
+    id: "weight-input"
+- clearText
+- inputText: "32.5"
+
+# Update notes
+- tapOn:
+    id: "notes-input"
+- inputText: "Loves belly rubs, allergic to chicken"
+
+# Save
+- tapOn: "Save"
+
+# Verify updates persisted
+- assertVisible: "32.5"
+- assertVisible: "Loves belly rubs"
+- takeScreenshot: pets-edit-success

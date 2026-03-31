@@ -1,0 +1,12 @@
+# Smoke test — verifies the app launches and home screen renders
+# Tags: smoke
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+- assertVisible: "PetForce"
+- assertVisible: "Your household pet care hub"
+
+- takeScreenshot: smoke-home-screen

@@ -22,6 +22,7 @@ import type {
   FeedingScheduleStatus,
 } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
+import { invalidateActivities } from "../lib/cache.js";
 
 export const feedingRouter = router({
   listSchedules: householdProcedure
@@ -276,6 +277,7 @@ export const feedingRouter = router({
         })
         .returning();
 
+      await invalidateActivities(ctx.householdId);
       return log;
     }),
 
@@ -290,6 +292,7 @@ export const feedingRouter = router({
             eq(feedingLogs.householdId, ctx.householdId)
           )
         );
+      await invalidateActivities(ctx.householdId);
       return { success: true };
     }),
 });

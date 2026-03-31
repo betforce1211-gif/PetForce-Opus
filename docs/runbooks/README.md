@@ -15,6 +15,7 @@ Operational procedures for common tasks and incident response.
 - [Health Checks](#health-checks)
 - [Troubleshooting](#troubleshooting)
 - [Incident Response](#incident-response)
+- [Disaster Recovery](disaster-recovery.md) — PITR, backups, restore procedures
 
 ---
 

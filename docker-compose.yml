@@ -17,6 +17,18 @@ services:
       timeout: 3s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   api:
     build:
       context: .
@@ -25,6 +37,7 @@ services:
       - "3001:3001"
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/petforce
+      REDIS_URL: redis://redis:6379
       API_PORT: "3001"
       NODE_ENV: production
     env_file:
@@ -32,6 +45,26 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["node", "apps/api/dist/worker.js"]
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/petforce
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   pgdata:
+  redisdata:

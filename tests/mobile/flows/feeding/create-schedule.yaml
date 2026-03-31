@@ -1,0 +1,47 @@
+# Feeding: Create a feeding schedule
+# Tags: feeding
+# Prerequisite: Authenticated user with at least one pet
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Navigate to feeding schedules
+- tapOn: "Feeding"
+
+# Create new schedule
+- tapOn:
+    id: "add-schedule-button"
+
+# Select pet
+- tapOn: "Buddy"
+
+# Set meal name
+- tapOn:
+    id: "meal-name-input"
+- inputText: "Breakfast"
+
+# Set time
+- tapOn:
+    id: "time-picker"
+- inputText: "08:00"
+
+# Set frequency
+- tapOn:
+    id: "frequency-select"
+- tapOn: "Daily"
+
+# Set food details
+- tapOn:
+    id: "food-details-input"
+- inputText: "2 cups dry food"
+
+# Save
+- tapOn: "Save"
+
+# Verify schedule appears
+- assertVisible: "Breakfast"
+- assertVisible: "08:00"
+- assertVisible: "Daily"
+- takeScreenshot: feeding-schedule-created

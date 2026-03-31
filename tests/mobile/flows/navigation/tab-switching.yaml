@@ -1,0 +1,36 @@
+# Navigation: Tab switching
+# Tags: navigation
+# Prerequisite: Authenticated user with household
+appId: com.petforce.app
+
+---
+
+- launchApp
+
+# Verify home tab is active
+- assertVisible: "My Household"
+- takeScreenshot: nav-home-tab
+
+# Switch to Pets tab
+- tapOn: "Pets"
+- assertVisible: "My Pets"
+- takeScreenshot: nav-pets-tab
+
+# Switch to Activities tab
+- tapOn: "Activities"
+- assertVisible: "Recent Activities"
+- takeScreenshot: nav-activities-tab
+
+# Switch to Feeding tab
+- tapOn: "Feeding"
+- assertVisible: "Feeding Schedules"
+- takeScreenshot: nav-feeding-tab
+
+# Switch to Settings tab
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- takeScreenshot: nav-settings-tab
+
+# Switch back to Home
+- tapOn: "Home"
+- assertVisible: "My Household"

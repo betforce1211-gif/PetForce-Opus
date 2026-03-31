@@ -1,0 +1,168 @@
+import { ScrollView, Alert, Pressable, Linking } from "react-native";
+import { YStack, XStack, Text, Spinner, Button } from "tamagui";
+import { useState } from "react";
+import { useClerk } from "@clerk/clerk-expo";
+import { useRouter } from "expo-router";
+import { Card, MemberRow, EmptyState } from "@petforce/ui";
+import { trpc } from "../../lib/trpc";
+import { useHousehold } from "../../lib/household";
+import { usePushNotifications } from "../../lib/notifications";
+import { MEMBER_ROLE_LABELS } from "@petforce/core";
+
+export default function SettingsScreen() {
+  const { householdId } = useHousehold();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const { expoPushToken, permissionStatus, register, unregister } = usePushNotifications();
+
+  const dashboardQuery = trpc.dashboard.get.useQuery(
+    { householdId: householdId! },
+    { enabled: !!householdId }
+  );
+
+  if (!householdId) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
+        <EmptyState icon="🏠" title="No Household" description="Select or create a household first." />
+      </YStack>
+    );
+  }
+
+  if (dashboardQuery.isLoading) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center">
+        <Spinner size="large" color="$petforcePrimary" />
+      </YStack>
+    );
+  }
+
+  const { household, members } = dashboardQuery.data ?? { household: null, members: [] };
+
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
+      <YStack padding="$4" gap="$4">
+        {/* Household info */}
+        <Card padding="$4">
+          <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Household</Text>
+          <YStack gap="$2">
+            <Text color="$petforceTextMuted">Name</Text>
+            <Text fontSize="$4">{household?.name ?? "—"}</Text>
+          </YStack>
+          {household?.joinCode && (
+            <YStack gap="$2" marginTop="$3">
+              <Text color="$petforceTextMuted">Join Code</Text>
+              <Text fontSize="$4" fontFamily="$mono">{household.joinCode}</Text>
+            </YStack>
+          )}
+        </Card>
+
+        {/* Theme */}
+        <Card padding="$4">
+          <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Theme</Text>
+          <XStack gap="$3" alignItems="center">
+            <YStack
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor={household?.theme?.primaryColor ?? "#6366F1"}
+            />
+            <YStack
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor={household?.theme?.secondaryColor ?? "#EC4899"}
+            />
+            <Text color="$petforceTextMuted">Primary & Secondary</Text>
+          </XStack>
+        </Card>
+
+        {/* Members */}
+        <Card padding="$4">
+          <Text fontSize="$5" fontWeight="bold" marginBottom="$2">
+            Members ({members.length})
+          </Text>
+          <YStack gap="$2">
+            {members.map((member) => (
+              <MemberRow
+                key={member.id}
+                displayName={member.displayName ?? "Unknown"}
+                role={member.role}
+              />
+            ))}
+          </YStack>
+        </Card>
+
+        {/* Pending invites/requests */}
+        {dashboardQuery.data && (
+          (dashboardQuery.data.pendingInviteCount > 0 || dashboardQuery.data.pendingRequestCount > 0) && (
+            <Card padding="$4">
+              <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Pending</Text>
+              {dashboardQuery.data.pendingInviteCount > 0 && (
+                <Text color="$petforceTextMuted">
+                  {dashboardQuery.data.pendingInviteCount} pending invite(s)
+                </Text>
+              )}
+              {dashboardQuery.data.pendingRequestCount > 0 && (
+                <Text color="$petforceTextMuted">
+                  {dashboardQuery.data.pendingRequestCount} pending request(s)
+                </Text>
+              )}
+            </Card>
+          )
+        )}
+
+        {/* Notifications */}
+        <Card padding="$4">
+          <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Notifications</Text>
+          <YStack gap="$2">
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text color="$petforceTextMuted">Push Notifications</Text>
+              <Text fontSize="$3" color={expoPushToken ? "#22C55E" : "$petforceTextMuted"}>
+                {expoPushToken ? "Enabled" : "Disabled"}
+              </Text>
+            </XStack>
+            {permissionStatus === "denied" ? (
+              <Button
+                size="$3"
+                theme="active"
+                onPress={() => Linking.openSettings()}
+              >
+                Open Settings to Enable
+              </Button>
+            ) : !expoPushToken ? (
+              <Button
+                size="$3"
+                theme="active"
+                onPress={register}
+              >
+                Enable Push Notifications
+              </Button>
+            ) : null}
+          </YStack>
+        </Card>
+
+        {/* Sign out */}
+        <Pressable
+          onPress={() => {
+            Alert.alert("Sign Out", "Are you sure?", [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Sign Out",
+                style: "destructive",
+                onPress: async () => {
+                  await unregister();
+                  await signOut();
+                  router.replace("/auth/sign-in");
+                },
+              },
+            ]);
+          }}
+        >
+          <Card padding="$4" alignItems="center">
+            <Text color="red" fontWeight="bold" fontSize="$4">Sign Out</Text>
+          </Card>
+        </Pressable>
+      </YStack>
+    </ScrollView>
+  );
+}

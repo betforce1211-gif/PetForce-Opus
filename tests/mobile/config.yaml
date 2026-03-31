@@ -1,10 +1,16 @@
-# Maestro E2E test configuration for PetForce mobile app
-# Requires: Maestro CLI (https://maestro.mobile.dev)
+# Maestro E2E Test Configuration for PetForce Mobile
+# https://maestro.mobile.dev/
 # Usage: maestro test tests/mobile/
 
+# Flow execution settings
+flows:
+  - flows/
+
+# App configuration
 appId: com.petforce.app
 name: PetForce Mobile E2E
 
+# Tags for selective test execution
 tags:
   smoke: Quick sanity check (app launch + home screen)
   auth: Authentication flows (sign-in, sign-up, onboard)
@@ -16,9 +22,13 @@ tags:
   theming: Household theme application
   notifications: Push notification registration
 
+# Environment variables available to all flows
 env:
+  APP_ID: com.petforce.app
+  TEST_USER_EMAIL: ${TEST_USER_EMAIL}
+  TEST_USER_PASSWORD: ${TEST_USER_PASSWORD}
+  API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
   TEST_EMAIL: "qa+maestro@petforce.test"
   TEST_PASSWORD: "TestPassword123!"
   TEST_HOUSEHOLD: "QA Test Household"
   TEST_PET_NAME: "Maestro Test Dog"
-  API_URL: "http://localhost:3100"
