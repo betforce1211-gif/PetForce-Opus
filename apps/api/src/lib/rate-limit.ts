@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import type { Context as HonoContext } from "hono";
+import { createMiddleware } from "hono/factory";
 import { env } from "./env.js";
 
 function getClientIp(c: HonoContext): string {
@@ -106,12 +107,19 @@ const rateLimiter: RateLimiterFn =
     ? createRedisLimiter()
     : createInMemoryLimiter();
 
-export async function rateLimitMiddleware(c: HonoContext, next: () => Promise<void>) {
-  const ip = getClientIp(c);
+export const rateLimitMiddleware = createMiddleware<{
+  Variables: { userId: string };
+}>(async (c, next) => {
   const category = getRouteCategory(c.req.path);
-  const result = await rateLimiter(ip, category);
 
-  // Set rate limit headers
+  // Prefer userId for rate limiting (set by auth middleware upstream).
+  // Falls back to client IP for unauthenticated requests.
+  const userId = c.get("userId");
+  const identifier = userId ? `user:${userId}` : `ip:${getClientIp(c)}`;
+
+  const result = await rateLimiter(identifier, category);
+
+  // Set rate limit headers (RFC 6585 / draft-ietf-httpapi-ratelimit-headers)
   c.header("X-RateLimit-Limit", String(result.limit));
   c.header("X-RateLimit-Remaining", String(result.remaining));
   c.header("X-RateLimit-Reset", String(result.reset));
@@ -121,4 +129,4 @@ export async function rateLimitMiddleware(c: HonoContext, next: () => Promise<vo
   }
 
   await next();
-}
+});
