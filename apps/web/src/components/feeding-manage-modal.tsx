@@ -6,6 +6,8 @@ import { Modal } from "./modal";
 import {
   FEEDING_LABEL_SUGGESTIONS,
   FEEDING_TIME_PRESETS,
+  FEEDING_SCHEDULE_TEMPLATES,
+  PET_SPECIES_LABELS,
 } from "@petforce/core";
 
 interface FeedingManageModalProps {
@@ -66,10 +68,33 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
   // Auto-select first pet if only one
   const effectivePetId = petId || (pets.length === 1 ? pets[0].id : "");
 
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+
   const handleSuggestion = (suggestion: string) => {
     setLabel(suggestion);
     const preset = FEEDING_TIME_PRESETS[suggestion];
     if (preset) setTime(preset);
+  };
+
+  const selectedPet = pets.find((p) => p.id === effectivePetId);
+  const petSpecies = selectedPet?.species ?? "other";
+  const templates = FEEDING_SCHEDULE_TEMPLATES[petSpecies] ?? FEEDING_SCHEDULE_TEMPLATES["other"];
+  const petHasSchedules = schedules.some((s) => s.petId === effectivePetId);
+
+  const handleApplyTemplate = async () => {
+    if (!effectivePetId || !templates.length) return;
+    setApplyingTemplate(true);
+    for (const t of templates) {
+      await createMut.mutateAsync({
+        householdId,
+        petId: effectivePetId,
+        label: t.label,
+        time: t.time,
+        foodType: t.foodType || null,
+        amount: t.amount || null,
+      });
+    }
+    setApplyingTemplate(false);
   };
 
   const handleAdd = (e: React.FormEvent) => {
@@ -126,6 +151,30 @@ export function FeedingManageModal({ householdId, onClose }: FeedingManageModalP
       {/* Add new schedule form */}
       <fieldset style={fieldsetStyle}>
         <legend style={legendStyle}>Add New Schedule</legend>
+
+        {/* Template banner — shown when pet selected and no schedules yet */}
+        {effectivePetId && !petHasSchedules && (
+          <div style={templateBanner}>
+            <span style={templateBannerText}>
+              Use {PET_SPECIES_LABELS[petSpecies] ?? petSpecies} template?
+            </span>
+            <div style={templatePreview}>
+              {templates.map((t, i) => (
+                <span key={i} style={templateChip}>
+                  {t.label} {t.time}{t.foodType ? ` \u00B7 ${t.foodType}` : ""}
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleApplyTemplate}
+              disabled={applyingTemplate}
+              style={templateApplyBtn(applyingTemplate)}
+            >
+              {applyingTemplate ? "Applying..." : "Apply Template"}
+            </button>
+          </div>
+        )}
 
         {/* Suggestion chips */}
         <div style={chipRow}>
@@ -454,3 +503,48 @@ const errorText: React.CSSProperties = {
   fontSize: "0.825rem",
   marginTop: "0.5rem",
 };
+
+const templateBanner: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  padding: "0.75rem",
+  marginBottom: "0.75rem",
+  borderRadius: "0.5rem",
+  background: "rgba(99, 102, 241, 0.06)",
+  border: "1px solid rgba(99, 102, 241, 0.15)",
+};
+
+const templateBannerText: React.CSSProperties = {
+  fontWeight: 600,
+  fontSize: "0.85rem",
+  color: "var(--pf-primary)",
+};
+
+const templatePreview: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "0.35rem",
+};
+
+const templateChip: React.CSSProperties = {
+  padding: "0.2rem 0.5rem",
+  borderRadius: "999px",
+  fontSize: "0.7rem",
+  fontWeight: 500,
+  background: "rgba(99, 102, 241, 0.1)",
+  color: "var(--pf-text-muted)",
+};
+
+const templateApplyBtn = (loading: boolean): React.CSSProperties => ({
+  alignSelf: "flex-start",
+  padding: "0.35rem 0.9rem",
+  borderRadius: "0.5rem",
+  background: "linear-gradient(135deg, #6366F1 0%, #7C3AED 100%)",
+  color: "white",
+  fontWeight: 600,
+  fontSize: "0.8rem",
+  border: "none",
+  cursor: loading ? "not-allowed" : "pointer",
+  opacity: loading ? 0.7 : 1,
+});
