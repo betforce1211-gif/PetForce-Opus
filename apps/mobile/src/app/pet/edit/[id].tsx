@@ -3,7 +3,7 @@ import { YStack, XStack, Text, Input, TextArea, Spinner } from "tamagui";
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card, EmptyState } from "@petforce/ui";
-import { trpc } from "../../../lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { PET_SPECIES_LABELS, PET_SEX_LABELS } from "@petforce/core";
 import type { PetSpecies, PetSex } from "@petforce/core";
 
