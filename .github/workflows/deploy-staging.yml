@@ -1,0 +1,159 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+
+# Prevent concurrent staging deploys
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  # Gate: only deploy if CI passes
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  deploy-api-staging:
+    runs-on: ubuntu-latest
+    needs: ci
+    environment: staging
+    outputs:
+      deploy_id: ${{ steps.deploy.outputs.deploy_id }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build core package
+        run: pnpm build --filter=@petforce/core
+
+      # Run database migrations on staging DB
+      - name: Run database migrations
+        run: pnpm --filter=@petforce/db db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (staging)
+        id: deploy
+        run: |
+          OUTPUT=$(railway up --service petforce-api-staging --detach 2>&1)
+          echo "$OUTPUT"
+          DEPLOY_ID=$(echo "$OUTPUT" | grep -oP 'deployment-[a-f0-9-]+' | head -1 || echo "unknown")
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+
+      # Verify staging deployment health
+      - name: Health check (staging)
+        id: health
+        run: |
+          sleep 15
+          for i in 1 2 3 4 5; do
+            if curl -sf "${{ vars.API_STAGING_URL }}/health"; then
+              echo "Staging health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Staging health check failed after 5 attempts"
+          exit 1
+
+      - name: Notify Slack (staging deploy success)
+        if: success()
+        run: |
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Staging deploy succeeded\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*Staging Deploy* — API\\n*Status:* Deployed\\n*Commit:* \`${GITHUB_SHA::8}\`\\n*Branch:* \`main\`\\n*URL:* ${{ vars.API_STAGING_URL }}\\n\\nRun the <${{ github.server_url }}/${{ github.repository }}/actions/workflows/deploy.yml|production promote workflow> to go live.\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed (webhook may not be configured)"
+
+      - name: Notify Slack (staging deploy failed)
+        if: failure()
+        run: |
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Staging deploy FAILED\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*Staging Deploy FAILED* — API\\n*Commit:* \`${GITHUB_SHA::8}\`\\n*Branch:* \`main\`\\n*Action:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed"
+
+  deploy-web-staging:
+    runs-on: ubuntu-latest
+    needs: ci
+    environment: staging
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Configure Vercel project
+        run: |
+          curl -sf -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory":"apps/web"}'
+          mkdir -p .vercel
+          echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_STAGING_PROJECT_ID }}
+
+      - name: Deploy to Vercel (staging)
+        id: vercel-deploy
+        run: |
+          URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
+          echo "staging_url=$URL" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_STAGING_PROJECT_ID }}
+
+      - name: Notify Slack (web staging)
+        if: success()
+        run: |
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"Staging deploy succeeded — Web\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*Staging Deploy* — Web\\n*Status:* Deployed\\n*URL:* ${{ steps.vercel-deploy.outputs.staging_url }}\\n*Commit:* \`${GITHUB_SHA::8}\`\"
+                }
+              }]
+            }" || echo "::warning::Slack notification failed"
