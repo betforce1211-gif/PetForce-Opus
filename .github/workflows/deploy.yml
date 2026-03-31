@@ -38,6 +38,7 @@ jobs:
         run: pnpm --filter=@petforce/db db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_OPTIONS: "--dns-result-order=ipv4first"
 
       # Deploy API to Railway
       - name: Install Railway CLI
