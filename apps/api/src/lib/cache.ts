@@ -80,15 +80,16 @@ function createRedisCache(): CacheClient {
 function createInMemoryCache(): CacheClient {
   const store = new Map<string, { value: unknown; expiresAt: number }>();
 
-  // Evict expired entries every 60s
+  // Evict expired entries every 60s.
+  // Cast needed: web build sees browser `setInterval` (returns number),
+  // but this code only runs on the Node.js API server.
   const timer = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store) {
       if (now > entry.expiresAt) store.delete(key);
     }
-  }, 60_000);
-  // Prevent timer from keeping Node.js process alive
-  if (typeof timer === "object" && "unref" in timer) timer.unref();
+  }, 60_000) as unknown as { unref?: () => void };
+  timer.unref?.();
 
   return {
     async get<T>(key: string): Promise<T | null> {
