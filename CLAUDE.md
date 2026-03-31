@@ -88,6 +88,43 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 - **Branch protection:** `main` requires passing `lint-and-build` and `unit-tests` CI checks, 1 approving review, and stale reviews are dismissed on new pushes.
 - **Code owners:** `.github/CODEOWNERS` auto-requests reviewers based on changed paths.
 
+## Agent Tooling
+
+### Installed
+- **gstack** — .claude/skills/gstack — role-based workflow skills for Claude Code
+- **Paperclip** — http://localhost:3100 — task orchestration, issue tracking, agent governance
+- **petforce-guardrails** — .claude/skills/petforce-guardrails — auto-loads, read before touching packages/
+
+### gstack (`.claude/skills/gstack`)
+Available skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/connect-chrome`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/retro`, `/investigate`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`
+
+Use `/browse` from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.
+
+- **`/freeze` and `/guard` are mandatory** before any edit to `packages/db` or `packages/core`. Drizzle schema is the most dangerous surface — it's shared across all apps.
+- `/investigate` auto-freezes to the module being debugged.
+- If gstack skills aren't working, run: `cd .claude/skills/gstack && ./setup`
+
+### Workflow for every feature
+1. `/office-hours` — validate the idea before writing any code
+2. `/plan-ceo-review` — product scope and priority check
+3. `/plan-eng-review` — architecture review, identify shared package impact
+4. Implement in a dedicated Conductor worktree
+5. `/review` — code review
+6. `/qa` — browser and integration testing
+7. `/ship` — deploy via Railway
+
+### Hard rules
+- `/guard` is mandatory before ANY edit to `packages/db` or `packages/core`
+- Never run `db:migrate` without first reading the generated SQL diff
+- One Conductor session per app or package boundary — use Claude Peers if sessions need to coordinate
+- Check Paperclip for open issues before starting new work
+
+### Paperclip
+Paperclip is the orchestration layer. Check it for task assignments before starting new work. Roles configured: CEO, CTO, Frontend Engineer, Mobile Engineer, QA, Doc Engineer. Approval gates on `packages/db/schema`, `packages/core`, and `infra/` changes.
+
+### PetForce Guardrails (`.claude/skills/petforce-guardrails`)
+Auto-loaded safety rules for protected surfaces, app boundaries, Drizzle migration rules, and Conductor workflow coordination. See `SKILL.md` for details.
+
 ## Deep-Dive Docs
 
 This file is the map. For details, go deeper:
@@ -115,3 +152,21 @@ This file is the map. For details, go deeper:
 All environment variables live in a single root `.env.local` file. Apps load it via `dotenv-cli` in their dev/build scripts. See `.env.example` for required variables. Never commit `.env` files.
 
 Test-only credentials (email, password, OTP code) live in `tests/.env`.
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
