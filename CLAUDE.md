@@ -153,6 +153,7 @@ This file is the map. For details, go deeper:
 | Topic | Location |
 |-------|----------|
 | **Product principles (read first)** | `docs/dev/product-principles.md` |
+| **Engineering standards** | `docs/dev/engineering-standards.md` |
 | Architecture & domain model | `docs/dev/architecture.md` |
 | Code conventions & patterns | `docs/dev/conventions.md` |
 | Multi-agent workflow | `docs/dev/multi-agent.md` |
