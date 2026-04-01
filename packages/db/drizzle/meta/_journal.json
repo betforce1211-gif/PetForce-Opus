@@ -71,6 +71,13 @@
       "when": 1775034867812,
       "tag": "0009_redundant_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775006327601,
+      "tag": "0010_acoustic_excalibur",
+      "breakpoints": true
     }
   ]
 }
