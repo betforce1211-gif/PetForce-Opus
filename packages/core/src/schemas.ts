@@ -266,6 +266,22 @@ export const getBudgetStatusSchema = z.object({
     .optional(),
 });
 
+// --- Notification Preferences ---
+
+export const notificationPreferencesSchema = z.object({
+  streakAlerts: z.boolean().default(true),
+  budgetAlerts: z.boolean().default(true),
+  weeklyDigest: z.boolean().default(true),
+  achievementAlerts: z.boolean().default(true),
+});
+
+export const updateNotificationPreferencesSchema = z.object({
+  streakAlerts: z.boolean().optional(),
+  budgetAlerts: z.boolean().optional(),
+  weeklyDigest: z.boolean().optional(),
+  achievementAlerts: z.boolean().optional(),
+});
+
 // --- Pet Notes ---
 
 export const createNoteSchema = z.object({

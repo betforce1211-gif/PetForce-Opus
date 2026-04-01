@@ -338,6 +338,24 @@ export interface BudgetAlert {
   alertLevel: "warning" | "exceeded";
 }
 
+// --- Notification Preferences ---
+
+export interface NotificationPreferences {
+  streakAlerts: boolean;
+  budgetAlerts: boolean;
+  weeklyDigest: boolean;
+  achievementAlerts: boolean;
+}
+
+export interface NotificationPreferenceRecord {
+  id: string;
+  memberId: string;
+  householdId: string;
+  preferences: NotificationPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // --- Pet Notes ---
 
 export interface PetNote {

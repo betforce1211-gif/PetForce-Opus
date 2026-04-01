@@ -403,6 +403,33 @@ export const budgets = pgTable("budgets", {
   householdPetIdx: index("budgets_household_pet_idx").on(table.householdId, table.petId),
 }));
 
+// --- Notification Preferences ---
+
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  preferences: jsonb("preferences").$type<{
+    streakAlerts: boolean;
+    budgetAlerts: boolean;
+    weeklyDigest: boolean;
+    achievementAlerts: boolean;
+  }>().notNull().default({
+    streakAlerts: true,
+    budgetAlerts: true,
+    weeklyDigest: true,
+    achievementAlerts: true,
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  memberHouseholdIdx: uniqueIndex("notification_prefs_member_household_idx").on(table.memberId, table.householdId),
+}));
+
 // --- Pet Notes ---
 
 export const petNotes = pgTable("pet_notes", {
