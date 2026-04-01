@@ -2,6 +2,7 @@
  * Notification trigger logic — scans the database for events that should
  * generate notifications and enqueues them to the BullMQ notifications queue.
  *
+ * All triggers respect per-member notification preferences.
  * Called by a repeatable BullMQ job (see scheduler setup in worker.ts).
  */
 
@@ -14,11 +15,105 @@ import {
   feedingSchedules,
   feedingLogs,
   members,
+  notificationPreferences,
   pets,
   households,
 } from "@petforce/db";
+import type { NotificationPreferences } from "@petforce/core";
 import { enqueueNotification } from "./queue.js";
 import { logger } from "./logger.js";
+
+// ---------------------------------------------------------------------------
+// Preference-aware helpers
+// ---------------------------------------------------------------------------
+
+const PREF_DEFAULTS: NotificationPreferences = {
+  streakAlerts: true,
+  budgetAlerts: true,
+  weeklyDigest: true,
+  achievementAlerts: true,
+};
+
+async function getMemberPreferences(
+  memberId: string,
+  householdId: string,
+): Promise<NotificationPreferences> {
+  const [record] = await db
+    .select()
+    .from(notificationPreferences)
+    .where(
+      and(
+        eq(notificationPreferences.memberId, memberId),
+        eq(notificationPreferences.householdId, householdId),
+      ),
+    );
+  return (record?.preferences as NotificationPreferences) ?? PREF_DEFAULTS;
+}
+
+// Map notification templates to the preference key that gates them.
+// Templates not in this map are always sent (e.g. medication/feeding/vet —
+// these are critical care reminders that should not be silenced).
+const TEMPLATE_TO_PREF: Partial<Record<string, keyof NotificationPreferences>> = {
+  "streak-alert": "streakAlerts",
+  "budget-alert": "budgetAlerts",
+  "weekly-digest": "weeklyDigest",
+  "achievement-alert": "achievementAlerts",
+};
+
+interface MemberRow {
+  id: string;
+  userId: string;
+  householdId: string;
+  email: string | null;
+  expoPushToken: string | null;
+  displayName: string;
+}
+
+async function enqueueForMember(
+  member: MemberRow,
+  template: string,
+  emailData: Record<string, unknown>,
+  pushData: Record<string, unknown>,
+): Promise<number> {
+  // Check if this template is gated by a notification preference
+  const prefKey = TEMPLATE_TO_PREF[template];
+  if (prefKey) {
+    const prefs = await getMemberPreferences(member.id, member.householdId);
+    if (!prefs[prefKey]) {
+      logger.debug(
+        { memberId: member.id, template, prefKey },
+        "Notification suppressed by member preference",
+      );
+      return 0;
+    }
+  }
+
+  let count = 0;
+
+  if (member.email) {
+    await enqueueNotification({
+      type: "email",
+      recipientUserId: member.userId,
+      householdId: member.householdId,
+      template,
+      data: { ...emailData, recipientEmail: member.email, memberName: member.displayName },
+    });
+    count++;
+  }
+
+  if (member.expoPushToken) {
+    await enqueueNotification({
+      type: "push",
+      recipientUserId: member.userId,
+      householdId: member.householdId,
+      template,
+      data: { ...pushData, expoPushToken: member.expoPushToken },
+    });
+    count++;
+  }
+
+  return count;
+}
 
 // ---------------------------------------------------------------------------
 // Overdue medication reminders
@@ -56,47 +151,26 @@ export async function checkOverdueMedications(): Promise<number> {
 
     if (existingLog) continue;
 
-    // Get all members in this household to notify
     const householdMembers = await db
       .select()
       .from(members)
       .where(eq(members.householdId, med.householdId));
 
     for (const member of householdMembers) {
-      // Enqueue email if member has email
-      if (member.email) {
-        await enqueueNotification({
-          type: "email",
-          recipientUserId: member.userId,
-          householdId: med.householdId,
-          template: "medication-reminder",
-          data: {
-            recipientEmail: member.email,
-            petName: row.pet.name,
-            householdName: row.household.name,
-            memberName: member.displayName,
-            medicationName: med.name,
-            dosage: med.dosage ?? undefined,
-          },
-        });
-        enqueued++;
-      }
-
-      // Enqueue push if member has push token
-      if (member.expoPushToken) {
-        await enqueueNotification({
-          type: "push",
-          recipientUserId: member.userId,
-          householdId: med.householdId,
-          template: "medication-reminder",
-          data: {
-            expoPushToken: member.expoPushToken,
-            petName: row.pet.name,
-            medicationName: med.name,
-          },
-        });
-        enqueued++;
-      }
+      enqueued += await enqueueForMember(
+        member,
+        "medication-reminder",
+        {
+          petName: row.pet.name,
+          householdName: row.household.name,
+          medicationName: med.name,
+          dosage: med.dosage ?? undefined,
+        },
+        {
+          petName: row.pet.name,
+          medicationName: med.name,
+        },
+      );
     }
   }
 
@@ -147,39 +221,21 @@ export async function checkUpcomingVetVisits(): Promise<number> {
       .where(eq(members.householdId, record.householdId));
 
     for (const member of householdMembers) {
-      if (member.email) {
-        await enqueueNotification({
-          type: "email",
-          recipientUserId: member.userId,
-          householdId: record.householdId,
-          template: "vet-visit-alert",
-          data: {
-            recipientEmail: member.email,
-            petName: row.pet.name,
-            householdName: row.household.name,
-            memberName: member.displayName,
-            visitDate,
-            vetOrClinic: record.vetOrClinic ?? undefined,
-            reason: record.reason ?? undefined,
-          },
-        });
-        enqueued++;
-      }
-
-      if (member.expoPushToken) {
-        await enqueueNotification({
-          type: "push",
-          recipientUserId: member.userId,
-          householdId: record.householdId,
-          template: "vet-visit-alert",
-          data: {
-            expoPushToken: member.expoPushToken,
-            petName: row.pet.name,
-            visitDate,
-          },
-        });
-        enqueued++;
-      }
+      enqueued += await enqueueForMember(
+        member,
+        "vet-visit-alert",
+        {
+          petName: row.pet.name,
+          householdName: row.household.name,
+          visitDate,
+          vetOrClinic: record.vetOrClinic ?? undefined,
+          reason: record.reason ?? undefined,
+        },
+        {
+          petName: row.pet.name,
+          visitDate,
+        },
+      );
     }
   }
 
@@ -236,43 +292,49 @@ export async function checkFeedingReminders(): Promise<number> {
       .where(eq(members.householdId, schedule.householdId));
 
     for (const member of householdMembers) {
-      if (member.email) {
-        await enqueueNotification({
-          type: "email",
-          recipientUserId: member.userId,
-          householdId: schedule.householdId,
-          template: "feeding-reminder",
-          data: {
-            recipientEmail: member.email,
-            petName: row.pet.name,
-            householdName: row.household.name,
-            memberName: member.displayName,
-            feedingLabel: schedule.label,
-            feedingTime: schedule.time,
-            foodType: schedule.foodType ?? undefined,
-          },
-        });
-        enqueued++;
-      }
-
-      if (member.expoPushToken) {
-        await enqueueNotification({
-          type: "push",
-          recipientUserId: member.userId,
-          householdId: schedule.householdId,
-          template: "feeding-reminder",
-          data: {
-            expoPushToken: member.expoPushToken,
-            petName: row.pet.name,
-            feedingLabel: schedule.label,
-          },
-        });
-        enqueued++;
-      }
+      enqueued += await enqueueForMember(
+        member,
+        "feeding-reminder",
+        {
+          petName: row.pet.name,
+          householdName: row.household.name,
+          feedingLabel: schedule.label,
+          feedingTime: schedule.time,
+          foodType: schedule.foodType ?? undefined,
+        },
+        {
+          petName: row.pet.name,
+          feedingLabel: schedule.label,
+        },
+      );
     }
   }
 
   logger.info({ enqueued, type: "feeding-reminder" }, "Feeding reminder check complete");
+  return enqueued;
+}
+
+// ---------------------------------------------------------------------------
+// Household activity notifications — called inline from mutation handlers
+// ---------------------------------------------------------------------------
+
+export async function notifyHouseholdActivity(
+  householdId: string,
+  template: "pet-added" | "member-joined",
+  data: Record<string, unknown>,
+): Promise<number> {
+  const householdMembers = await db
+    .select()
+    .from(members)
+    .where(eq(members.householdId, householdId));
+
+  let enqueued = 0;
+
+  for (const member of householdMembers) {
+    enqueued += await enqueueForMember(member, template, data, data);
+  }
+
+  logger.info({ enqueued, template, householdId }, "Household activity notification sent");
   return enqueued;
 }
 
