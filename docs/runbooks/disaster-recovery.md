@@ -59,14 +59,20 @@ Point-in-Time Recovery lets you restore your database to any specific second wit
 
 ### Status
 
-> **Action required:** Run `bash infra/scripts/verify-pitr.sh` to confirm PITR is enabled on your Supabase project. Update this section with the results.
+**Verified 2026-04-01** via direct database query (PostgreSQL settings).
 
 | Property | Value |
 |----------|-------|
-| Enabled | _Run verify-pitr.sh to confirm_ |
+| WAL level | `logical` (PITR-compatible) |
+| Archive mode | `on` |
+| Archive timeout | `2min` (WAL segments archived every 2 minutes) |
+| Max WAL senders | `5` |
+| PostgreSQL version | `17.6` |
 | Retention window | 7 days (Supabase Pro default) |
 | Granularity | Per-second |
-| Earliest restore point | _Run verify-pitr.sh to check_ |
+| Earliest restore point | Requires `SUPABASE_ACCESS_TOKEN` — run `verify-pitr.sh` |
+
+> **Note:** WAL-level settings confirm PITR infrastructure is active. Full PITR add-on status confirmation via Supabase Management API requires a `SUPABASE_ACCESS_TOKEN` (personal access token). Generate one at Supabase Dashboard → Account → Access Tokens and run `bash infra/scripts/verify-pitr.sh`.
 
 ### How to enable PITR
 
@@ -474,14 +480,15 @@ gh secret list
 
 ## Recovery Time Metrics
 
-> **Action required:** Run `bash infra/scripts/test-restore.sh` and record the actual times below.
+> **Partial data recorded 2026-04-01.** Full restore test requires `pg_dump`/`psql` tools and a `STAGING_DATABASE_URL`.
 
 | Metric | Value | Last tested |
 |--------|-------|------------|
-| pg_dump duration | _pending_ | _pending_ |
-| Restore duration (staging) | _pending_ | _pending_ |
+| Database size | 24 MB | 2026-04-01 |
+| Public tables | 21 | 2026-04-01 |
+| pg_dump duration | _pending — requires pg tools_ | _pending_ |
+| Restore duration (staging) | _pending — requires staging DB_ | _pending_ |
 | Total recovery time | _pending_ | _pending_ |
-| Database size | _pending_ | _pending_ |
 
 **Target RTO (Recovery Time Objective):** < 30 minutes for full database restore.
 
