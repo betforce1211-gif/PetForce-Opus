@@ -13,6 +13,7 @@ import { appRouter } from "./router.js";
 import { verifyClerkToken } from "./lib/clerk-auth.js";
 import { rateLimitMiddleware } from "./lib/rate-limit.js";
 import { requestIdMiddleware } from "./lib/request-id.js";
+import { extractIdempotencyKey } from "./lib/idempotency.js";
 import uploadApp from "./routes/upload.js";
 import { logger } from "./lib/logger.js";
 import type { Context } from "./trpc.js";
@@ -138,12 +139,13 @@ app.route("/upload", uploadApp);
 
 app.use("/trpc/*", async (c) => {
   const userId = c.get("userId") ?? null;
+  const _idempotencyKey = extractIdempotencyKey(c.req.raw.headers);
 
   const response = await fetchRequestHandler({
     endpoint: "/trpc",
     req: c.req.raw,
     router: appRouter,
-    createContext: (): Context => ({ userId }),
+    createContext: (): Context => ({ userId, _idempotencyKey }),
   });
   return response;
 });

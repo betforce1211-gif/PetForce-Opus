@@ -481,3 +481,57 @@ export interface GamificationFullStats {
   pets: GamificationPetView[];
   currentUserId: string;
 }
+
+export interface Achievement {
+  id: string;
+  badgeId: string;
+  name: string;
+  description: string;
+  icon: string;
+  group: GamificationEntityGroup;
+  category: string;
+  sortOrder: number;
+}
+
+export interface MemberAchievement {
+  id: string;
+  memberId: string;
+  householdId: string;
+  achievementId: string;
+  unlockedAt: Date;
+  achievement: Achievement;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  memberId: string;
+  memberName: string;
+  avatarUrl: string | null;
+  totalXp: number;
+  level: number;
+  levelName: string;
+  currentStreak: number;
+  achievementCount: number;
+  isCurrentUser: boolean;
+}
+
+export interface HouseholdLeaderboard {
+  entries: LeaderboardEntry[];
+  householdName: string;
+  totalHouseholdXp: number;
+}
+
+export interface AchievementWithProgress {
+  achievement: Achievement;
+  unlocked: boolean;
+  unlockedAt: Date | null;
+}
+
+export interface MemberAchievementSummary {
+  memberId: string;
+  memberName: string;
+  totalUnlocked: number;
+  totalAvailable: number;
+  recentUnlocks: MemberAchievement[];
+  byCategory: { category: string; unlocked: number; total: number }[];
+}

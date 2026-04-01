@@ -306,6 +306,68 @@ export const updatePetPhotoSchema = z.object({
   takenAt: z.coerce.date().nullable().optional(),
 });
 
+// --- Gamification ---
+
+export const achievementGroupTypes = ["member", "household", "pet"] as const;
+
+export const leaderboardInputSchema = z.object({
+  limit: z.number().int().min(1).max(50).default(10),
+});
+
+export const memberAchievementsInputSchema = z.object({
+  memberId: z.uuid().optional(), // defaults to current user's member
+});
+
+export const recentAchievementsInputSchema = z.object({
+  limit: z.number().int().min(1).max(50).default(10),
+});
+
+// --- Gamification Config ---
+
+export const gamificationConfigKeys = [
+  "xp_values",
+  "streak_thresholds",
+  "feature_flags",
+] as const;
+
+export type GamificationConfigKey = (typeof gamificationConfigKeys)[number];
+
+export const gamificationConfigKeySchema = z.enum(gamificationConfigKeys);
+
+export const xpValuesConfigSchema = z.object({
+  feeding: z.number().int().min(0).max(1000).default(10),
+  medication: z.number().int().min(0).max(1000).default(15),
+  activity: z.number().int().min(0).max(1000).default(20),
+});
+
+export const streakThresholdsConfigSchema = z.object({
+  bonusXpAt: z.number().int().min(1).default(7),
+  bonusXpMultiplier: z.number().min(1).max(10).default(1.5),
+});
+
+export const gamificationFeatureFlagsSchema = z.object({
+  enabled: z.boolean().default(true),
+  showLeaderboard: z.boolean().default(true),
+  showBadges: z.boolean().default(true),
+  showStreaks: z.boolean().default(true),
+  showLevels: z.boolean().default(true),
+});
+
+export const gamificationConfigValueSchemas: Record<GamificationConfigKey, z.ZodTypeAny> = {
+  xp_values: xpValuesConfigSchema,
+  streak_thresholds: streakThresholdsConfigSchema,
+  feature_flags: gamificationFeatureFlagsSchema,
+};
+
+export const getGamificationConfigSchema = z.object({
+  key: gamificationConfigKeySchema.optional(),
+});
+
+export const updateGamificationConfigSchema = z.object({
+  key: gamificationConfigKeySchema,
+  value: z.unknown(),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

@@ -23,6 +23,7 @@ import type {
 } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
 import { invalidateActivities } from "../lib/cache.js";
+import { awardXp } from "../lib/award-xp.js";
 
 export const feedingRouter = router({
   listSchedules: householdProcedure
@@ -278,7 +279,19 @@ export const feedingRouter = router({
         .returning();
 
       await invalidateActivities(ctx.householdId);
-      return log;
+
+      // Award XP for feeding completion (skip if marked as skipped)
+      let xpResult = { xpAwarded: 0, newLevel: 0, newBadges: [] as string[] };
+      if (!log.skipped) {
+        xpResult = await awardXp({
+          householdId: ctx.householdId,
+          memberId: ctx.membership.id,
+          petId: schedule.petId,
+          taskType: "feeding",
+        });
+      }
+
+      return { ...log, ...xpResult };
     }),
 
   undoCompletion: householdProcedure
