@@ -84,8 +84,29 @@ export const updatePetSchema = createPetSchema.partial();
 
 - Create/Update: return the full entity
 - Delete: return `{ success: true }` or the deleted entity
-- List: return an array
+- List: return a paginated array (see pagination below)
 - Summary/aggregation: return a typed object
+
+### Pagination
+
+All list endpoints must accept `limit` and `offset` parameters. Default limit: 50, max: 200. No unbounded queries.
+
+```ts
+// Input
+z.object({
+  householdId: z.string().uuid(),
+  limit: z.number().min(1).max(200).default(50),
+  offset: z.number().min(0).default(0),
+})
+
+// Query
+const results = await db
+  .select()
+  .from(table)
+  .where(eq(table.householdId, input.householdId))
+  .limit(input.limit)
+  .offset(input.offset);
+```
 
 ### Error handling
 
