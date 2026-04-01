@@ -45,10 +45,10 @@ CREATE UNIQUE INDEX "member_achievements_member_achievement_idx" ON "member_achi
 CREATE INDEX "member_achievements_household_idx" ON "member_achievements" USING btree ("household_id");--> statement-breakpoint
 CREATE INDEX "member_achievements_unlocked_at_idx" ON "member_achievements" USING btree ("unlocked_at");--> statement-breakpoint
 ALTER TABLE "pet_photos" ADD CONSTRAINT "pet_photos_activity_id_activities_id_fk" FOREIGN KEY ("activity_id") REFERENCES "public"."activities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "feeding_logs_household_completed_at_idx" ON "feeding_logs" USING btree ("household_id","completed_at");--> statement-breakpoint
-CREATE INDEX "medication_logs_household_idx" ON "medication_logs" USING btree ("household_id");--> statement-breakpoint
-CREATE INDEX "medication_logs_household_logged_date_idx" ON "medication_logs" USING btree ("household_id","logged_date");--> statement-breakpoint
-CREATE INDEX "pet_photos_activity_idx" ON "pet_photos" USING btree ("activity_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "feeding_logs_household_completed_at_idx" ON "feeding_logs" USING btree ("household_id","completed_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "medication_logs_household_idx" ON "medication_logs" USING btree ("household_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "medication_logs_household_logged_date_idx" ON "medication_logs" USING btree ("household_id","logged_date");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "pet_photos_activity_idx" ON "pet_photos" USING btree ("activity_id");--> statement-breakpoint
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_metadata_length" CHECK (length("activity_log"."metadata"::text) <= 10240);--> statement-breakpoint
 ALTER TABLE "analytics_events" ADD CONSTRAINT "analytics_events_metadata_length" CHECK (length("analytics_events"."metadata"::text) <= 10240);--> statement-breakpoint
 ALTER TABLE "pet_notes" ADD CONSTRAINT "pet_notes_content_length" CHECK (length("pet_notes"."content") <= 51200);--> statement-breakpoint
