@@ -303,6 +303,57 @@ export interface FinanceSummary {
   byCategory: { category: string; total: number }[];
   byPet: { petId: string; petName: string; total: number }[];
   recentExpenses: FinanceSummaryItem[];
+  budgetUtilization?: BudgetStatus[];
+}
+
+// --- Budgets ---
+
+export interface Budget {
+  id: string;
+  householdId: string;
+  petId: string | null;
+  monthlyAmount: number;
+  currency: string;
+  effectiveFrom: Date;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface BudgetStatus {
+  budget: Budget;
+  spent: number;
+  remaining: number;
+  utilizationPercent: number;
+  alertLevel: "ok" | "warning" | "exceeded";
+  petName: string | null;
+}
+
+export interface BudgetAlert {
+  budgetId: string;
+  petId: string | null;
+  petName: string | null;
+  monthlyAmount: number;
+  spent: number;
+  alertLevel: "warning" | "exceeded";
+}
+
+// --- Notification Preferences ---
+
+export interface NotificationPreferences {
+  streakAlerts: boolean;
+  budgetAlerts: boolean;
+  weeklyDigest: boolean;
+  achievementAlerts: boolean;
+}
+
+export interface NotificationPreferenceRecord {
+  id: string;
+  memberId: string;
+  householdId: string;
+  preferences: NotificationPreferences;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // --- Pet Notes ---

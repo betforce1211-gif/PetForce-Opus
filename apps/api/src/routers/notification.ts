@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { householdProcedure, router } from "../trpc.js";
-import { db, members } from "@petforce/db";
+import { db, members, notificationPreferences } from "@petforce/db";
+import { updateNotificationPreferencesSchema } from "@petforce/core";
+import type { NotificationPreferences } from "@petforce/core";
 
 export const notificationRouter = router({
   /**
@@ -61,5 +63,67 @@ export const notificationRouter = router({
         .returning({ id: members.id, email: members.email });
 
       return updated;
+    }),
+
+  getPreferences: householdProcedure.query(async ({ ctx }) => {
+    const defaults: NotificationPreferences = {
+      streakAlerts: true,
+      budgetAlerts: true,
+      weeklyDigest: true,
+      achievementAlerts: true,
+    };
+
+    const [record] = await db
+      .select()
+      .from(notificationPreferences)
+      .where(
+        and(
+          eq(notificationPreferences.memberId, ctx.membership.id),
+          eq(notificationPreferences.householdId, ctx.householdId),
+        ),
+      );
+
+    return record?.preferences ?? defaults;
+  }),
+
+  updatePreferences: householdProcedure
+    .input(updateNotificationPreferencesSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Get current preferences or defaults
+      const [existing] = await db
+        .select()
+        .from(notificationPreferences)
+        .where(
+          and(
+            eq(notificationPreferences.memberId, ctx.membership.id),
+            eq(notificationPreferences.householdId, ctx.householdId),
+          ),
+        );
+
+      const merged: NotificationPreferences = {
+        streakAlerts: input.streakAlerts ?? existing?.preferences?.streakAlerts ?? true,
+        budgetAlerts: input.budgetAlerts ?? existing?.preferences?.budgetAlerts ?? true,
+        weeklyDigest: input.weeklyDigest ?? existing?.preferences?.weeklyDigest ?? true,
+        achievementAlerts: input.achievementAlerts ?? existing?.preferences?.achievementAlerts ?? true,
+      };
+
+      if (existing) {
+        const [updated] = await db
+          .update(notificationPreferences)
+          .set({ preferences: merged, updatedAt: new Date() })
+          .where(eq(notificationPreferences.id, existing.id))
+          .returning();
+        return updated.preferences;
+      }
+
+      const [created] = await db
+        .insert(notificationPreferences)
+        .values({
+          memberId: ctx.membership.id,
+          householdId: ctx.householdId,
+          preferences: merged,
+        })
+        .returning();
+      return created.preferences;
     }),
 });

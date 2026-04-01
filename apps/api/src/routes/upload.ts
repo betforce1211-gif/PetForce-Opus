@@ -9,8 +9,9 @@ import {
   PET_PHOTO_MAX_PER_PET,
 } from "@petforce/core";
 import { verifyClerkToken } from "../lib/clerk-auth.js";
-import { uploadPetAvatar, uploadPetPhoto } from "../lib/supabase-storage.js";
+import { uploadPetAvatar, uploadPetAvatarThumbnail, uploadPetPhoto, uploadPetPhotoVariants } from "../lib/supabase-storage.js";
 import { validateFileMagicBytes } from "../lib/validate-file-type.js";
+import { generateAvatarVariants, generateImageVariants } from "../lib/image-optimizer.js";
 
 const uploadApp = new Hono();
 
@@ -77,13 +78,24 @@ uploadApp.post("/pet-avatar", async (c) => {
   // --- Upload to Supabase Storage ---
   const avatarUrl = await uploadPetAvatar(pet.householdId, petId, buffer, detectedMime);
 
+  // --- Generate and upload optimized variants ---
+  let avatarThumbnailUrl: string | null = null;
+  let avatarBlurHash: string | null = null;
+  try {
+    const variants = await generateAvatarVariants(buffer);
+    avatarThumbnailUrl = await uploadPetAvatarThumbnail(pet.householdId, petId, variants.thumbnail);
+    avatarBlurHash = variants.blurHash;
+  } catch {
+    // Variants are best-effort; original upload still succeeds
+  }
+
   // --- Update pet record ---
   await db
     .update(pets)
-    .set({ avatarUrl, updatedAt: new Date() })
+    .set({ avatarUrl, avatarThumbnailUrl, avatarBlurHash, updatedAt: new Date() })
     .where(eq(pets.id, petId));
 
-  return c.json({ avatarUrl });
+  return c.json({ avatarUrl, avatarThumbnailUrl, avatarBlurHash });
 });
 
 uploadApp.post("/pet-photo", async (c) => {
@@ -178,10 +190,31 @@ uploadApp.post("/pet-photo", async (c) => {
     }
     const url = await uploadPetPhoto(pet.householdId, petId, photo.id, buffer, detectedMime);
 
-    // Update record with real URL
+    // Generate and upload optimized variants
+    let thumbnailUrl: string | null = null;
+    let mediumUrl: string | null = null;
+    let webpUrl: string | null = null;
+    let blurHash: string | null = null;
+    try {
+      const variants = await generateImageVariants(buffer);
+      const variantUrls = await uploadPetPhotoVariants(
+        pet.householdId,
+        petId,
+        photo.id,
+        variants
+      );
+      thumbnailUrl = variantUrls.thumbnailUrl;
+      mediumUrl = variantUrls.mediumUrl;
+      webpUrl = variantUrls.webpUrl;
+      blurHash = variants.blurHash;
+    } catch {
+      // Variants are best-effort; original upload still succeeds
+    }
+
+    // Update record with real URL and variant URLs
     const [updated] = await db
       .update(petPhotos)
-      .set({ url })
+      .set({ url, thumbnailUrl, mediumUrl, webpUrl, blurHash })
       .where(eq(petPhotos.id, photo.id))
       .returning();
 

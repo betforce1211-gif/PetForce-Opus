@@ -131,6 +131,31 @@ function buildPushContent(template: string, data: Record<string, unknown>): { ti
         title: `🍖 Feeding Time`,
         body: `Time to feed ${petName} — ${(data.feedingLabel as string) ?? "scheduled feeding"}`,
       };
+    case "pet-added":
+      return {
+        title: `🐾 New Pet Added`,
+        body: `${petName} has joined the household!`,
+      };
+    case "member-joined":
+      return {
+        title: `👋 New Member`,
+        body: `${(data.memberName as string) ?? "Someone"} joined the household`,
+      };
+    case "streak-alert":
+      return {
+        title: `🔥 Streak Alert`,
+        body: `Your care streak for ${petName} is at risk!`,
+      };
+    case "budget-alert":
+      return {
+        title: `💰 Budget Alert`,
+        body: `You've reached ${(data.percentUsed as string) ?? "80%"} of your budget`,
+      };
+    case "achievement-alert":
+      return {
+        title: `🏆 Achievement Unlocked`,
+        body: `You earned: ${(data.achievementName as string) ?? "a new badge"}!`,
+      };
     default:
       return { title: "PetForce Notification", body: "You have a new notification." };
   }
