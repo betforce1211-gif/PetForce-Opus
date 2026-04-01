@@ -22,6 +22,7 @@ The PetForce API is a [tRPC](https://trpc.io/) v10 server running on [Hono](http
   - [health](#health)
   - [calendar](#calendar)
   - [finance](#finance)
+  - [notification](#notification)
   - [notes](#notes)
   - [reporting](#reporting)
   - [analytics](#analytics)
@@ -903,9 +904,174 @@ All fields optional.
 
 ---
 
+#### `finance.setBudget` — mutation
+
+Create a monthly budget for the household or a specific pet.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID | no (omit for household-level budget) |
+| `monthlyAmount` | number (positive) | yes |
+| `currency` | string | no (default: `"USD"`) |
+| `effectiveFrom` | Date | no (default: now) |
+
+**Returns:** `Budget`
+
+```ts
+{
+  id: string
+  householdId: string
+  petId: string | null
+  monthlyAmount: number
+  currency: string
+  effectiveFrom: string   // ISO date
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+```
+
+---
+
+#### `finance.getBudgets` — query
+
+List all budgets for the household, optionally filtered by pet.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID | no |
+
+**Returns:** `Budget[]`
+
+---
+
+#### `finance.getBudgetStatus` — query
+
+Get budget utilization and alert levels for a given month.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `month` | string `YYYY-MM` | no (defaults to current month) |
+
+**Returns:** `BudgetStatus[]`
+
+```ts
+{
+  budget: Budget
+  spent: number
+  remaining: number
+  utilizationPercent: number
+  alertLevel: "ok" | "warning" | "exceeded"
+  petName: string | null
+}
+```
+
+Alert thresholds: `warning` at 80%, `exceeded` at 100%.
+
+---
+
+#### `finance.updateBudget` — mutation
+
+Update an existing budget's amount, currency, or effective date.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID, ...partial budget fields }`
+**Returns:** `Budget`
+
+---
+
+#### `finance.deleteBudget` — mutation
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID }`
+**Returns:** `{ success: true }`
+
+---
+
+#### `finance.createExpense` — mutation
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID | yes |
+| `category` | `food \| treats \| toys \| grooming \| boarding \| insurance \| supplies \| training \| other` | yes |
+| `description` | string (1-200) | yes |
+| `amount` | number (positive) | yes |
+| `date` | Date | yes |
+| `notes` | string (max 2000) | no |
+
+**Returns:**
+
+```ts
+{
+  expense: Expense
+  budgetAlerts: Array<{
+    budgetId: string
+    petId: string | null
+    petName: string | null
+    monthlyAmount: number
+    spent: number
+    alertLevel: "warning" | "exceeded"
+  }>
+}
+```
+
+Budget alerts are automatically computed when an expense is created. If spending exceeds 80% or 100% of a matching budget, the alert is included in the response.
+
+---
+
+#### `finance.listExpenses` — query
+
+List all expenses, optionally filtered by pet.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `petId` | UUID | no |
+
+**Returns:** `Expense[]`
+
+---
+
+#### `finance.updateExpense` — mutation
+
+All fields optional.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID, ...partial fields }`
+**Returns:** `Expense`
+
+---
+
+#### `finance.deleteExpense` — mutation
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: UUID, id: UUID }`
+**Returns:** `{ success: true }`
+
+---
+
 #### `finance.summary` — query
 
-Get monthly spending summary with breakdowns. **Automatically includes health record costs** (vet visits, vaccinations, etc. with a `cost` field).
+Get monthly spending summary with breakdowns. **Automatically includes health record costs** (vet visits, vaccinations, etc. with a `cost` field) and budget utilization data when budgets exist.
 
 **Auth:** `householdProcedure`
 **Input:**
@@ -924,6 +1090,7 @@ Get monthly spending summary with breakdowns. **Automatically includes health re
   byCategory: { category: string, total: number }[]   // sorted by total desc
   byPet: { petId: string, petName: string, total: number }[]
   recentExpenses: FinanceSummaryItem[]    // last 5 items
+  budgetUtilization?: BudgetStatus[]     // included when budgets exist
 }
 
 // FinanceSummaryItem
@@ -956,6 +1123,7 @@ Get monthly spending summary with breakdowns. **Automatically includes health re
 | Invitation status | `pending`, `accepted`, `declined`, `expired` |
 | Access request status | `pending`, `approved`, `denied` |
 | Calendar event kinds | `activity`, `feeding`, `birthday`, `holiday`, `health` |
+| Budget alert levels | `ok`, `warning`, `exceeded` |
 
 ## Error Codes
 
@@ -989,6 +1157,90 @@ await createPet.mutateAsync({
 ```
 
 All input validation is handled by Zod schemas defined in `@petforce/core`. Invalid inputs will throw a `BAD_REQUEST` error with field-level details.
+
+---
+
+### notification
+
+Push token management and per-member notification preferences.
+
+#### `notification.registerPushToken` — mutation
+
+Register an Expo push token for mobile notifications.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `expoPushToken` | string (min 1) | yes |
+
+**Returns:** `{ success: boolean }`
+
+---
+
+#### `notification.unregisterPushToken` — mutation
+
+Remove the push token for the current member (e.g., on logout).
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: string }`
+**Returns:** `{ success: true }`
+
+---
+
+#### `notification.updateEmail` — mutation
+
+Update the notification email for the current member in this household.
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `email` | string (email) | yes |
+
+**Returns:** `{ id: string, email: string }`
+
+---
+
+#### `notification.getPreferences` — query
+
+Get notification preferences for the current member. Returns defaults if no preferences have been set.
+
+**Auth:** `householdProcedure`
+**Input:** `{ householdId: string }`
+**Returns:**
+
+```ts
+{
+  streakAlerts: boolean      // default: true
+  budgetAlerts: boolean      // default: true
+  weeklyDigest: boolean      // default: true
+  achievementAlerts: boolean // default: true
+}
+```
+
+---
+
+#### `notification.updatePreferences` — mutation
+
+Update notification preferences (partial update — only include fields to change).
+
+**Auth:** `householdProcedure`
+**Input:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `householdId` | UUID | yes |
+| `streakAlerts` | boolean | no |
+| `budgetAlerts` | boolean | no |
+| `weeklyDigest` | boolean | no |
+| `achievementAlerts` | boolean | no |
+
+**Returns:** `NotificationPreferences` (merged with defaults)
 
 ---
 
