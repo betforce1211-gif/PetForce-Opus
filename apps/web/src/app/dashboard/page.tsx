@@ -252,7 +252,7 @@ export default function DashboardPage() {
                     <div style={petCard}>
                       {pet.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={pet.avatarUrl} alt={pet.name} style={petAvatarImg} />
+                        <img src={pet.avatarThumbnailUrl || pet.avatarUrl} alt={pet.name} style={petAvatarImg} loading="lazy" />
                       ) : (
                         <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{speciesEmoji[pet.species] ?? "\uD83D\uDC3E"}</span>
                       )}

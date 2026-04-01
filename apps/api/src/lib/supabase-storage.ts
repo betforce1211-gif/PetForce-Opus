@@ -65,6 +65,33 @@ export async function uploadPetAvatar(
   return `${publicUrl}?t=${Date.now()}`;
 }
 
+export async function uploadPetAvatarThumbnail(
+  householdId: string,
+  petId: string,
+  buffer: Buffer
+): Promise<string> {
+  const path = `${householdId}/${petId}_thumb.webp`;
+
+  const sb = getSupabase();
+
+  const { error } = await sb.storage
+    .from(BUCKET)
+    .upload(path, buffer, {
+      contentType: "image/webp",
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Avatar thumbnail upload failed: ${error.message}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = sb.storage.from(BUCKET).getPublicUrl(path);
+
+  return `${publicUrl}?t=${Date.now()}`;
+}
+
 export async function deletePetAvatar(path: string): Promise<void> {
   const { error } = await getSupabase().storage.from(BUCKET).remove([path]);
   if (error) {
@@ -104,6 +131,56 @@ export async function uploadPetPhoto(
   } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(path);
 
   return publicUrl;
+}
+
+export interface PhotoVariantUrls {
+  thumbnailUrl: string;
+  mediumUrl: string;
+  webpUrl: string;
+}
+
+/**
+ * Upload optimized image variants (thumbnail, medium, webp) alongside the original.
+ */
+export async function uploadPetPhotoVariants(
+  householdId: string,
+  petId: string,
+  photoId: string,
+  variants: { thumbnail: Buffer; medium: Buffer; webp: Buffer }
+): Promise<PhotoVariantUrls> {
+  const sb = getSupabase();
+  const basePath = `${householdId}/${petId}/${photoId}`;
+
+  const uploads = [
+    { path: `${basePath}_thumb.webp`, buffer: variants.thumbnail, key: "thumbnailUrl" as const },
+    { path: `${basePath}_medium.webp`, buffer: variants.medium, key: "mediumUrl" as const },
+    { path: `${basePath}.webp`, buffer: variants.webp, key: "webpUrl" as const },
+  ];
+
+  const results: PhotoVariantUrls = { thumbnailUrl: "", mediumUrl: "", webpUrl: "" };
+
+  await Promise.all(
+    uploads.map(async ({ path, buffer, key }) => {
+      const { error } = await sb.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, buffer, {
+          contentType: "image/webp",
+          upsert: true,
+        });
+
+      if (error) {
+        throw new Error(`Variant upload failed (${key}): ${error.message}`);
+      }
+
+      const {
+        data: { publicUrl },
+      } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+
+      results[key] = publicUrl;
+    })
+  );
+
+  return results;
 }
 
 export async function deletePetPhotoFile(

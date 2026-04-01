@@ -135,9 +135,13 @@ export function PetPhotoGallery({ petId, petName }: PetPhotoGalleryProps) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={photo.url}
+                src={photo.thumbnailUrl || photo.url}
                 alt={photo.caption || `${petName} photo`}
-                style={thumbImgStyle}
+                loading="lazy"
+                style={photo.blurHash
+                  ? { ...thumbImgStyle, background: `url(${photo.blurHash}) center/cover no-repeat` }
+                  : thumbImgStyle
+                }
               />
               {photo.caption && (
                 <div style={thumbCaptionStyle}>{photo.caption}</div>
@@ -186,10 +190,10 @@ export function PetPhotoGallery({ petId, petName }: PetPhotoGalleryProps) {
               &times;
             </button>
 
-            {/* Image */}
+            {/* Image — prefer WebP full size, fall back to original */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={photos[lightboxIdx].url}
+              src={photos[lightboxIdx].webpUrl || photos[lightboxIdx].url}
               alt={photos[lightboxIdx].caption || `${petName} photo`}
               style={lightboxImgStyle}
             />
