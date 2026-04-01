@@ -306,6 +306,22 @@ export const updatePetPhotoSchema = z.object({
   takenAt: z.coerce.date().nullable().optional(),
 });
 
+// --- Gamification ---
+
+export const achievementGroupTypes = ["member", "household", "pet"] as const;
+
+export const leaderboardInputSchema = z.object({
+  limit: z.number().int().min(1).max(50).default(10),
+});
+
+export const memberAchievementsInputSchema = z.object({
+  memberId: z.uuid().optional(), // defaults to current user's member
+});
+
+export const recentAchievementsInputSchema = z.object({
+  limit: z.number().int().min(1).max(50).default(10),
+});
+
 // --- Onboarding ---
 
 export const onboardHouseholdSchema = z.object({

@@ -487,6 +487,45 @@ export const petGameStats = pgTable("pet_game_stats", {
   householdIdx: index("pet_game_stats_household_idx").on(table.householdId),
 }));
 
+// --- Achievements (Gamification) ---
+
+export const achievements = pgTable("achievements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  badgeId: text("badge_id").notNull().unique(), // matches BadgeDefinition.id from @petforce/core
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  group: text("group", { enum: ["member", "household", "pet"] }).notNull(),
+  category: text("category").notNull(), // e.g. "Milestones", "Feeding", "Streaks"
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  groupCategoryIdx: index("achievements_group_category_idx").on(table.group, table.category),
+}));
+
+// --- Member Achievements (Gamification) ---
+
+export const memberAchievements = pgTable("member_achievements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  achievementId: uuid("achievement_id")
+    .notNull()
+    .references(() => achievements.id, { onDelete: "cascade" }),
+  unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  memberAchievementUnique: uniqueIndex("member_achievements_member_achievement_idx").on(
+    table.memberId,
+    table.achievementId
+  ),
+  householdIdx: index("member_achievements_household_idx").on(table.householdId),
+  unlockedAtIdx: index("member_achievements_unlocked_at_idx").on(table.unlockedAt),
+}));
+
 // --- Activity Log (Audit Trail) ---
 
 export const activityLog = pgTable("activity_log", {

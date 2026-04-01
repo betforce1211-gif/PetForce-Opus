@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
+import { z } from "zod";
 import { householdProcedure, router } from "../trpc.js";
 import {
   db,
@@ -10,10 +11,16 @@ import {
   households,
   feedingSchedules,
   medications,
+  achievements,
+  memberAchievements,
 } from "@petforce/db";
 import {
   GAMIFICATION_XP_VALUES,
+  GAMIFICATION_BADGES,
   evaluateBadges,
+  leaderboardInputSchema,
+  memberAchievementsInputSchema,
+  recentAchievementsInputSchema,
 } from "@petforce/core";
 import type {
   GamificationMemberView,
@@ -370,4 +377,131 @@ export const gamificationRouter = router({
 
     return { success: true };
   }),
+
+  /** Household leaderboard — members ranked by XP with level/streak info */
+  leaderboard: householdProcedure
+    .input(leaderboardInputSchema)
+    .query(async ({ ctx, input }) => {
+      const [householdMembers, gameStats] = await Promise.all([
+        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+        db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
+      ]);
+
+      const statsMap = new Map(gameStats.map((s) => [s.memberId, s]));
+      const ranked = householdMembers
+        .map((m) => {
+          const gs = statsMap.get(m.id);
+          const xp = gs?.totalXp ?? 0;
+          const lv = buildLevelView(xp, "member");
+          return {
+            memberId: m.id,
+            memberName: m.displayName,
+            avatarUrl: m.avatarUrl,
+            totalXp: xp,
+            ...lv,
+            currentStreak: gs?.currentStreak ?? 0,
+            longestStreak: gs?.longestStreak ?? 0,
+          };
+        })
+        .sort((a, b) => b.totalXp - a.totalXp)
+        .slice(0, input.limit);
+
+      // Assign ranks (1-indexed, ties share rank)
+      let rank = 1;
+      return ranked.map((entry, i) => {
+        if (i > 0 && entry.totalXp < ranked[i - 1].totalXp) rank = i + 1;
+        return { ...entry, rank };
+      });
+    }),
+
+  /** List all available badge/achievement definitions, optionally filtered by group */
+  achievements: householdProcedure
+    .input(z.object({
+      group: z.enum(["member", "household", "pet"]).optional(),
+    }).default({}))
+    .query(({ input }) => {
+      const badges = input.group
+        ? GAMIFICATION_BADGES.filter((b) => b.group === input.group)
+        : GAMIFICATION_BADGES;
+      return badges.map((b) => ({
+        badgeId: b.id,
+        name: b.name,
+        icon: b.icon,
+        description: b.description,
+        group: b.group,
+        category: b.category,
+      }));
+    }),
+
+  /** Unlocked achievements for a specific member (defaults to current user) */
+  memberAchievements: householdProcedure
+    .input(memberAchievementsInputSchema)
+    .query(async ({ ctx, input }) => {
+      // Resolve target member
+      let targetMemberId = input.memberId;
+      if (!targetMemberId) {
+        const [self] = await db
+          .select({ id: members.id })
+          .from(members)
+          .where(
+            and(
+              eq(members.householdId, ctx.householdId),
+              eq(members.userId, ctx.userId),
+            ),
+          );
+        targetMemberId = self?.id;
+        if (!targetMemberId) return [];
+      }
+
+      const rows = await db
+        .select({
+          achievementId: memberAchievements.achievementId,
+          unlockedAt: memberAchievements.unlockedAt,
+          badgeId: achievements.badgeId,
+          name: achievements.name,
+          description: achievements.description,
+          icon: achievements.icon,
+          group: achievements.group,
+          category: achievements.category,
+        })
+        .from(memberAchievements)
+        .innerJoin(achievements, eq(memberAchievements.achievementId, achievements.id))
+        .where(
+          and(
+            eq(memberAchievements.memberId, targetMemberId),
+            eq(memberAchievements.householdId, ctx.householdId),
+          ),
+        )
+        .orderBy(desc(memberAchievements.unlockedAt));
+
+      return rows;
+    }),
+
+  /** Recently unlocked achievements across the whole household */
+  recentAchievements: householdProcedure
+    .input(recentAchievementsInputSchema)
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select({
+          memberId: memberAchievements.memberId,
+          memberName: members.displayName,
+          avatarUrl: members.avatarUrl,
+          achievementId: memberAchievements.achievementId,
+          unlockedAt: memberAchievements.unlockedAt,
+          badgeId: achievements.badgeId,
+          name: achievements.name,
+          description: achievements.description,
+          icon: achievements.icon,
+          group: achievements.group,
+          category: achievements.category,
+        })
+        .from(memberAchievements)
+        .innerJoin(achievements, eq(memberAchievements.achievementId, achievements.id))
+        .innerJoin(members, eq(memberAchievements.memberId, members.id))
+        .where(eq(memberAchievements.householdId, ctx.householdId))
+        .orderBy(desc(memberAchievements.unlockedAt))
+        .limit(input.limit);
+
+      return rows;
+    }),
 });
