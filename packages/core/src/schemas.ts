@@ -243,6 +243,29 @@ export const financeSummaryInputSchema = z.object({
     .optional(),
 });
 
+// --- Budgets ---
+
+export const createBudgetSchema = z.object({
+  petId: z.uuid().nullable().optional(),
+  monthlyAmount: z.number().positive(),
+  currency: z.string().min(3).max(3).default("USD"),
+  effectiveFrom: z.coerce.date().optional(),
+});
+
+export const updateBudgetSchema = z.object({
+  id: z.uuid(),
+  monthlyAmount: z.number().positive().optional(),
+  currency: z.string().min(3).max(3).optional(),
+  effectiveFrom: z.coerce.date().optional(),
+});
+
+export const getBudgetStatusSchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Must be YYYY-MM format")
+    .optional(),
+});
+
 // --- Pet Notes ---
 
 export const createNoteSchema = z.object({

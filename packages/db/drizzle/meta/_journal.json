@@ -71,6 +71,13 @@
       "when": 1775053728943,
       "tag": "0009_pale_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775054482157,
+      "tag": "0010_left_agent_zero",
+      "breakpoints": true
     }
   ]
 }

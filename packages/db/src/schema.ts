@@ -381,6 +381,28 @@ export const expenses = pgTable("expenses", {
   householdDateIdx: index("expenses_household_date_idx").on(table.householdId, table.date),
 }));
 
+// --- Budgets ---
+
+export const budgets = pgTable("budgets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  petId: uuid("pet_id")
+    .references(() => pets.id, { onDelete: "cascade" }),
+  monthlyAmount: real("monthly_amount").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull().defaultNow(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  householdIdx: index("budgets_household_idx").on(table.householdId),
+  householdPetIdx: index("budgets_household_pet_idx").on(table.householdId, table.petId),
+}));
+
 // --- Pet Notes ---
 
 export const petNotes = pgTable("pet_notes", {
