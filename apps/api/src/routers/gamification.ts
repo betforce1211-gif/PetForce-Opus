@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { householdProcedure, router } from "../trpc.js";
 import {
@@ -140,7 +140,7 @@ export const gamificationRouter = router({
     const today = new Date().toISOString().split("T")[0];
 
     // Pre-fetch lookup data and existing stats in parallel
-    const [householdMembers, petRows, schedules, meds, existingMemberStats, existingHouseholdStats, existingPetStats] = await Promise.all([
+    const [householdMembers, petRows, schedules, meds, existingMemberStats, existingHouseholdStats, existingPetStats, allAchievements, existingUnlocks] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
       db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
@@ -148,7 +148,16 @@ export const gamificationRouter = router({
       db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
       db.select().from(householdGameStats).where(eq(householdGameStats.householdId, ctx.householdId)),
       db.select().from(petGameStats).where(eq(petGameStats.householdId, ctx.householdId)),
+      db.select({ id: achievements.id, badgeId: achievements.badgeId }).from(achievements),
+      db.select({ memberId: memberAchievements.memberId, achievementId: memberAchievements.achievementId })
+        .from(memberAchievements)
+        .where(eq(memberAchievements.householdId, ctx.householdId)),
     ]);
+
+    // Build lookup maps for achievement sync
+    const achievementByBadgeId = new Map(allAchievements.map((a) => [a.badgeId, a.id]));
+    const existingUnlockSet = new Set(existingUnlocks.map((u) => `${u.memberId}:${u.achievementId}`));
+    const newUnlocks: { memberId: string; householdId: string; achievementId: string }[] = [];
 
     // Use lastActiveDate to bound the fetch instead of scanning from 2000-01-01.
     // 90-day buffer ensures streak continuity across recalculations.
@@ -247,6 +256,14 @@ export const gamificationRouter = router({
         longestStreak,
         level,
       });
+
+      // Track newly unlocked achievements for memberAchievements table
+      for (const bid of badgeIds) {
+        const achId = achievementByBadgeId.get(bid);
+        if (achId && !existingUnlockSet.has(`${memberId}:${achId}`)) {
+          newUnlocks.push({ memberId, householdId: ctx.householdId, achievementId: achId });
+        }
+      }
 
       if (memberStatsMap.has(memberId)) {
         memberUpserts.push(
@@ -369,8 +386,16 @@ export const gamificationRouter = router({
       }
     }
 
+    // Insert newly unlocked member achievements
+    const achievementInserts: Promise<unknown>[] = [];
+    if (newUnlocks.length > 0) {
+      achievementInserts.push(
+        db.insert(memberAchievements).values(newUnlocks).onConflictDoNothing()
+      );
+    }
+
     // Execute all upserts in parallel
-    await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts]);
+    await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts, ...achievementInserts]);
 
     // Bust gamification cache after recalculation
     await cache.del(cacheKey.gamificationStats(ctx.householdId));

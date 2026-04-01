@@ -5,6 +5,7 @@ import { protectedProcedure, householdProcedure, router, verifyMembership } from
 import { db, activities, pets } from "@petforce/db";
 import { createActivitySchema, updateActivitySchema, paginationInput } from "@petforce/core";
 import { invalidateActivities } from "../lib/cache.js";
+import { awardXp } from "../lib/award-xp.js";
 
 export const activityRouter = router({
   listByHousehold: householdProcedure
@@ -130,7 +131,16 @@ export const activityRouter = router({
         .where(eq(activities.id, input.id))
         .returning();
       await invalidateActivities(existing.householdId);
-      return activity;
+
+      // Award XP for completing an activity
+      const xpResult = await awardXp({
+        householdId: existing.householdId,
+        memberId: membership.id,
+        petId: existing.petId,
+        taskType: "activity",
+      });
+
+      return { ...activity, ...xpResult };
     }),
 
   delete: protectedProcedure

@@ -18,6 +18,7 @@ import {
 } from "@petforce/core";
 import type { HealthSummary, MedicationStatus, HouseholdMedicationStatus } from "@petforce/core";
 import { logActivity } from "../lib/audit.js";
+import { awardXp } from "../lib/award-xp.js";
 
 export const healthRouter = router({
   // ── Health Records ──
@@ -267,6 +268,17 @@ export const healthRouter = router({
       skipped: z.boolean().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Look up medication to get petId for XP award
+      const [med] = await db
+        .select({ petId: medications.petId })
+        .from(medications)
+        .where(
+          and(
+            eq(medications.id, input.medicationId),
+            eq(medications.householdId, ctx.householdId),
+          ),
+        );
+
       const [log] = await db
         .insert(medicationLogs)
         .values({
@@ -277,7 +289,19 @@ export const healthRouter = router({
           skipped: input.skipped ?? false,
         })
         .returning();
-      return log;
+
+      // Award XP for medication completion (skip if marked as skipped)
+      let xpResult = { xpAwarded: 0, newLevel: 0, newBadges: [] as string[] };
+      if (!log.skipped) {
+        xpResult = await awardXp({
+          householdId: ctx.householdId,
+          memberId: ctx.membership.id,
+          petId: med?.petId ?? null,
+          taskType: "medication",
+        });
+      }
+
+      return { ...log, ...xpResult };
     }),
 
   undoMedicationLog: householdProcedure
