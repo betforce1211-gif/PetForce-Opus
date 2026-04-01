@@ -526,6 +526,25 @@ export const memberAchievements = pgTable("member_achievements", {
   unlockedAtIdx: index("member_achievements_unlocked_at_idx").on(table.unlockedAt),
 }));
 
+// --- Gamification Config ---
+
+export const gamificationConfig = pgTable("gamification_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  householdId: uuid("household_id")
+    .references(() => households.id, { onDelete: "cascade" }),
+  key: text("key").notNull(),
+  value: jsonb("value").notNull(),
+  updatedBy: uuid("updated_by")
+    .references(() => members.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  householdKeyUnique: uniqueIndex("gamification_config_household_key_idx").on(
+    table.householdId,
+    table.key,
+  ),
+}));
+
 // --- Activity Log (Audit Trail) ---
 
 export const activityLog = pgTable("activity_log", {

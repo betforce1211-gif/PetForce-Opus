@@ -1,6 +1,7 @@
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { householdProcedure, router } from "../trpc.js";
+import { TRPCError } from "@trpc/server";
+import { householdProcedure, router, requireAdmin } from "../trpc.js";
 import {
   db,
   members,
@@ -13,20 +14,26 @@ import {
   medications,
   achievements,
   memberAchievements,
+  gamificationConfig,
 } from "@petforce/db";
 import {
   GAMIFICATION_XP_VALUES,
+  GAMIFICATION_CONFIG_DEFAULTS,
   GAMIFICATION_BADGES,
   evaluateBadges,
   leaderboardInputSchema,
   memberAchievementsInputSchema,
   recentAchievementsInputSchema,
+  getGamificationConfigSchema,
+  updateGamificationConfigSchema,
+  gamificationConfigValueSchemas,
 } from "@petforce/core";
 import type {
   GamificationMemberView,
   GamificationHouseholdView,
   GamificationPetView,
   GamificationFullStats,
+  GamificationConfigKey,
 } from "@petforce/core";
 import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
 import { levelFromXp, buildLevelView, computeStreaks } from "../lib/gamification-helpers.js";
@@ -528,5 +535,116 @@ export const gamificationRouter = router({
         .limit(input.limit);
 
       return rows;
+    }),
+
+  /** Get gamification config for a household. Falls back to global defaults. */
+  getConfig: householdProcedure
+    .input(getGamificationConfigSchema)
+    .query(async ({ ctx, input }) => {
+      // Fetch household-specific and global configs
+      const rows = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          input.key
+            ? and(
+                eq(gamificationConfig.key, input.key),
+                // household-specific OR global (householdId IS NULL)
+                eq(gamificationConfig.householdId, ctx.householdId),
+              )
+            : eq(gamificationConfig.householdId, ctx.householdId),
+        );
+
+      // Also fetch global defaults if no household override
+      const globalRows = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          input.key
+            ? and(
+                eq(gamificationConfig.key, input.key),
+                isNull(gamificationConfig.householdId),
+              )
+            : isNull(gamificationConfig.householdId),
+        );
+
+      // Merge: household overrides > global DB > hardcoded defaults
+      const householdMap = new Map(rows.map((r) => [r.key, r]));
+      const globalMap = new Map(globalRows.map((r) => [r.key, r]));
+
+      const keys = input.key
+        ? [input.key]
+        : (Object.keys(GAMIFICATION_CONFIG_DEFAULTS) as GamificationConfigKey[]);
+
+      return keys.map((key) => {
+        const row = householdMap.get(key) ?? globalMap.get(key);
+        return {
+          key,
+          value: row?.value ?? GAMIFICATION_CONFIG_DEFAULTS[key],
+          source: householdMap.has(key)
+            ? "household" as const
+            : globalMap.has(key)
+              ? "global" as const
+              : "default" as const,
+          updatedAt: row?.updatedAt ?? null,
+        };
+      });
+    }),
+
+  /** Update gamification config for a household. Admin only. */
+  updateConfig: householdProcedure
+    .input(updateGamificationConfigSchema)
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx.membership);
+
+      // Validate value against the schema for this key
+      const schema = gamificationConfigValueSchemas[input.key];
+      const parsed = schema.safeParse(input.value);
+      if (!parsed.success) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Invalid value for config key "${input.key}": ${parsed.error.message}`,
+        });
+      }
+
+      // Upsert: check if row exists for this household + key
+      const [existing] = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          and(
+            eq(gamificationConfig.householdId, ctx.householdId),
+            eq(gamificationConfig.key, input.key),
+          ),
+        );
+
+      if (existing) {
+        const [row] = await db
+          .update(gamificationConfig)
+          .set({
+            value: parsed.data,
+            updatedBy: ctx.membership.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(gamificationConfig.id, existing.id))
+          .returning();
+
+        // Bust gamification cache since config changed
+        await cache.del(cacheKey.gamificationStats(ctx.householdId));
+        return row;
+      }
+
+      const [row] = await db
+        .insert(gamificationConfig)
+        .values({
+          householdId: ctx.householdId,
+          key: input.key,
+          value: parsed.data,
+          updatedBy: ctx.membership.id,
+        })
+        .returning();
+
+      await cache.del(cacheKey.gamificationStats(ctx.householdId));
+      return row;
     }),
 });
