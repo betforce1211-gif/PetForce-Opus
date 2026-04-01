@@ -1,6 +1,6 @@
 {
-  "id": "d0524f7a-fa60-4bb2-aaf9-8503e2d54c3f",
-  "prevId": "20887a7d-abe8-4dc2-ab31-8353e98774cf",
+  "id": "6901752a-bb06-4b22-bac1-4af287a8ca5a",
+  "prevId": "759b3046-4202-4169-be5a-349309809d8a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -594,155 +594,6 @@
           "value": "length(\"analytics_events\".\"metadata\"::text) <= 10240"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.budgets": {
-      "name": "budgets",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "household_id": {
-          "name": "household_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "pet_id": {
-          "name": "pet_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "monthly_amount": {
-          "name": "monthly_amount",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'USD'"
-        },
-        "effective_from": {
-          "name": "effective_from",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "budgets_household_idx": {
-          "name": "budgets_household_idx",
-          "columns": [
-            {
-              "expression": "household_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "budgets_household_pet_idx": {
-          "name": "budgets_household_pet_idx",
-          "columns": [
-            {
-              "expression": "household_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "pet_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "budgets_household_id_households_id_fk": {
-          "name": "budgets_household_id_households_id_fk",
-          "tableFrom": "budgets",
-          "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "budgets_pet_id_pets_id_fk": {
-          "name": "budgets_pet_id_pets_id_fk",
-          "tableFrom": "budgets",
-          "tableTo": "pets",
-          "columnsFrom": [
-            "pet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "budgets_created_by_members_id_fk": {
-          "name": "budgets_created_by_members_id_fk",
-          "tableFrom": "budgets",
-          "tableTo": "members",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.expenses": {
@@ -2821,30 +2672,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "thumbnail_url": {
-          "name": "thumbnail_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "medium_url": {
-          "name": "medium_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "webp_url": {
-          "name": "webp_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "blur_hash": {
-          "name": "blur_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "caption": {
           "name": "caption",
           "type": "text",
@@ -3084,18 +2911,6 @@
         },
         "avatar_url": {
           "name": "avatar_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "avatar_thumbnail_url": {
-          "name": "avatar_thumbnail_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "avatar_blur_hash": {
-          "name": "avatar_blur_hash",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -4,10 +4,13 @@ import { eq, and } from "drizzle-orm";
 import { db, members } from "@petforce/db";
 import superjson from "superjson";
 import { telemetryMiddleware } from "./lib/trpc-telemetry.js";
+import { idempotencyMiddleware } from "./lib/idempotency.js";
 import { cache, cacheKey, CACHE_TTL } from "./lib/cache.js";
 
 export interface Context {
   userId: string | null;
+  /** Set by Hono middleware when X-Idempotency-Key header is present */
+  _idempotencyKey?: string;
 }
 
 /** The membership record shape returned by householdProcedure context */
@@ -19,9 +22,9 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router;
 
-// Base procedure with telemetry — all procedures inherit tracing + metrics.
+// Base procedure with telemetry + idempotency — all procedures inherit these.
 // @ts-expect-error — telemetryMiddleware uses a loose opts type for portability
-const instrumentedProcedure = t.procedure.use(telemetryMiddleware);
+const instrumentedProcedure = t.procedure.use(telemetryMiddleware).use(idempotencyMiddleware);
 
 export const publicProcedure = instrumentedProcedure;
 export const protectedProcedure = instrumentedProcedure.use(({ ctx, next }) => {
