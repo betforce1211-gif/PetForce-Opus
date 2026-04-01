@@ -323,3 +323,16 @@ export const GAMIFICATION_XP_VALUES: Record<string, number> = {
   medication: 15,
   activity: 20,
 };
+
+/** Default gamification config values — used when no DB config exists */
+export const GAMIFICATION_CONFIG_DEFAULTS = {
+  xp_values: { feeding: 10, medication: 15, activity: 20 },
+  streak_thresholds: { bonusXpAt: 7, bonusXpMultiplier: 1.5 },
+  feature_flags: {
+    enabled: true,
+    showLeaderboard: true,
+    showBadges: true,
+    showStreaks: true,
+    showLevels: true,
+  },
+} as const;

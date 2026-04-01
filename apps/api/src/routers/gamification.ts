@@ -1,5 +1,7 @@
-import { eq } from "drizzle-orm";
-import { householdProcedure, router } from "../trpc.js";
+import { eq, desc, and, isNull, inArray } from "drizzle-orm";
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { householdProcedure, router, requireAdmin } from "../trpc.js";
 import {
   db,
   members,
@@ -10,16 +12,28 @@ import {
   households,
   feedingSchedules,
   medications,
+  achievements,
+  memberAchievements,
+  gamificationConfig,
 } from "@petforce/db";
 import {
   GAMIFICATION_XP_VALUES,
+  GAMIFICATION_CONFIG_DEFAULTS,
+  GAMIFICATION_BADGES,
   evaluateBadges,
+  leaderboardInputSchema,
+  memberAchievementsInputSchema,
+  recentAchievementsInputSchema,
+  getGamificationConfigSchema,
+  updateGamificationConfigSchema,
+  gamificationConfigValueSchemas,
 } from "@petforce/core";
 import type {
   GamificationMemberView,
   GamificationHouseholdView,
   GamificationPetView,
   GamificationFullStats,
+  GamificationConfigKey,
 } from "@petforce/core";
 import { fetchUnifiedCompletions } from "../lib/unified-completions.js";
 import { levelFromXp, buildLevelView, computeStreaks } from "../lib/gamification-helpers.js";
@@ -133,7 +147,7 @@ export const gamificationRouter = router({
     const today = new Date().toISOString().split("T")[0];
 
     // Pre-fetch lookup data and existing stats in parallel
-    const [householdMembers, petRows, schedules, meds, existingMemberStats, existingHouseholdStats, existingPetStats] = await Promise.all([
+    const [householdMembers, petRows, schedules, meds, existingMemberStats, existingHouseholdStats, existingPetStats, allAchievements, existingUnlocks] = await Promise.all([
       db.select().from(members).where(eq(members.householdId, ctx.householdId)),
       db.select().from(pets).where(eq(pets.householdId, ctx.householdId)),
       db.select().from(feedingSchedules).where(eq(feedingSchedules.householdId, ctx.householdId)),
@@ -141,7 +155,16 @@ export const gamificationRouter = router({
       db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
       db.select().from(householdGameStats).where(eq(householdGameStats.householdId, ctx.householdId)),
       db.select().from(petGameStats).where(eq(petGameStats.householdId, ctx.householdId)),
+      db.select({ id: achievements.id, badgeId: achievements.badgeId }).from(achievements),
+      db.select({ memberId: memberAchievements.memberId, achievementId: memberAchievements.achievementId })
+        .from(memberAchievements)
+        .where(eq(memberAchievements.householdId, ctx.householdId)),
     ]);
+
+    // Build lookup maps for achievement sync
+    const achievementByBadgeId = new Map(allAchievements.map((a) => [a.badgeId, a.id]));
+    const existingUnlockSet = new Set(existingUnlocks.map((u) => `${u.memberId}:${u.achievementId}`));
+    const newUnlocks: { memberId: string; householdId: string; achievementId: string }[] = [];
 
     // Use lastActiveDate to bound the fetch instead of scanning from 2000-01-01.
     // 90-day buffer ensures streak continuity across recalculations.
@@ -240,6 +263,14 @@ export const gamificationRouter = router({
         longestStreak,
         level,
       });
+
+      // Track newly unlocked achievements for memberAchievements table
+      for (const bid of badgeIds) {
+        const achId = achievementByBadgeId.get(bid);
+        if (achId && !existingUnlockSet.has(`${memberId}:${achId}`)) {
+          newUnlocks.push({ memberId, householdId: ctx.householdId, achievementId: achId });
+        }
+      }
 
       if (memberStatsMap.has(memberId)) {
         memberUpserts.push(
@@ -362,12 +393,258 @@ export const gamificationRouter = router({
       }
     }
 
+    // Insert newly unlocked member achievements
+    const achievementInserts: Promise<unknown>[] = [];
+    if (newUnlocks.length > 0) {
+      achievementInserts.push(
+        db.insert(memberAchievements).values(newUnlocks).onConflictDoNothing()
+      );
+    }
+
     // Execute all upserts in parallel
-    await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts]);
+    await Promise.all([...memberUpserts, ...householdUpserts, ...petUpserts, ...achievementInserts]);
 
     // Bust gamification cache after recalculation
     await cache.del(cacheKey.gamificationStats(ctx.householdId));
 
     return { success: true };
   }),
+
+  /** Household leaderboard — members ranked by XP with level/streak info */
+  leaderboard: householdProcedure
+    .input(leaderboardInputSchema)
+    .query(async ({ ctx, input }) => {
+      const [householdMembers, gameStats] = await Promise.all([
+        db.select().from(members).where(eq(members.householdId, ctx.householdId)),
+        db.select().from(memberGameStats).where(eq(memberGameStats.householdId, ctx.householdId)),
+      ]);
+
+      const statsMap = new Map(gameStats.map((s) => [s.memberId, s]));
+      const ranked = householdMembers
+        .map((m) => {
+          const gs = statsMap.get(m.id);
+          const xp = gs?.totalXp ?? 0;
+          const lv = buildLevelView(xp, "member");
+          return {
+            memberId: m.id,
+            memberName: m.displayName,
+            avatarUrl: m.avatarUrl,
+            totalXp: xp,
+            ...lv,
+            currentStreak: gs?.currentStreak ?? 0,
+            longestStreak: gs?.longestStreak ?? 0,
+          };
+        })
+        .sort((a, b) => b.totalXp - a.totalXp)
+        .slice(0, input.limit);
+
+      // Assign ranks (1-indexed, ties share rank)
+      let rank = 1;
+      return ranked.map((entry, i) => {
+        if (i > 0 && entry.totalXp < ranked[i - 1].totalXp) rank = i + 1;
+        return { ...entry, rank };
+      });
+    }),
+
+  /** List all available badge/achievement definitions, optionally filtered by group */
+  achievements: householdProcedure
+    .input(z.object({
+      group: z.enum(["member", "household", "pet"]).optional(),
+    }).default({}))
+    .query(({ input }) => {
+      const badges = input.group
+        ? GAMIFICATION_BADGES.filter((b) => b.group === input.group)
+        : GAMIFICATION_BADGES;
+      return badges.map((b) => ({
+        badgeId: b.id,
+        name: b.name,
+        icon: b.icon,
+        description: b.description,
+        group: b.group,
+        category: b.category,
+      }));
+    }),
+
+  /** Unlocked achievements for a specific member (defaults to current user) */
+  memberAchievements: householdProcedure
+    .input(memberAchievementsInputSchema)
+    .query(async ({ ctx, input }) => {
+      // Resolve target member
+      let targetMemberId = input.memberId;
+      if (!targetMemberId) {
+        const [self] = await db
+          .select({ id: members.id })
+          .from(members)
+          .where(
+            and(
+              eq(members.householdId, ctx.householdId),
+              eq(members.userId, ctx.userId),
+            ),
+          );
+        targetMemberId = self?.id;
+        if (!targetMemberId) return [];
+      }
+
+      const rows = await db
+        .select({
+          achievementId: memberAchievements.achievementId,
+          unlockedAt: memberAchievements.unlockedAt,
+          badgeId: achievements.badgeId,
+          name: achievements.name,
+          description: achievements.description,
+          icon: achievements.icon,
+          group: achievements.group,
+          category: achievements.category,
+        })
+        .from(memberAchievements)
+        .innerJoin(achievements, eq(memberAchievements.achievementId, achievements.id))
+        .where(
+          and(
+            eq(memberAchievements.memberId, targetMemberId),
+            eq(memberAchievements.householdId, ctx.householdId),
+          ),
+        )
+        .orderBy(desc(memberAchievements.unlockedAt));
+
+      return rows;
+    }),
+
+  /** Recently unlocked achievements across the whole household */
+  recentAchievements: householdProcedure
+    .input(recentAchievementsInputSchema)
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select({
+          memberId: memberAchievements.memberId,
+          memberName: members.displayName,
+          avatarUrl: members.avatarUrl,
+          achievementId: memberAchievements.achievementId,
+          unlockedAt: memberAchievements.unlockedAt,
+          badgeId: achievements.badgeId,
+          name: achievements.name,
+          description: achievements.description,
+          icon: achievements.icon,
+          group: achievements.group,
+          category: achievements.category,
+        })
+        .from(memberAchievements)
+        .innerJoin(achievements, eq(memberAchievements.achievementId, achievements.id))
+        .innerJoin(members, eq(memberAchievements.memberId, members.id))
+        .where(eq(memberAchievements.householdId, ctx.householdId))
+        .orderBy(desc(memberAchievements.unlockedAt))
+        .limit(input.limit);
+
+      return rows;
+    }),
+
+  /** Get gamification config for a household. Falls back to global defaults. */
+  getConfig: householdProcedure
+    .input(getGamificationConfigSchema)
+    .query(async ({ ctx, input }) => {
+      // Fetch household-specific and global configs
+      const rows = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          input.key
+            ? and(
+                eq(gamificationConfig.key, input.key),
+                // household-specific OR global (householdId IS NULL)
+                eq(gamificationConfig.householdId, ctx.householdId),
+              )
+            : eq(gamificationConfig.householdId, ctx.householdId),
+        );
+
+      // Also fetch global defaults if no household override
+      const globalRows = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          input.key
+            ? and(
+                eq(gamificationConfig.key, input.key),
+                isNull(gamificationConfig.householdId),
+              )
+            : isNull(gamificationConfig.householdId),
+        );
+
+      // Merge: household overrides > global DB > hardcoded defaults
+      const householdMap = new Map(rows.map((r) => [r.key, r]));
+      const globalMap = new Map(globalRows.map((r) => [r.key, r]));
+
+      const keys = input.key
+        ? [input.key]
+        : (Object.keys(GAMIFICATION_CONFIG_DEFAULTS) as GamificationConfigKey[]);
+
+      return keys.map((key) => {
+        const row = householdMap.get(key) ?? globalMap.get(key);
+        return {
+          key,
+          value: row?.value ?? GAMIFICATION_CONFIG_DEFAULTS[key],
+          source: householdMap.has(key)
+            ? "household" as const
+            : globalMap.has(key)
+              ? "global" as const
+              : "default" as const,
+          updatedAt: row?.updatedAt ?? null,
+        };
+      });
+    }),
+
+  /** Update gamification config for a household. Admin only. */
+  updateConfig: householdProcedure
+    .input(updateGamificationConfigSchema)
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx.membership);
+
+      // Validate value against the schema for this key
+      const schema = gamificationConfigValueSchemas[input.key];
+      const parsed = schema.safeParse(input.value);
+      if (!parsed.success) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Invalid value for config key "${input.key}": ${parsed.error.message}`,
+        });
+      }
+
+      // Upsert: check if row exists for this household + key
+      const [existing] = await db
+        .select()
+        .from(gamificationConfig)
+        .where(
+          and(
+            eq(gamificationConfig.householdId, ctx.householdId),
+            eq(gamificationConfig.key, input.key),
+          ),
+        );
+
+      if (existing) {
+        const [row] = await db
+          .update(gamificationConfig)
+          .set({
+            value: parsed.data,
+            updatedBy: ctx.membership.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(gamificationConfig.id, existing.id))
+          .returning();
+
+        // Bust gamification cache since config changed
+        await cache.del(cacheKey.gamificationStats(ctx.householdId));
+        return row;
+      }
+
+      const [row] = await db
+        .insert(gamificationConfig)
+        .values({
+          householdId: ctx.householdId,
+          key: input.key,
+          value: parsed.data,
+          updatedBy: ctx.membership.id,
+        })
+        .returning();
+
+      await cache.del(cacheKey.gamificationStats(ctx.householdId));
+      return row;
+    }),
 });
