@@ -70,6 +70,27 @@ This project uses 9 specialized Claude Code agents, each in its own git worktree
 | **QA/Testing** | `~/petforce-tests/` | `agent/tests` | E2E tests, integration tests, coverage, test utilities |
 | **DevOps/Infra** | `~/petforce-infra/` | `agent/infra` | CI/CD, Docker, deployments, monitoring, scripts |
 
+## Product Development Principles
+
+Every team member must read `docs/dev/product-principles.md` before writing any code. These 14 principles are non-negotiable and define how we build PetForce:
+
+1. **The Household is the Product** — multi-player coordination, not solo pet tracking
+2. **Capture the Moment** — sub-3-second logging or people will not use it
+3. **Run the App from the Lock Screen** — actionable notifications, no app-open required
+4. **Data In, Insight Out** — every data point serves a future insight
+5. **Architect for a Billion Users** — partitioned tables, read replicas, horizontal-ready
+6. **Trust the Schema, Ship the Feature** — schema is sacred, UI iterates fast
+7. **Zero Trust Security** — verify household membership on every API call, no exceptions
+8. **Document Everything** — docs are deliverables, PRs without docs are incomplete
+9. **Test Like the Customer Depends on It** — unit + E2E on every PR, no database mocks
+10. **Reliability is the Product** — offline-first, multi-region, automated failover
+11. **GitHub is the Source of Truth** — no PR = did not happen
+12. **Earn the Right to Complexity** — phases in order, no skipping
+13. **Multi-Platform Parity** — web and mobile match every sprint
+14. **Build for the Household That Grows** — 1 pet to 10, 1 member to grandma
+
+If a feature violates any of these, it does not ship.
+
 ## Conventions
 
 - **Package naming:** `@petforce/<name>` (e.g., `@petforce/core`)
@@ -131,6 +152,7 @@ This file is the map. For details, go deeper:
 
 | Topic | Location |
 |-------|----------|
+| **Product principles (read first)** | `docs/dev/product-principles.md` |
 | Architecture & domain model | `docs/dev/architecture.md` |
 | Code conventions & patterns | `docs/dev/conventions.md` |
 | Multi-agent workflow | `docs/dev/multi-agent.md` |
