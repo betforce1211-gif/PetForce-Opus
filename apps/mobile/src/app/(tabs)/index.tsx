@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { Card, PetCard, ActivityFeedItem, HouseholdHeader, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
+import { StreakBanner } from "../../components/StreakBanner";
+import { BudgetAlertBanner } from "../../components/BudgetAlertBanner";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,6 +33,19 @@ export default function HomeScreen() {
   );
   const healthSummary = trpc.health.summary.useQuery(
     { householdId: householdId! },
+    { enabled: !!householdId }
+  );
+
+  // Gamification stats for streak banner
+  const gamificationStats = trpc.gamification.getStats.useQuery(
+    { householdId: householdId! },
+    { enabled: !!householdId }
+  );
+
+  // Budget status for alert banners
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const budgetStatus = trpc.finance.getBudgetStatus.useQuery(
+    { householdId: householdId!, month: currentMonth },
     { enabled: !!householdId }
   );
 
@@ -79,6 +94,46 @@ export default function HomeScreen() {
             memberCount={dashboard.members.length}
           />
         )}
+
+        {/* Streak-at-risk banner: show after 6pm if streak >= 3 and no activity today */}
+        {(() => {
+          const hour = new Date().getHours();
+          const stats = gamificationStats.data;
+          const currentMember = stats?.members.find(
+            (m) => m.memberId === stats.currentUserId
+          );
+          const hasActivityToday = (dashboard?.recentActivities ?? []).some((a) => {
+            const d = new Date(a.createdAt).toISOString().slice(0, 10);
+            return d === today;
+          });
+          if (
+            hour >= 18 &&
+            currentMember &&
+            currentMember.currentStreak >= 3 &&
+            !hasActivityToday
+          ) {
+            return (
+              <StreakBanner
+                currentStreak={currentMember.currentStreak}
+                onPress={() => router.push("/activity/new")}
+              />
+            );
+          }
+          return null;
+        })()}
+
+        {/* Budget alert banners */}
+        {(budgetStatus.data ?? [])
+          .filter((s) => s.alertLevel === "warning" || s.alertLevel === "exceeded")
+          .map((s) => (
+            <BudgetAlertBanner
+              key={s.budget.id}
+              alertLevel={s.alertLevel as "warning" | "exceeded"}
+              petName={s.petName}
+              spent={s.spent}
+              monthlyAmount={s.budget.monthlyAmount}
+            />
+          ))}
 
         {/* Quick stats */}
         <XStack gap="$3">

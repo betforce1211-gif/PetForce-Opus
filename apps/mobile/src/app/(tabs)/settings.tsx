@@ -1,4 +1,4 @@
-import { ScrollView, Alert, Pressable, Linking } from "react-native";
+import { ScrollView, Alert, Pressable, Linking, Switch } from "react-native";
 import { YStack, XStack, Text, Spinner, Button } from "tamagui";
 import { useState } from "react";
 import { useClerk } from "@clerk/clerk-expo";
@@ -19,6 +19,15 @@ export default function SettingsScreen() {
     { householdId: householdId! },
     { enabled: !!householdId }
   );
+
+  const prefsQuery = trpc.notification.getPreferences.useQuery(
+    { householdId: householdId! },
+    { enabled: !!householdId }
+  );
+  const utils = trpc.useUtils();
+  const updatePrefsMutation = trpc.notification.updatePreferences.useMutation({
+    onSuccess: () => utils.notification.getPreferences.invalidate(),
+  });
 
   if (!householdId) {
     return (
@@ -140,6 +149,51 @@ export default function SettingsScreen() {
             ) : null}
           </YStack>
         </Card>
+
+        {/* Notification Preferences */}
+        {prefsQuery.data && (
+          <Card padding="$4">
+            <Text fontSize="$5" fontWeight="bold" marginBottom="$2">Notification Preferences</Text>
+            <YStack gap="$3">
+              {([
+                { key: "streakAlerts" as const, label: "Streak Alerts", desc: "Warn when your streak is at risk" },
+                { key: "budgetAlerts" as const, label: "Budget Alerts", desc: "Notify on budget warnings" },
+                { key: "achievementAlerts" as const, label: "Achievement Alerts", desc: "Celebrate badge unlocks" },
+                { key: "weeklyDigest" as const, label: "Weekly Digest", desc: "Weekly care summary email" },
+              ]).map(({ key, label, desc }) => (
+                <XStack key={key} justifyContent="space-between" alignItems="center">
+                  <YStack flex={1}>
+                    <Text fontSize="$3" fontWeight="600">{label}</Text>
+                    <Text fontSize="$2" color="$petforceTextMuted">{desc}</Text>
+                  </YStack>
+                  <Switch
+                    value={prefsQuery.data[key] ?? true}
+                    onValueChange={(val) =>
+                      updatePrefsMutation.mutate({
+                        householdId: householdId!,
+                        [key]: val,
+                      })
+                    }
+                    trackColor={{ false: "#D1D5DB", true: "#6366F1" }}
+                  />
+                </XStack>
+              ))}
+            </YStack>
+          </Card>
+        )}
+
+        {/* Budget Settings */}
+        <Pressable onPress={() => router.push("/budget/settings")}>
+          <Card padding="$4">
+            <XStack justifyContent="space-between" alignItems="center">
+              <YStack>
+                <Text fontSize="$5" fontWeight="bold">Budget</Text>
+                <Text fontSize="$2" color="$petforceTextMuted">Manage monthly budgets</Text>
+              </YStack>
+              <Text fontSize="$4" color="$petforceTextMuted">{">"}</Text>
+            </XStack>
+          </Card>
+        </Pressable>
 
         {/* Sign out */}
         <Pressable

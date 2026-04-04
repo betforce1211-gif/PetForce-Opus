@@ -4,12 +4,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card, EmptyState } from "@petforce/ui";
 import { trpc } from "../../lib/trpc";
 import { useHousehold } from "../../lib/household";
+import { useXpReward } from "../../hooks/useXpReward";
+import { XpToast } from "../../components/XpToast";
+import { LevelUpModal } from "../../components/LevelUpModal";
+import { BadgeUnlockOverlay } from "../../components/BadgeUnlockOverlay";
 
 export default function FeedingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ petId?: string; householdId?: string }>();
   const { householdId: contextHouseholdId } = useHousehold();
   const householdId = params.householdId ?? contextHouseholdId;
+  const xpReward = useXpReward();
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -20,8 +25,11 @@ export default function FeedingScreen() {
 
   const utils = trpc.useUtils();
   const logMutation = trpc.feeding.logCompletion.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.feeding.todayStatus.invalidate();
+      if (data && "xpAwarded" in data && (data as { xpAwarded: number }).xpAwarded > 0) {
+        xpReward.handleXpReward(data as { xpAwarded: number; newLevel: number; newBadges: string[] });
+      }
     },
     onError: (err) => Alert.alert("Error", err.message),
   });
@@ -58,6 +66,10 @@ export default function FeedingScreen() {
     : data.pets;
 
   return (
+    <>
+    <XpToast xp={xpReward.xpToast?.xp ?? 0} visible={!!xpReward.xpToast} onDismiss={xpReward.dismissXpToast} />
+    <LevelUpModal level={xpReward.levelUp?.level ?? 0} visible={!!xpReward.levelUp} onDismiss={xpReward.dismissLevelUp} />
+    <BadgeUnlockOverlay badgeIds={xpReward.badgeUnlock?.badgeIds ?? []} visible={!!xpReward.badgeUnlock} onDismiss={xpReward.dismissBadgeUnlock} />
     <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
       <YStack padding="$4" gap="$4">
         {/* Summary */}
@@ -177,5 +189,6 @@ export default function FeedingScreen() {
         ))}
       </YStack>
     </ScrollView>
+    </>
   );
 }
