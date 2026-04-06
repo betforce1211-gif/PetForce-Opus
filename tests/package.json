@@ -18,7 +18,7 @@
   "devDependencies": {
     "@petforce/core": "workspace:*",
     "@playwright/test": "^1.58.2",
-    "@types/node": "^20.14.0",
+    "@types/node": "^25.5.2",
     "playwright": "^1.45.0",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
