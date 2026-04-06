@@ -35,7 +35,7 @@
     "@upstash/redis": "^1.37.0",
     "bullmq": "^5.34.0",
     "drizzle-orm": "^0.45.2",
-    "file-type": "^21.3.2",
+    "file-type": "^22.0.0",
     "hono": "^4.12.9",
     "pino": "^10.3.1",
     "sharp": "^0.34.5",
