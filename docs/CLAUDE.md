@@ -35,10 +35,13 @@ docs/
 │   ├── auth.md                # Clerk authentication setup
 │   └── deployment.md          # Deployment guide (web, mobile, API)
 ├── api/
-│   ├── overview.md            # API architecture overview
-│   ├── households.md          # Household endpoints
-│   ├── pets.md                # Pet endpoints
-│   └── activities.md          # Activity endpoints
+│   ├── README.md              # API index — all 15 routers
+│   ├── household.md           # Household endpoints
+│   ├── pet.md                 # Pet endpoints
+│   ├── activity.md            # Activity endpoints
+│   ├── feeding.md             # Feeding schedule endpoints
+│   ├── health.md              # Health record endpoints
+│   └── ... (15 router files)  # One file per tRPC router
 ├── dev/
 │   ├── setup.md               # Developer environment setup
 │   ├── architecture.md        # System architecture deep-dive

@@ -45,12 +45,19 @@ drizzle/             # Generated migration files (auto-generated)
 - `pets` — belongs to a household, species/breed/medical info
 - `activities` — links pets + members, tracks care events
 
-## Migration Workflow
+## Migration Workflow (canonical checklist)
 
-1. Modify `src/schema.ts`
-2. Run `pnpm --filter=@petforce/db db:generate` to create a migration
-3. Review the generated SQL in `drizzle/`
-4. Run `pnpm --filter=@petforce/db db:push` to apply
+This is the single source of truth for the Drizzle migration process. All other references (guardrails, rules, commands) point here.
+
+1. **Run `/guard`** — mandatory before any schema change, no exceptions
+2. **Modify `src/schema.ts`** — make your schema changes
+3. **Run `pnpm --filter=@petforce/db db:generate`** — generates migration SQL
+4. **Read the generated SQL in `drizzle/`** — confirm it does exactly what you expect. Never skip this step.
+5. **Run `pnpm --filter=@petforce/db db:push`** — applies the migration
+6. **Verify all three apps boot** — run `pnpm dev` and confirm web (:3000), API (:3001), and mobile all start without errors
+
+Never drop columns — deprecate first, migrate data, drop in a separate PR.
+One concern per migration PR only.
 
 ## Environment
 

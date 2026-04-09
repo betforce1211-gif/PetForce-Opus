@@ -1,10 +1,10 @@
+<!-- owner: architect -->
+
 # Engineering Standards
 
 [Developer]
 
 How the 14 product principles translate into enforceable engineering practices. Every PR, every architecture decision, and every agent task must comply.
-
-Last updated: 2026-03-31
 
 ---
 

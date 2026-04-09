@@ -1,3 +1,5 @@
+<!-- owner: architect -->
+
 # System Architecture
 
 [Developer]
@@ -190,6 +192,23 @@ All tables are defined in `packages/db/src/schema.ts` using Drizzle ORM.
 | gamification | 2 | household |
 
 Total: **97 procedures** across 15 routers.
+
+---
+
+## Key Architectural Decisions
+
+For full decision context, alternatives considered, and agent-specific constraints, read the linked ADR.
+
+| Decision | ADR | Rationale |
+|----------|-----|-----------|
+| tRPC for API layer | [ADR-001](../adrs/001-trpc-api-layer.md) | End-to-end type safety with shared Zod schemas |
+| Drizzle ORM | [ADR-002](../adrs/002-drizzle-orm.md) | SQL-like API, schema-as-code, lightweight |
+| Clerk for auth | [ADR-003](../adrs/003-clerk-auth.md) | Managed auth with JWT verification, multi-platform |
+| Tamagui for UI | [ADR-004](../adrs/004-tamagui-ui.md) | True cross-platform components with household theming |
+| Household data model | [ADR-005](../adrs/005-household-data-model.md) | Multi-member collaboration as the core product concept |
+| Lazy gamification | [ADR-006](../adrs/006-gamification-lazy-recalc.md) | Denormalized stats recalculated on-demand from history |
+
+See also: [Active execution plans](../exec-plans/active/) for current implementation state.
 
 ---
 

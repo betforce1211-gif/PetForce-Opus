@@ -28,10 +28,5 @@ description: PetForce monorepo safety rules. Auto-loads for all Conductor sessio
 - /guard is mandatory before any edit to packages/db or packages/core. No exceptions.
 
 ## Drizzle migration checklist
-Before any schema change:
-1. Run /guard
-2. Make schema changes in packages/db
-3. Run pnpm db:generate
-4. Read the generated SQL — confirm it does what you expect
-5. Run pnpm db:migrate
-6. Test all three apps still boot correctly
+Before any schema change, follow the canonical 6-step migration workflow in `packages/db/CLAUDE.md`.
+The checklist lives there as the single source of truth — do not duplicate it here.

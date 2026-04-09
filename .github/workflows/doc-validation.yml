@@ -1,0 +1,60 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - '**/CLAUDE.md'
+      - '.claude/**'
+      - 'packages/*/CLAUDE.md'
+      - 'apps/*/CLAUDE.md'
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Link check
+        run: |
+          npx markdown-link-check --config .markdown-link-check.json \
+            $(find docs/ -name '*.md') \
+            $(find . -maxdepth 2 -name 'CLAUDE.md')
+
+      - name: Budget check (no file > 500 lines)
+        run: |
+          failed=0
+          find docs/ -name '*.md' -not -path 'docs/generated/*' | while read f; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 500 ]; then
+              echo "FAIL: $f ($lines lines > 500)"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Freshness check (git-derived)
+        run: |
+          for f in $(git diff --name-only origin/main...HEAD -- 'docs/*.md' '**/*.md'); do
+            if [ -f "$f" ]; then
+              last_commit=$(git log --follow -1 --format=%ct -- "$f")
+              now=$(date +%s)
+              days_ago=$(( (now - last_commit) / 86400 ))
+              if [ "$days_ago" -gt 90 ]; then
+                echo "WARN: $f last substantively changed $days_ago days ago"
+              fi
+            fi
+          done
+
+      - name: Structure check (CLAUDE.md presence)
+        run: |
+          failed=0
+          for dir in apps/web apps/api apps/mobile packages/core packages/db packages/ui packages/config; do
+            if [ ! -f "$dir/CLAUDE.md" ]; then
+              echo "FAIL: Missing $dir/CLAUDE.md"
+              failed=1
+            fi
+          done
+          exit $failed

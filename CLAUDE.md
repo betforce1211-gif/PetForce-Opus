@@ -160,6 +160,10 @@ This file is the map. For details, go deeper:
 | Quality scores by domain | `docs/dev/quality-score.md` |
 | Active execution plans | `docs/exec-plans/active/` |
 | API reference (all 15 routers) | `docs/api/README.md` |
+| Architecture Decision Records | `docs/adrs/README.md` |
+| Design proposals (in-progress) | `docs/design/README.md` |
+| Deployment topology | `docs/config/deployment.md` |
+| Documentation index | `docs/README.md` |
 | User guide | `docs/user-guide/README.md` |
 
 ## Scripts

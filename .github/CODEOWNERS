@@ -22,6 +22,9 @@ packages/db/                 @betforce1211-gif
 
 # Documentation
 docs/                        @betforce1211-gif
+docs/api/                    @betforce1211-gif
+**/CLAUDE.md                 @betforce1211-gif
+.claude/                     @betforce1211-gif
 
 # Tests — E2E, integration, fixtures
 tests/                       @betforce1211-gif

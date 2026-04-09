@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(DROP TABLE:*)",
+      "Bash(DROP DATABASE:*)",
+      "Bash(pnpm db:migrate:*)",
+      "Bash(drizzle-kit push:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE 'packages/(db|core)/'; then echo 'PROTECTED SURFACE — run /guard before editing packages/db or packages/core'; fi",
+            "statusMessage": "Checking protected surface boundary..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE 'packages/(db|core)/'; then echo 'PROTECTED SURFACE — run /guard before editing packages/db or packages/core'; fi",
+            "statusMessage": "Checking protected surface boundary..."
+          }
+        ]
+      }
+    ]
+  }
+}

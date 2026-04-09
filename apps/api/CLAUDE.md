@@ -62,3 +62,20 @@ const result = await db.select().from(households).where(eq(households.id, id));
 
 - `@petforce/core` — shared types and Zod schemas
 - `@petforce/db` — database client and schema
+
+## Error Handling
+
+Use tRPC error codes consistently:
+
+| Code | When to use |
+|------|-------------|
+| `UNAUTHORIZED` | No auth token or invalid JWT |
+| `FORBIDDEN` | Valid auth but wrong role or not a household member |
+| `NOT_FOUND` | Entity doesn't exist (pet, household, activity) |
+| `BAD_REQUEST` | Input validation failure beyond what Zod catches |
+| `CONFLICT` | Duplicate resource (e.g., duplicate invitation) |
+
+- Always throw `TRPCError` with a descriptive message — never return error objects in success responses
+- Permission checks early in the procedure body — fail fast before business logic
+- Zod schemas catch most input errors automatically via `.input()` — only use `BAD_REQUEST` for business rule violations
+- See `docs/dev/conventions.md` for full error handling patterns

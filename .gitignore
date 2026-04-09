@@ -34,3 +34,9 @@ coverage/
 test-results/
 playwright-report/
 tests/e2e/.auth/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Context audit reports
+CONTEXT-AUDIT-REPORT.html

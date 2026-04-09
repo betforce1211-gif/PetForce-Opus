@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "paperclip": {
+      "_comment": "Task orchestration and agent governance — see CLAUDE.md Agent Tooling section",
+      "url": "http://localhost:3100",
+      "disabled": true
+    }
+  }
+}

@@ -1,3 +1,5 @@
+<!-- owner: architect -->
+
 # PetForce Product Development Principles
 
 These are the rules we build by. Every feature, every PR, every sprint decision runs through these. They are non-negotiable. They are what separates a side project from a billion-user product.

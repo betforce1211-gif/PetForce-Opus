@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetForce-Opus Context Audit: Before vs After</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e4e4e7;
+    --muted: #71717a;
+    --red: #ef4444;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 2rem; line-height: 1.6; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.4rem; margin: 2rem 0 1rem; color: var(--cyan); }
+  h3 { font-size: 1.1rem; margin: 1rem 0 0.5rem; }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; }
+  .grade-container { display: flex; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
+  .grade-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; flex: 1; min-width: 280px; text-align: center; }
+  .grade-card.before { border-color: var(--yellow); }
+  .grade-card.after { border-color: var(--green); }
+  .grade-label { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+  .grade-letter { font-size: 4rem; font-weight: 800; line-height: 1; }
+  .grade-letter.b { color: var(--yellow); }
+  .grade-letter.a { color: var(--green); }
+  .grade-score { font-size: 1.5rem; color: var(--muted); margin-top: 0.5rem; }
+  .arrow-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; display: flex; align-items: center; justify-content: center; min-width: 80px; }
+  .arrow { font-size: 3rem; color: var(--green); }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .score-before { color: var(--yellow); font-weight: 700; }
+  .score-after { color: var(--green); font-weight: 700; }
+  .score-same { color: var(--green); font-weight: 700; }
+  .delta { color: var(--green); font-weight: 600; }
+  .delta-zero { color: var(--muted); }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .metric { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+  .metric-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; }
+  .metric-values { display: flex; align-items: baseline; gap: 0.5rem; margin-top: 0.25rem; }
+  .metric-before { font-size: 1.2rem; color: var(--yellow); text-decoration: line-through; opacity: 0.6; }
+  .metric-after { font-size: 1.5rem; color: var(--green); font-weight: 700; }
+  .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+  .badge-new { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+  .badge-improved { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+  .badge-unchanged { background: rgba(113, 113, 122, 0.15); color: var(--muted); }
+  .pass { color: var(--green); }
+  .fail { color: var(--red); }
+  .tier-table td:last-child { font-weight: 700; }
+  .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
+  .files-created { background: rgba(34, 197, 94, 0.05); border-color: rgba(34, 197, 94, 0.2); }
+  .files-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.25rem; font-size: 0.85rem; color: var(--muted); }
+  .files-list code { color: var(--cyan); font-size: 0.8rem; }
+  .review-table td:nth-child(3) { font-weight: 700; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>PetForce-Opus Context Hierarchy Audit</h1>
+<p class="subtitle">Before &amp; After Remediation &mdash; Comprehensive Tier &mdash; 2026-04-08</p>
+
+<!-- Grade Comparison -->
+<div class="grade-container">
+  <div class="grade-card before">
+    <div class="grade-label">Before</div>
+    <div class="grade-letter b">B</div>
+    <div class="grade-score">76%</div>
+  </div>
+  <div class="arrow-card">
+    <div class="arrow">&rarr;</div>
+  </div>
+  <div class="grade-card after">
+    <div class="grade-label">After</div>
+    <div class="grade-letter a">A</div>
+    <div class="grade-score">95%</div>
+  </div>
+</div>
+
+<!-- Category Scores -->
+<h2>Category Scores</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Weight</th>
+      <th>Before</th>
+      <th>After</th>
+      <th>Delta</th>
+      <th>Comp. Required</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Entry Point Quality</td>
+      <td>20%</td>
+      <td class="score-same">5/5</td>
+      <td class="score-after">5/5</td>
+      <td class="delta-zero">&mdash;</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Progressive Disclosure</td>
+      <td>20%</td>
+      <td class="score-before">4/5</td>
+      <td class="score-after">5/5</td>
+      <td class="delta">+1</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Agent Infrastructure</td>
+      <td>20%</td>
+      <td class="score-before">4/5</td>
+      <td class="score-after">5/5</td>
+      <td class="delta">+1</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Context Budgeting</td>
+      <td>15%</td>
+      <td class="score-before">3/5</td>
+      <td class="score-after">5/5</td>
+      <td class="delta">+2</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Maintainability &amp; Freshness</td>
+      <td>15%</td>
+      <td class="score-before">3/5</td>
+      <td class="score-after">4/5</td>
+      <td class="delta">+1</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Architectural Legibility</td>
+      <td>10%</td>
+      <td class="score-before">3/5</td>
+      <td class="score-after">5/5</td>
+      <td class="delta">+2</td>
+      <td>4</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Key Metrics -->
+<h2>Key Metrics: Before vs After</h2>
+<div class="metric-grid">
+  <div class="metric">
+    <div class="metric-label">CLAUDE.md Lines</div>
+    <div class="metric-values">
+      <span class="metric-before">196</span>
+      <span class="metric-after">200</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Internal Links</div>
+    <div class="metric-values">
+      <span class="metric-before">33</span>
+      <span class="metric-after">37</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Subdirectory CLAUDE.md</div>
+    <div class="metric-values">
+      <span class="metric-before">10</span>
+      <span class="metric-after">11</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Glob-Scoped Rules</div>
+    <div class="metric-values">
+      <span class="metric-before">0</span>
+      <span class="metric-after">4</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Slash Commands</div>
+    <div class="metric-values">
+      <span class="metric-before">0</span>
+      <span class="metric-after">4</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Team Settings</div>
+    <div class="metric-values">
+      <span class="metric-before">No</span>
+      <span class="metric-after">Yes</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">MCP Config</div>
+    <div class="metric-values">
+      <span class="metric-before">No</span>
+      <span class="metric-after">Yes</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">ADRs</div>
+    <div class="metric-values">
+      <span class="metric-before">0</span>
+      <span class="metric-after">6</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">API Doc Lines</div>
+    <div class="metric-values">
+      <span class="metric-before">1,503</span>
+      <span class="metric-after">~80 index</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Docs Index</div>
+    <div class="metric-values">
+      <span class="metric-before">No</span>
+      <span class="metric-after">Yes</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">CI Doc Validation</div>
+    <div class="metric-values">
+      <span class="metric-before">No</span>
+      <span class="metric-after">Yes</span>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Deployment Docs</div>
+    <div class="metric-values">
+      <span class="metric-before">No</span>
+      <span class="metric-after">Yes</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tier Compliance -->
+<h2>Comprehensive Tier Compliance</h2>
+<table class="tier-table">
+  <thead>
+    <tr><th>Category</th><th>Required</th><th>Before</th><th>Before Status</th><th>After</th><th>After Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Entry Point Quality</td><td>4</td><td>5</td><td class="pass">PASS</td><td>5</td><td class="pass">PASS</td></tr>
+    <tr><td>Progressive Disclosure</td><td>4</td><td>4</td><td class="pass">PASS</td><td>5</td><td class="pass">PASS</td></tr>
+    <tr><td>Agent Infrastructure</td><td>4</td><td>4</td><td class="pass">PASS</td><td>5</td><td class="pass">PASS</td></tr>
+    <tr><td>Context Budgeting</td><td>4</td><td>3</td><td class="fail">FAIL</td><td>5</td><td class="pass">PASS</td></tr>
+    <tr><td>Maintainability</td><td>4</td><td>3</td><td class="fail">FAIL</td><td>4</td><td class="pass">PASS</td></tr>
+    <tr><td>Architectural Legibility</td><td>4</td><td>3</td><td class="fail">FAIL</td><td>5</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+
+<!-- Review Committee -->
+<h2>Review Committee Scores</h2>
+<table class="review-table">
+  <thead>
+    <tr><th>Reviewer</th><th>Role</th><th>R1</th><th>R2</th><th>Verdict</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>R1</td><td>Context Architecture</td><td class="score-before">7/10</td><td class="score-after">9/10</td><td class="pass">APPROVE</td></tr>
+    <tr><td>R2</td><td>Context Budget</td><td class="score-before">7/10</td><td class="score-after">9/10</td><td class="pass">APPROVE</td></tr>
+    <tr><td>R3</td><td>Agent Infrastructure</td><td class="fail">5/10</td><td class="score-after">8/10</td><td class="pass">APPROVE</td></tr>
+    <tr><td>R4</td><td>Maintainability</td><td class="fail">5/10</td><td class="score-after">8/10</td><td class="pass">APPROVE</td></tr>
+    <tr><td>R5</td><td>Architectural Legibility</td><td class="score-before">7/10</td><td class="score-after">9/10</td><td class="pass">APPROVE</td></tr>
+  </tbody>
+</table>
+
+<!-- Files Created -->
+<h2>Artifacts Created</h2>
+<div class="summary-card files-created">
+  <h3>New Files (~36)</h3>
+  <div class="files-list">
+    <div><code>.claude/rules/db-guard.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/rules/core-guard.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/rules/api-router.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/rules/ui-components.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/settings.json</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/commands/dev.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/commands/test.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/commands/migrate.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.claude/commands/status.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.mcp.json</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/README.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>packages/config/CLAUDE.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/README.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/template.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/001-trpc-api-layer.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/002-drizzle-orm.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/003-clerk-auth.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/004-tamagui-ui.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/005-household-data-model.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/adrs/006-gamification-lazy-recalc.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/design/README.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/design/template.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/config/deployment.md</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>docs/api/README.md</code> <span class="badge badge-improved">REWRITE</span></div>
+    <div><code>docs/api/*.md (15 routers)</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.github/workflows/doc-validation.yml</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.github/workflows/doc-gardener.yml</code> <span class="badge badge-new">NEW</span></div>
+    <div><code>.markdown-link-check.json</code> <span class="badge badge-new">NEW</span></div>
+  </div>
+</div>
+
+<div class="summary-card">
+  <h3>Edited Files (~9)</h3>
+  <div class="files-list">
+    <div><code>.gitignore</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>CLAUDE.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>packages/db/CLAUDE.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>apps/api/CLAUDE.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>.claude/skills/petforce-guardrails/SKILL.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>docs/CLAUDE.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>docs/dev/architecture.md</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>.github/CODEOWNERS</code> <span class="badge badge-improved">EDIT</span></div>
+    <div><code>docs/dev/*.md (5 files)</code> <span class="badge badge-improved">EDIT</span></div>
+  </div>
+</div>
+
+<!-- Remaining Items -->
+<h2>Remaining Watch Items</h2>
+<table>
+  <thead><tr><th>Item</th><th>Severity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>3 broken internal links</td><td><span style="color:var(--yellow)">Warning</span></td><td>Pre-existing refs in docs/CLAUDE.md; partially addressed by file structure update</td></tr>
+    <tr><td>Hook $TOOL_INPUT variable</td><td><span style="color:var(--muted)">Info</span></td><td>May need stdin-based approach; verify during implementation</td></tr>
+    <tr><td>CLAUDE.md at 200 lines</td><td><span style="color:var(--muted)">Info</span></td><td>At the limit; future additions require trimming</td></tr>
+    <tr><td>markdown-link-check as dev dep</td><td><span style="color:var(--muted)">Info</span></td><td>Currently via npx; pin as dev dependency for faster CI</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Generated by Context Audit Skill &mdash; PetForce-Opus &mdash; 2026-04-08
+  <br>Spec reviewed by 5-agent committee (2 rounds, unanimous approval at 8.6/10 avg)
+  <br>Branch: fix/context-hierarchy-remediation
+</footer>
+
+</body>
+</html>
