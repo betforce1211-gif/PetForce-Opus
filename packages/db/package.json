@@ -16,7 +16,7 @@
   "dependencies": {
     "@petforce/core": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "postgres": "^3.4.4"
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@petforce/config": "workspace:*",
